@@ -1,0 +1,133 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+@import '../hatady-ui.css';
+
+.concrnt-ui {
+	container-type: inline-size;
+	min-width: 0;
+	color: var(--hy-ink);
+	background: var(--hy-bg);
+	border-radius: 24px;
+	padding: 24px;
+	font-size: 14px;
+	overflow-wrap: anywhere;
+}
+.concrnt-ui .connection-settings { max-width: 740px; min-width: 0; margin-inline: auto; }
+.concrnt-ui :is(h1, h2, h3, p) { margin: 0; }
+.concrnt-ui .connection-header { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+.concrnt-ui .connection-header > div { min-width: 0; }
+.concrnt-ui .connection-mark { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; border-radius: 16px; background: var(--hy-accent); color: var(--hy-on-accent); font-size: 24px; }
+.concrnt-ui .connection-eyebrow { display: block; color: var(--hy-muted); font-size: 12px; margin-bottom: 3px; }
+.concrnt-ui .connection-header h1 { font-size: 22px; line-height: 1.35; }
+.concrnt-ui .connection-nav { display: flex; justify-content: center; min-width: 0; margin-bottom: 20px; }
+.concrnt-ui .connection-card { min-width: 0; padding: 20px; border: 1px solid var(--hy-border); border-radius: 20px; background: var(--hy-surface); box-shadow: 0 3px 12px rgb(0 0 0 / 4%); }
+.concrnt-ui .connection-card + .connection-card { margin-top: 12px; }
+.concrnt-ui .connection-card h2 { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 16px; line-height: 1.5; }
+.concrnt-ui .connection-card h2 > i { color: var(--hy-accent); }
+.concrnt-ui .connection-description { color: var(--hy-muted); font-size: 12px; line-height: 1.65; }
+.concrnt-ui .connection-identity { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; padding-bottom: 16px; }
+.concrnt-ui .connection-avatar { display: grid; place-items: center; flex: 0 0 56px; width: 56px; height: 56px; border-radius: 50%; object-fit: cover; color: var(--hy-accent); background: var(--hy-soft); font-size: 26px; }
+.concrnt-ui .connection-identity-text { flex: 1 1 150px; min-width: 0; }
+.concrnt-ui .connection-identity-text strong { display: block; font-size: 17px; }
+.concrnt-ui .connection-status { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; background: var(--hy-soft); color: var(--hy-accent); font-size: 12px; font-weight: 700; }
+.concrnt-ui .connection-status[data-muted='true'] { color: var(--hy-muted); background: var(--hy-bg); }
+.concrnt-ui .connection-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 66px; padding: 13px 0; border-top: 1px solid var(--hy-border); }
+.concrnt-ui .connection-row > span:first-child { flex: 1; min-width: 0; }
+.concrnt-ui .connection-row strong { display: block; font-size: 13px; }
+.concrnt-ui .connection-row small { display: block; margin-top: 3px; color: var(--hy-muted); font-size: 12px; line-height: 1.6; }
+.concrnt-ui .connection-value { max-width: 50%; font-size: 12px; color: var(--hy-muted); text-align: end; }
+.concrnt-ui .connection-account-id { display: grid; gap: 6px; min-width: 0; margin: 16px 0 0; padding-top: 16px; border-top: 1px solid var(--hy-border); text-align: start; }
+.concrnt-ui .connection-account-id dt { font-size: 13px; font-weight: 700; }
+.concrnt-ui .connection-account-id dd { min-width: 0; margin: 0; color: var(--hy-muted); font-size: 13px; line-height: 1.65; overflow-wrap: anywhere; }
+.concrnt-ui .connection-empty .connection-account-id { text-align: center; }
+.concrnt-ui .connection-server { display: flex; align-items: center; gap: 8px; min-width: 0; margin-block: 6px; text-align: start; }
+.concrnt-ui .connection-server[data-centered='true'] { justify-content: center; }
+.concrnt-ui .connection-server-icon { display: grid; place-items: center; flex: 0 0 32px; width: 32px; height: 32px; border-radius: 8px; object-fit: contain; color: var(--hy-accent); background: var(--hy-soft); font-size: 20px; }
+.concrnt-ui .connection-server-text { min-width: 0; overflow-wrap: anywhere; }
+.concrnt-ui .connection-server .connection-server-name { display: block; font-size: 13px; line-height: 1.5; }
+.concrnt-ui .connection-server-domain { display: block; color: var(--hy-muted); font-size: 12px; line-height: 1.6; }
+.concrnt-ui .connection-switch { display: grid; place-items: center; flex: 0 0 48px; width: 48px; min-height: 44px; }
+.concrnt-ui .connection-switch input { appearance: none; -webkit-appearance: none; position: relative; width: 44px; height: 26px; margin: 0; border: 1px solid var(--hy-border); border-radius: 999px; background: var(--hy-muted); cursor: pointer; }
+.concrnt-ui .connection-switch input::after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: var(--hy-surface); box-shadow: 0 1px 3px rgb(0 0 0 / 20%); transition: transform .16s; }
+.concrnt-ui .connection-switch input:checked { background: var(--hy-accent); border-color: var(--hy-accent); }
+.concrnt-ui .connection-switch input:checked::after { transform: translateX(18px); }
+.concrnt-ui .connection-switch input:disabled { opacity: .45; cursor: default; }
+.concrnt-ui .connection-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.concrnt-ui .connection-actions :is(button, a) { min-height: 44px; text-decoration: none; }
+.concrnt-ui .connection-danger { color: var(--MI_THEME-error, #a83a40); }
+.concrnt-ui .connection-field { display: grid; gap: 6px; margin-top: 16px; font-size: 13px; font-weight: 700; }
+.concrnt-ui .connection-field :is(input, select) { box-sizing: border-box; min-width: 0; width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid var(--hy-border); border-radius: 12px; background: var(--hy-bg); color: var(--hy-ink); font-size: 16px; font-weight: 400; }
+.concrnt-ui .connection-field input[aria-invalid='true'] { border-color: var(--MI_THEME-error, #a83a40); }
+.concrnt-ui .connection-field :disabled { opacity: .5; }
+.concrnt-ui .connection-note { display: flex; align-items: start; gap: 8px; margin-top: 14px; padding: 12px; border-radius: 12px; background: var(--hy-bg); color: var(--hy-muted); font-size: 12px; line-height: 1.65; }
+.concrnt-ui .connection-note > i { flex: none; margin-top: 3px; }
+.concrnt-ui .connection-alert { margin-bottom: 12px; padding: 14px 16px; border: 1px solid var(--hy-border); border-radius: 16px; background: var(--hy-warm); color: var(--hy-ink); font-size: 13px; }
+.concrnt-ui .connection-error { margin-top: 8px; color: var(--MI_THEME-error, #a83a40); font-size: 12px; }
+.concrnt-ui .connection-live { margin-bottom: 12px; color: var(--hy-accent); font-size: 13px; }
+.concrnt-ui .connection-live:empty { margin: 0; }
+.concrnt-ui .connection-empty { padding-block: 28px; text-align: center; }
+.concrnt-ui .connection-empty h2, .concrnt-ui .connection-empty .connection-actions { justify-content: center; }
+.concrnt-ui .connection-empty > i { display: block; margin: 0 auto 12px; color: var(--hy-accent); font-size: 32px; }
+.concrnt-ui .connection-choice-group { min-width: 0; margin: 18px 0 0; padding: 0; border: 0; }
+.concrnt-ui .connection-choice-group legend { margin-bottom: 8px; font-size: 13px; font-weight: 700; }
+.concrnt-ui .connection-choice { display: flex; align-items: start; gap: 10px; min-height: 44px; padding: 11px 12px; margin-top: 7px; border: 1px solid var(--hy-border); border-radius: 12px; cursor: pointer; }
+.concrnt-ui .connection-choice:has(input:checked) { border-color: var(--hy-accent); background: var(--hy-soft); }
+.concrnt-ui .connection-choice input { flex: none; width: 18px; height: 18px; margin: 3px 0 0; accent-color: var(--hy-accent); }
+.concrnt-ui .connection-choice strong { display: block; font-size: 13px; }
+.concrnt-ui .connection-choice small { display: block; color: var(--hy-muted); font-size: 12px; }
+.concrnt-ui .connection-steps { display: flex; gap: 8px; margin: 0 0 20px; padding: 0; list-style: none; color: var(--hy-muted); font-size: 12px; }
+.concrnt-ui .connection-steps li { display: flex; align-items: center; flex: 1; gap: 6px; }
+.concrnt-ui .connection-steps b { display: grid; place-items: center; flex: 0 0 26px; width: 26px; height: 26px; border: 1px solid var(--hy-border); border-radius: 50%; }
+.concrnt-ui .connection-steps [aria-current='step'] { color: var(--hy-accent); font-weight: 700; }
+.concrnt-ui .connection-steps [aria-current='step'] b { background: var(--hy-accent); color: var(--hy-on-accent); }
+.concrnt-ui .connection-details { margin-top: 16px; border-top: 1px solid var(--hy-border); padding-top: 12px; font-size: 12px; color: var(--hy-muted); }
+.concrnt-ui .connection-details summary { min-height: 44px; cursor: pointer; }
+.concrnt-ui .connection-details ul { margin: 6px 0 12px; padding-inline-start: 1.5em; }
+.concrnt-ui .connection-emojis { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.concrnt-ui .connection-emoji { display: flex; align-items: center; gap: 4px; padding: 3px 3px 3px 12px; border: 1px solid var(--hy-border); border-radius: 13px; background: var(--hy-bg); }
+.concrnt-ui .connection-emoji img { width: 30px; height: 30px; object-fit: contain; }
+.concrnt-ui .connection-emoji > span { font-size: 24px; }
+.concrnt-ui .connection-emoji button { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: var(--hy-muted); cursor: pointer; }
+.concrnt-ui .connection-confirm { margin-top: 16px; padding: 16px; border: 1px solid var(--hy-border); border-radius: 15px; background: var(--hy-bg); }
+.concrnt-ui .connection-confirm h3 { margin-bottom: 8px; font-size: 14px; }
+.concrnt-ui .connection-feature { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--hy-border); font-size: 13px; }
+.concrnt-ui .connection-feature span { display: flex; align-items: center; gap: 8px; }
+.concrnt-ui .connection-feature small { color: var(--hy-muted); }
+
+/* Settings live inside the shared settings panel and inherit its theme and type. */
+.concrnt-ui[data-connection-settings] {
+	--hy-shadow: none;
+	padding: 0;
+	border-radius: 0;
+	background: transparent;
+	font-family: inherit;
+	color-scheme: inherit;
+}
+.concrnt-ui[data-connection-settings] .connection-settings { max-width: none; }
+.concrnt-ui[data-connection-settings] :is(h1, h2, h3, h4) { font-family: inherit; }
+.concrnt-ui[data-connection-settings] .connection-header { margin-bottom: 20px; }
+.concrnt-ui[data-connection-settings] .connection-header h1 { font-size: 20px; }
+.concrnt-ui[data-connection-settings] .connection-card { border-radius: 16px; box-shadow: none; }
+.concrnt-ui[data-connection-settings] .connection-description { font-size: 13px; }
+
+@container (max-width: 430px) {
+	.concrnt-ui .connection-header { gap: 9px; }
+	.concrnt-ui .connection-header h1 { font-size: 20px; }
+	.concrnt-ui .connection-card { padding: 16px; }
+	.concrnt-ui .connection-row { gap: 8px; }
+	.concrnt-ui .connection-row[data-stack='true'] { align-items: start; flex-direction: column; }
+	.concrnt-ui .connection-value { max-width: 100%; text-align: start; }
+	.concrnt-ui .connection-feature { align-items: start; flex-direction: column; gap: 4px; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.concrnt-ui .connection-switch input::after { transition: none; }
+}
+/* 旗鯖fork: 外部アカウント連携の接続先選択。サーバー名とアイコンを並べ、選んだものに印を付ける。 */
+.concrnt-ui .connection-servers { display: grid; gap: 6px; min-width: 0; margin: 0 0 8px; padding: 0; border: 0; }
+.concrnt-ui .connection-servers > legend { margin-bottom: 6px; padding: 0; }
+.concrnt-ui .connection-server-choice { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 4px 12px; border: 1px solid var(--hy-border); border-radius: 12px; background: var(--hy-bg); cursor: pointer; }
+.concrnt-ui .connection-server-choice > input { position: absolute; opacity: 0; pointer-events: none; }
+.concrnt-ui .connection-server-choice > .connection-server { flex: 1; margin-block: 0; }
+.concrnt-ui .connection-server-choice[data-active] { border-color: var(--hy-accent); background: var(--hy-soft); }
+.concrnt-ui .connection-server-choice > .ti-check { color: var(--hy-accent); }
+.concrnt-ui .connection-server-choice:has(> input:focus-visible) { outline: 2px solid var(--hy-accent); outline-offset: 2px; }
+.concrnt-ui .connection-servers:disabled .connection-server-choice { opacity: .6; cursor: default; }

@@ -1,0 +1,61 @@
+/* SPDX-FileCopyrightText: tolehata
+ * SPDX-License-Identifier: AGPL-3.0-only */
+.hata-intro .hggo { --go-accent: var(--hg-green); --go-panel: var(--hg-panel); --go-rule: var(--hg-line); container-type: inline-size; overflow: hidden; border: 1px solid var(--go-rule); border-radius: 22px; background: var(--hg-bg); color: var(--hg-fg); }
+.hata-intro .hggo-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--go-rule); background: var(--go-panel); }
+.hata-intro .hggo-header strong { font-size: 20px; }
+.hata-intro .hggo-header > span, .hata-intro .hggo-muted { color: var(--hg-muted); font-size: 12px; }
+.hata-intro .hggo-body { padding: 20px; }
+.hata-intro .hggo h3 { margin: 0 0 12px; font-size: 15px; }
+.hata-intro .hggo p { line-height: 1.8; }
+.hata-intro .hggo button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--go-rule); border-radius: 999px; color: var(--hg-fg); background: var(--go-panel); cursor: pointer; font: inherit; font-size: 12px; }
+.hata-intro .hggo button:hover:not(:disabled) { border-color: var(--go-accent); }
+.hata-intro .hggo button:focus-visible, .hata-intro .hggo input:focus-visible { outline: 2px solid var(--go-accent); outline-offset: 3px; }
+.hata-intro .hggo button:disabled { opacity: .55; cursor: default; }
+.hata-intro .hggo button[aria-pressed="true"], .hata-intro .hggo button.hggo-primary { color: var(--hg-on-accent); background: var(--go-accent); border-color: transparent; }
+.hata-intro .hggo [hidden] { display: none !important; }
+.hata-intro .hggo-capsule { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; width: fit-content; max-width: 100%; margin: 0 auto 18px; padding: 4px; border: 1px solid var(--go-rule); border-radius: 28px; background: var(--go-panel); }
+.hata-intro .hggo-capsule button { border: 0; }
+.hata-intro .hggo-home-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.hata-intro .hggo-card, .hata-intro .hggo-panel { min-width: 0; padding: 18px; border: 1px solid var(--go-rule); border-radius: 18px; background: var(--go-panel); }
+.hata-intro .hggo-card > p { margin: 10px 0; font-size: 12px; }
+.hata-intro .hggo-card > button { width: 100%; }
+.hata-intro .hggo-daily { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; background: color-mix(in srgb, var(--go-accent) 8%, var(--go-panel)); }
+.hata-intro .hggo-daily > strong { font-size: 36px; }
+.hata-intro .hggo-daily > strong small { font-size: 15px; }
+.hata-intro .hggo-title { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.hata-intro .hggo-title h3 { margin: 0; }
+.hata-intro .hggo-search { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding: 6px 10px; border: 1px solid var(--go-rule); border-radius: 28px; background: var(--go-panel); }
+.hata-intro .hggo-search input { flex: 1; min-width: 0; width: 100%; min-height: 40px; padding: 6px; border: 0; color: inherit; background: transparent; font: inherit; font-size: 13px; }
+.hata-intro .hggo-apps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-block: 12px; }
+.hata-intro .hggo-apps button { flex-direction: column; min-height: 82px; border-radius: 16px; overflow-wrap: anywhere; }
+.hata-intro .hggo-apps button > i { font-size: 26px; color: var(--go-accent); }
+.hata-intro .hggo-panel { margin-block: 14px; }
+.hata-intro .hggo-order { display: grid; gap: 6px; margin: 12px 0; padding: 0; list-style: none; }
+.hata-intro .hggo-order li { display: flex; align-items: center; gap: 5px; min-height: 48px; padding: 5px 8px; border: 1px solid var(--go-rule); border-radius: 12px; background: var(--go-panel); }
+.hata-intro .hggo-order li > span, .hata-intro .hggo-order label { flex: 1; min-width: 0; font-size: 12px; overflow-wrap: anywhere; }
+.hata-intro .hggo-order label { display: flex; align-items: center; gap: 8px; }
+.hata-intro .hggo-order button { flex-shrink: 0; width: 44px; min-height: 44px; padding: 5px; }
+.hata-intro .hggo-additions, .hata-intro .hggo-buttons, .hata-intro .hggo-themes { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-block: 14px; }
+.hata-intro .hggo-results { display: grid; gap: 8px; }
+.hata-intro .hggo-results button { align-items: start; flex-direction: column; gap: 5px; padding: 14px 16px; border-radius: 16px; text-align: start; }
+.hata-intro .hggo-results small { color: var(--go-accent); }
+.hata-intro .hggo-preview { display: flex; flex-direction: column; gap: 12px; margin: 16px 0 24px; padding: 24px; border: 1px solid var(--go-rule); border-radius: 18px; background: color-mix(in srgb, var(--go-accent) 8%, var(--go-panel)); }
+.hata-intro .hggo-preview[data-hggo-preview="koke"] { --go-accent: #477146; }
+.hata-intro .hggo-preview[data-hggo-preview="kisetsu"] { --go-accent: #a86535; border-radius: 4px; }
+.hata-intro .hggo-preview[data-hggo-preview="kashin"] { --go-accent: #b76588; border-radius: 28px; }
+.hata-intro .hggo-preview[data-hggo-preview="suri"] { --go-accent: #697882; border-radius: 0; }
+.hata-intro .hggo-preview[data-hggo-preview="hatakyu"] { --go-accent: #567fba; border-radius: 24px; }
+.hata-intro .hggo-preview strong { font-size: 19px; }
+.hata-intro .hggo-preview span, .hata-intro .hggo-preview small { font-size: 12px; }
+.hata-intro .hggo-card-samples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.hata-intro .hggo-card-samples span { flex: 1; min-width: 74px; padding: 16px 10px; border: 1px solid var(--go-rule); border-radius: 12px; background: var(--go-panel); font-size: 12px; text-align: center; }
+.hata-intro .hggo-feedback { margin: 0; padding: 14px 20px; border-top: 1px solid var(--go-rule); background: var(--go-panel); font-size: 12px; }
+@container (max-width: 420px) {
+	.hata-intro .hggo-body { padding: 12px; }
+	.hata-intro .hggo-home-grid { gap: 8px; }
+	.hata-intro .hggo-card { padding: 12px; }
+	.hata-intro .hggo-apps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.hata-intro .hggo-capsule button { padding-inline: 8px; font-size: 11px; }
+	.hata-intro .hggo-panel { padding: 12px; }
+	.hata-intro .hggo-order li { padding-inline: 5px; }
+}

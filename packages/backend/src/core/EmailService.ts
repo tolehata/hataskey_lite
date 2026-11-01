@@ -1,0 +1,329 @@
+/*
+ * SPDX-FileCopyrightText: syuilo and misskey-project
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
+
+import { createTransport } from 'nodemailer';
+import juice from 'juice';
+import { Inject, Injectable } from '@nestjs/common';
+import { UtilityService } from '@/core/UtilityService.js';
+import { DI } from '@/di-symbols.js';
+import type { Config } from '@/config.js';
+import type Logger from '@/logger.js';
+import type { MiMeta, UserProfilesRepository } from '@/models/_.js';
+import { LoggerService } from '@/core/LoggerService.js';
+import { bindThis } from '@/decorators.js';
+import { HttpRequestService } from '@/core/HttpRequestService.js';
+import { createHataskeyEmail, type HataskeyEmailInput } from '@/core/email/hataskey-email-content.js';
+import { renderHataskeyEmail, type EmailBrand } from '@/core/email/render-hataskey-email.js';
+
+@Injectable()
+export class EmailService {
+	private logger: Logger;
+
+	constructor(
+		@Inject(DI.config)
+		private config: Config,
+
+		@Inject(DI.meta)
+		private meta: MiMeta,
+
+		@Inject(DI.userProfilesRepository)
+		private userProfilesRepository: UserProfilesRepository,
+
+		private loggerService: LoggerService,
+		private utilityService: UtilityService,
+		private httpRequestService: HttpRequestService,
+	) {
+		this.logger = this.loggerService.getLogger('email');
+	}
+
+	/** Compatibility entry point for the administrator's existing HTML input. */
+	@bindThis
+	public async sendEmail(to: string, subject: string, html: string, text: string) {
+		if (!this.meta.enableEmail) return;
+
+		const brand = this.emailBrand();
+		const message = createHataskeyEmail({ kind: 'admin-message', subject, text }, brand, this.emailLocale());
+		// The renderer sanitizes only this fragment, never the completed email layout.
+		const rendered = renderHataskeyEmail({ ...message, htmlBody: html }, brand);
+		await this.deliverEmail(to, rendered);
+	}
+
+	/** Templates accept plain data; recipient selection and eligibility remain with callers. */
+	@bindThis
+	public async sendTemplateEmail(to: string, input: HataskeyEmailInput, locale?: string | null) {
+		if (!this.meta.enableEmail) return;
+
+		const brand = this.emailBrand();
+		const message = createHataskeyEmail(input, brand, this.emailLocale(locale));
+		await this.deliverEmail(to, renderHataskeyEmail(message, brand));
+	}
+
+	private emailLocale(locale?: string | null): 'ja' | 'en' {
+		const language = locale || this.meta.langs?.[0] || 'ja';
+		return /^ja(?:[-_]|$)/i.test(language) ? 'ja' : 'en';
+	}
+
+	private emailBrand(): EmailBrand {
+		const fallbackIcon = `${this.config.url}/favicon.ico`;
+		let iconUrl = fallbackIcon;
+		// Older metadata accepts arbitrary strings. A bad icon must not block account emails.
+		if (this.meta.iconUrl && !/[\s\u0000-\u001f\u007f]/u.test(this.meta.iconUrl)) {
+			try {
+				const icon = new URL(this.meta.iconUrl, this.config.url);
+				if (['http:', 'https:'].includes(icon.protocol) && !icon.username && !icon.password) {
+					iconUrl = icon.href;
+				}
+			} catch { /* Use the server's fallback icon. */ }
+		}
+		return { name: this.meta.name || this.config.host, url: this.config.url, iconUrl };
+	}
+
+	private async deliverEmail(to: string, message: { subject: string; html: string; text: string }) {
+		const enableAuth = this.meta.smtpUser != null && this.meta.smtpUser !== '';
+		const transporter = createTransport({
+			host: this.meta.smtpHost ?? undefined,
+			port: this.meta.smtpPort ?? undefined,
+			secure: this.meta.smtpSecure,
+			ignoreTLS: !enableAuth,
+			proxy: this.config.proxySmtp,
+			auth: enableAuth ? {
+				user: this.meta.smtpUser!,
+				pass: this.meta.smtpPass ?? undefined,
+			} : undefined,
+		});
+
+		const inlinedHtml = juice(message.html);
+		try {
+			const info = await transporter.sendMail({
+				from: this.meta.name ? {
+					name: this.meta.name,
+					address: this.meta.email!,
+				} : this.meta.email!,
+				to: to,
+				subject: message.subject,
+				text: message.text,
+				html: inlinedHtml,
+			});
+
+			this.logger.info(`Message sent: ${info.messageId}`);
+		} catch (err) {
+			this.logger.error(err as Error);
+			throw err;
+		}
+	}
+
+	@bindThis
+	public async validateEmailForAccount(emailAddress: string): Promise<{
+		available: boolean;
+		reason: null | 'used' | 'format' | 'disposable' | 'mx' | 'smtp' | 'banned' | 'network' | 'blacklist';
+	}> {
+		if (!this.utilityService.validateEmailFormat(emailAddress)) {
+			return {
+				available: false,
+				reason: 'format',
+			};
+		}
+
+		const exist = await this.userProfilesRepository.countBy({
+			emailVerified: true,
+			email: emailAddress,
+		});
+
+		if (exist !== 0) {
+			return {
+				available: false,
+				reason: 'used',
+			};
+		}
+
+		let validated: {
+			valid: boolean,
+			reason?: string | null,
+		} = { valid: true, reason: null };
+
+		if (this.meta.enableActiveEmailValidation) {
+			if (this.meta.enableVerifymailApi && this.meta.verifymailAuthKey != null) {
+				validated = await this.verifyMail(emailAddress, this.meta.verifymailAuthKey);
+			} else if (this.meta.enableTruemailApi && this.meta.truemailInstance && this.meta.truemailAuthKey != null) {
+				validated = await this.trueMail(this.meta.truemailInstance, emailAddress, this.meta.truemailAuthKey);
+			} else {
+				const { validate: validateEmail } = await import('deep-email-validator');
+				validated = await validateEmail({
+					email: emailAddress,
+					validateRegex: true,
+					validateMx: true,
+					validateTypo: false, // TLDを見ているみたいだけどclubとか弾かれるので
+					validateDisposable: true, // 捨てアドかどうかチェック
+					validateSMTP: false, // 日本だと25ポートが殆どのプロバイダーで塞がれていてタイムアウトになるので
+				});
+			}
+		}
+
+		if (!validated.valid) {
+			const formatReason: Record<string, 'format' | 'disposable' | 'mx' | 'smtp' | 'network' | 'blacklist' | undefined> = {
+				regex: 'format',
+				disposable: 'disposable',
+				mx: 'mx',
+				smtp: 'smtp',
+				network: 'network',
+				blacklist: 'blacklist',
+			};
+
+			return {
+				available: false,
+				reason: validated.reason ? formatReason[validated.reason] ?? null : null,
+			};
+		}
+
+		const emailDomain: string = emailAddress.split('@')[1];
+		const isBanned = this.utilityService.isBlockedHost(this.meta.bannedEmailDomains, emailDomain);
+
+		if (isBanned) {
+			return {
+				available: false,
+				reason: 'banned',
+			};
+		}
+
+		return {
+			available: true,
+			reason: null,
+		};
+	}
+
+	private async verifyMail(emailAddress: string, verifymailAuthKey: string): Promise<{
+		valid: boolean;
+		reason: 'used' | 'format' | 'disposable' | 'mx' | 'smtp' | null;
+	}> {
+		const endpoint = 'https://verifymail.io/api/' + emailAddress + '?key=' + verifymailAuthKey;
+		const res = await this.httpRequestService.send(endpoint, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+				Accept: 'application/json, */*',
+			},
+		});
+
+		const json = (await res.json()) as Partial<{
+			message: string;
+			block: boolean;
+			catch_all: boolean;
+			deliverable_email: boolean;
+			disposable: boolean;
+			domain: string;
+			email_address: string;
+			email_provider: string;
+			mx: boolean;
+			mx_fallback: boolean;
+			mx_host: string[];
+			mx_ip: string[];
+			mx_priority: { [key: string]: number };
+			privacy: boolean;
+			related_domains: string[];
+		}>;
+
+		/* api error: when there is only one `message` attribute in the returned result */
+		if (Object.keys(json).length === 1 && Reflect.has(json, 'message')) {
+			return {
+				valid: false,
+				reason: null,
+			};
+		}
+		if (json.email_address === undefined) {
+			return {
+				valid: false,
+				reason: 'format',
+			};
+		}
+		if (json.deliverable_email !== undefined && !json.deliverable_email) {
+			return {
+				valid: false,
+				reason: 'smtp',
+			};
+		}
+		if (json.disposable) {
+			return {
+				valid: false,
+				reason: 'disposable',
+			};
+		}
+		if (json.mx !== undefined && !json.mx) {
+			return {
+				valid: false,
+				reason: 'mx',
+			};
+		}
+
+		return {
+			valid: true,
+			reason: null,
+		};
+	}
+
+	private async trueMail<T>(truemailInstance: string, emailAddress: string, truemailAuthKey: string): Promise<{
+		valid: boolean;
+		reason: 'used' | 'format' | 'blacklist' | 'mx' | 'smtp' | 'network' | T | null;
+	}> {
+		const endpoint = truemailInstance + '?email=' + emailAddress;
+		try {
+			const res = await this.httpRequestService.send(endpoint, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Accept: 'application/json',
+					Authorization: truemailAuthKey,
+				},
+				isLocalAddressAllowed: true,
+			});
+
+			const json = (await res.json()) as {
+				email: string;
+				success: boolean;
+				error?: string;
+				errors?: {
+					list_match?: string;
+					regex?: string;
+					mx?: string;
+					smtp?: string;
+				} | null;
+			};
+
+			if (json.email === undefined || json.errors?.regex) {
+				return {
+					valid: false,
+					reason: 'format',
+				};
+			}
+			if (json.errors?.smtp) {
+				return {
+					valid: false,
+					reason: 'smtp',
+				};
+			}
+			if (json.errors?.mx) {
+				return {
+					valid: false,
+					reason: 'mx',
+				};
+			}
+			if (!json.success) {
+				return {
+					valid: false,
+					reason: json.errors?.list_match as T || 'blacklist',
+				};
+			}
+
+			return {
+				valid: true,
+				reason: null,
+			};
+		} catch (error) {
+			return {
+				valid: false,
+				reason: 'network',
+			};
+		}
+	}
+}

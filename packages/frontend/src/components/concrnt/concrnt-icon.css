@@ -1,0 +1,22 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* 旗鯖fork: ナビバーやタブでは Tabler アイコンと同じく文字色で塗る（テーマ・UI・UI S に追従する白抜き/黒抜き）。 */
+.concrnt-icon {
+	display: inline-block;
+	flex: none;
+	width: 1.2em;
+	height: 1.2em;
+	vertical-align: -.2em;
+	background-color: currentColor;
+	-webkit-mask: url('/client-assets/concrnt/mark.svg') center / contain no-repeat;
+	mask: url('/client-assets/concrnt/mark.svg') center / contain no-repeat;
+}
+
+/* 連携設定など、ブランドとして示す場所だけ公式の配色を使う。 */
+.concrnt-logo {
+	display: inline-block;
+	flex: none;
+	width: 1.2em;
+	height: 1.2em;
+	vertical-align: -.2em;
+	background: url('/client-assets/concrnt/logo.svg') center / contain no-repeat;
+}

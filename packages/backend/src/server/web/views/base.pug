@@ -1,0 +1,108 @@
+block vars
+
+block loadClientEntry
+	- const entry = config.frontendEntry;
+	- const baseUrl = config.url;
+
+doctype html
+
+//-
+	-
+	   _____ _                          _____ _      _
+	  / ____| |                        |  __ (_)    | |
+	 | |    | |__   ___ _ __ _ __ _   _| |__) |  ___| | __
+	 | |    | '_ \ / _ \ '__| '__| | | |  ___/ |/ __| |/ /
+	 | |____| | | |  __/ |  | |  | |_| | |   | | (__|   <
+	  \_____|_| |_|\___|_|  |_|   \__, |_|   |_|\___|_|\_\
+	                               __/ |
+	                              |___/
+		Thank you for using CherryPick!
+		If you are reading this message... how about joining the development?
+		https://github.com/kokonect-link/cherrypick
+
+html
+
+	head
+		meta(charset='utf-8')
+		meta(name='application-name' content='CherryPick')
+		meta(name='referrer' content='origin')
+		meta(name='theme-color' content= themeColor || '#ffbcdc')
+		meta(name='theme-color-orig' content= themeColor || '#ffbcdc')
+		meta(property='og:site_name' content= instanceName || 'CherryPick')
+		meta(property='instance_url' content= instanceUrl)
+		meta(name='viewport' content='width=device-width, initial-scale=1')
+		meta(name='format-detection' content='telephone=no,date=no,address=no,email=no,url=no')
+		link(rel='icon' href= icon || '/favicon.ico')
+		link(rel='apple-touch-icon' href= appleTouchIcon || '/apple-touch-icon.png')
+		link(rel='manifest' href='/manifest.json')
+		link(rel='search' type='application/opensearchdescription+xml' title=(title || "CherryPick") href=`${baseUrl}/opensearch.xml`)
+		link(rel='prefetch' href=serverErrorImageUrl)
+		link(rel='prefetch' href=infoImageUrl)
+		link(rel='prefetch' href=notFoundImageUrl)
+
+		if !config.frontendManifestExists
+				script(type="module" src="/vite/@vite/client")
+
+		//- 旗鯖fork(G13): vite 8 で CSS が分割チャンク側へ散るため、manifest 全体から収集した css を出す
+		//- (entry.css だけだと静的 import 連鎖のチャンク CSS が <link> されず素の見た目になる)。
+		//- ⚠️modulepreload は scripts/ 素体を指す (実行時はロケール別ディレクトリを読む) ため出さない
+		if Array.isArray(config.frontendViteCss) && config.frontendViteCss.length > 0
+			each href in config.frontendViteCss
+				link(rel='stylesheet' href=`/vite/${href}`)
+		else if Array.isArray(entry.css)
+			each href in entry.css
+				link(rel='stylesheet' href=`/vite/${href}`)
+
+		title
+			block title
+				= title || 'CherryPick'
+
+		if noindex
+			meta(name='robots' content='noindex')
+
+		block desc
+			meta(name='description' content= desc || '✨🌎✨ A interplanetary communication platform ✨🚀✨')
+
+		block meta
+
+		block og
+			meta(property='og:title'       content= title || 'CherryPick')
+			meta(property='og:description' content= desc || '✨🌎✨ A interplanetary communication platform ✨🚀✨')
+			meta(property='og:image'       content= img)
+			meta(property='twitter:card'   content='summary')
+
+		style
+			include ../style.css
+
+		script.
+			var VERSION = "#{version}";
+			var BASED_MISSKEY_VERSION = "#{basedMisskeyVersion}";
+			var CLIENT_ENTRY = !{JSON.stringify(entry.file)};
+			var LANGS = !{JSON.stringify(langs)};
+
+		script(type='application/json' id='cherrypick_meta' data-generated-at=now)
+			!= metaJson
+
+		script(type='application/json' id='cherrypick_clientCtx' data-generated-at=now)
+			!= clientCtx
+
+		script
+			include ../boot.js
+
+	body
+		noscript: p
+			| JavaScriptを有効にしてください
+			br
+			| Please turn on your JavaScript
+			br
+			| JavaScript를 활성화해주세요
+		div#splash
+			img#splashIcon(src= appleTouchIcon || icon || '/apple-touch-icon.png' alt='')
+			span#splashText
+				block customSplashText
+					= customSplashText
+			div#splashSpinner
+				<svg class="spinner" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+					<circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="6px" style="fill: none; stroke: currentColor; stroke-width: 6px;"></circle>
+				</svg>
+		block content

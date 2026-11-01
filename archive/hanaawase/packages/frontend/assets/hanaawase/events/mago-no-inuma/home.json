@@ -1,0 +1,12 @@
+{
+	"v": 1,
+	"bg": "img/bg_kiyoba_front.webp",
+	"accent": "#8e7cb0",
+	"chara": "chara/kiyoba/pose_a.webp",
+	"line": "表の通りを、藤色の上着が行ったり来たりしています。",
+	"entries": [
+		"event-stages",
+		"exchange",
+		"event-story"
+	]
+}

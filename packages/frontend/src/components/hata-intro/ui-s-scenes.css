@@ -1,0 +1,124 @@
+/* SPDX-FileCopyrightText: tolehata
+ * SPDX-License-Identifier: AGPL-3.0-only */
+.hata-intro .hguis-scene { container: hguis / inline-size; border: 1px solid var(--hg-line); border-radius: 20px; background: var(--hg-nav); overflow: clip; }
+.hata-intro .hguis-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 18px; border-bottom: 1px solid var(--hg-line); background: var(--hg-panel); }
+.hata-intro .hguis-toolbar strong { display: block; }
+.hata-intro .hguis-choice { display: flex; gap: 4px; padding: 3px; border: 1px solid var(--hg-line); border-radius: 999px; }
+.hata-intro .hguis-button, .hata-intro .hguis-icon { display: inline-flex; justify-content: center; align-items: center; flex-shrink: 0; gap: 8px; min-height: 44px; min-width: 44px; padding: 9px 13px; border: 1px solid transparent; border-radius: 999px; background: transparent; line-height: 1.35; transition: background .18s, color .18s; }
+.hata-intro .hguis-icon { padding: 9px; font-size: 18px; }
+.hata-intro .hguis-button:hover, .hata-intro .hguis-icon:hover { background: var(--hg-soft); }
+.hata-intro .hguis-button[aria-pressed="true"] { background: var(--hg-accent); color: var(--hg-on-accent); }
+.hata-intro .hguis-scene button:focus-visible, .hata-intro .hguis-scene textarea:focus-visible { outline: 2px solid var(--hg-accent); outline-offset: 2px; }
+.hata-intro .hguis-muted, .hata-intro .hguis-caption { color: var(--hg-muted); font-size: 13px; line-height: 1.75; }
+.hata-intro .hguis-caption { padding: 14px 18px 0; }
+.hata-intro .hguis-status { padding: 16px 18px; min-height: 54px; color: var(--hg-green); font-size: 13px; }
+.hata-intro .hguis-kicker { display: block; color: var(--hg-muted); font-size: 12px; margin-bottom: 4px; }
+.hata-intro .hguis-badge { border-radius: 999px; padding: 5px 10px; background: var(--hg-green-bg); color: var(--hg-green); font-size: 12px; }
+.hata-intro .hguis-overview { position: relative; display: grid; grid-template-columns: minmax(100px, .6fr) minmax(0, 2fr) 58px; min-height: 360px; }
+.hata-intro .hguis-side { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 20px; padding: 22px 12px; border-right: 1px solid var(--hg-line); }
+.hata-intro .hguis-side > b { font-size: 20px; }
+.hata-intro .hguis-side > .hguis-button { gap: 5px; padding-inline: 6px; font-size: 12px; }
+.hata-intro .hguis-switcher { position: absolute; top: 120px; left: 10px; z-index: 3; display: grid; width: min(260px, 80cqi); padding: 14px; border: 1px solid var(--hg-line); border-radius: 16px; background: var(--hg-panel); box-shadow: var(--hg-shadow); }
+.hata-intro .hguis-reading { padding: 22px 16px; min-width: 0; }
+.hata-intro .hguis-reading > header { margin-bottom: 10px; }
+.hata-intro .hguis-notes { margin-top: 16px; }
+.hata-intro .hguis-note { display: grid; grid-template-columns: 34px minmax(0,1fr); gap: 10px; padding: 18px 0; border-bottom: 1px solid var(--hg-line); }
+.hata-intro .hguis-note:last-child { border-bottom: 0; }
+.hata-intro .hguis-avatar { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: var(--hg-soft); color: var(--hg-accent); font-weight: 700; }
+.hata-intro .hguis-note strong { font-size: 13px; }
+.hata-intro .hguis-note small { display: inline-block; margin-left: 8px; font-size: 11px; color: var(--hg-muted); }
+.hata-intro .hguis-note p { margin-top: 7px; font-size: 13px; line-height: 1.8; }
+.hata-intro .hguis-note-actions { display: flex; gap: 24px; margin-top: 12px; color: var(--hg-muted); font-size: 16px; }
+.hata-intro .hguis-timeline-nav { position: absolute; z-index: 2; top: 16px; right: 4px; bottom: 16px; display: flex; flex-direction: column; align-items: stretch; gap: 5px; width: 50px; padding: 3px; border: 1px solid var(--hg-line); border-radius: 18px; background: var(--hg-panel); box-shadow: var(--hg-shadow); }
+.hata-intro .hguis-timeline-nav .hguis-button { justify-content: flex-start; overflow: hidden; padding: 11px 12px; min-width: 44px; }
+.hata-intro .hguis-timeline-nav .hguis-button i { width: 18px; flex: 0 0 18px; font-size: 18px; }
+.hata-intro .hguis-timeline-nav .hguis-button span { display: none; }
+.hata-intro .hguis-timeline-nav:hover, .hata-intro .hguis-timeline-nav:focus-within { width: 172px; }
+.hata-intro .hguis-timeline-nav:hover span, .hata-intro .hguis-timeline-nav:focus-within span { display: inline; }
+.hata-intro .hguis-mobile-dock { display: none; }
+.hata-intro .hguis-overview[data-hguis-device="mobile"] { display: flex; flex-direction: column; max-width: 440px; margin-inline: auto; }
+.hata-intro [data-hguis-device="mobile"] .hguis-side { display: none; }
+.hata-intro [data-hguis-device="mobile"] .hguis-timeline-nav { position: static; order: -1; flex-direction: row; align-self: center; width: auto; max-width: calc(100% - 24px); margin: 14px 12px 0; border-radius: 999px; overflow-x: auto; }
+.hata-intro [data-hguis-device="mobile"] .hguis-timeline-nav .hguis-button[aria-pressed="true"] span { display: inline; }
+.hata-intro [data-hguis-device="mobile"] .hguis-timeline-nav .hguis-button[aria-pressed="false"] span { display: none; }
+.hata-intro [data-hguis-device="mobile"] .hguis-mobile-dock { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; padding: 10px; margin: 0 12px 10px; border: 1px solid var(--hg-line); border-radius: 24px; background: var(--hg-panel); }
+.hata-intro .hguis-dock-icons { display: flex; gap: 3px; }
+.hata-intro [data-hguis-menu-open] [data-hguis-device="mobile"] .hguis-side { display: block; position: absolute; top: 65px; left: 12px; z-index: 4; width: min(250px, calc(100% - 24px)); background: var(--hg-panel); border: 1px solid var(--hg-line); border-radius: 16px; padding: 14px; }
+.hata-intro [data-hguis-menu-open] [data-hguis-device="mobile"] .hguis-side > b, .hata-intro [data-hguis-menu-open] [data-hguis-device="mobile"] .hguis-side > .hguis-muted { display: none; }
+.hata-intro [data-hguis-menu-open] [data-hguis-device="mobile"] .hguis-switcher { position: static; width: auto; border: 0; box-shadow: none; padding: 8px 0 0; }
+.hata-intro .hguis-picker { position: absolute; z-index: 5; bottom: 70px; left: 12px; right: 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; padding: 16px; border: 1px solid var(--hg-line); border-radius: 20px; background: var(--hg-panel); box-shadow: var(--hg-shadow); }
+.hata-intro .hguis-picker > strong, .hata-intro .hguis-picker > button:last-child { grid-column: 1 / -1; }
+.hata-intro .hguis-post-backdrop { padding: 10px 24px; }
+.hata-intro .hguis-composer { margin: 10px 16px 16px; border: 1px solid var(--hg-line); border-radius: 20px; background: var(--hg-panel); padding: 14px; box-shadow: var(--hg-shadow); }
+.hata-intro .hguis-compose-label { display: grid; gap: 7px; color: var(--hg-muted); font-size: 12px; }
+.hata-intro .hguis-compose-label textarea { width: 100%; resize: vertical; min-height: 100px; border: 0; border-radius: 8px; padding: 8px; background: transparent; color: var(--hg-fg); font: inherit; font-size: 15px; line-height: 1.7; }
+.hata-intro .hguis-compose-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; padding-top: 8px; border-top: 1px solid var(--hg-line); }
+.hata-intro .hguis-space { flex: 1; }
+.hata-intro [data-hguis-action="send"] { color: var(--hg-on-accent); background: var(--hg-accent); }
+.hata-intro .hguis-recipient { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; padding-bottom: 12px; }
+.hata-intro .hguis-recipient input { min-width: 0; max-width: 100%; flex: 1; background: var(--hg-nav); color: var(--hg-fg); padding: 10px; border: 1px solid var(--hg-line); border-radius: 10px; }
+.hata-intro .hguis-menu { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--hg-line); }
+.hata-intro .hguis-menu > strong { width: 100%; font-size: 13px; }
+.hata-intro .hguis-info { font-size: 13px; padding: 12px; margin-top: 10px; border-radius: 12px; color: var(--hg-blue); background: var(--hg-blue-bg); }
+.hata-intro .hguis-sent { margin: 0 16px; border-radius: 16px; padding: 16px; color: var(--hg-green); background: var(--hg-green-bg); }
+.hata-intro .hguis-sent p { color: var(--hg-fg); white-space: pre-wrap; margin: 10px 0; }
+.hata-intro .hguis-sent small { font-size: 12px; }
+.hata-intro .hguis-workspace { padding: 16px; }
+.hata-intro .hguis-workspace-nav { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.hata-intro .hguis-workspace-nav .hguis-button { border-color: var(--hg-line); background: var(--hg-panel); }
+.hata-intro .hguis-split { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.hata-intro [data-hguis-workspace="split"] .hguis-split { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.hata-intro .hguis-page, .hata-intro .hguis-workspace-timeline, .hata-intro .hguis-side-pane { min-width: 0; padding: 16px; border: 1px solid var(--hg-line); border-radius: 16px; background: var(--hg-panel); }
+.hata-intro .hguis-page header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px; }
+.hata-intro .hguis-page header > div { display: flex; }
+.hata-intro .hguis-notice { padding: 14px 0; border-bottom: 1px solid var(--hg-line); font-size: 13px; }
+.hata-intro .hguis-notice i { margin-right: 8px; color: var(--hg-accent); }
+.hata-intro .hguis-side-pane { margin-top: 12px; }
+.hata-intro .hguis-side-pane > div { margin-top: 8px; font-size: 13px; }
+.hata-intro .hguis-deck { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 16px; }
+.hata-intro .hguis-deck > section { min-width: 0; padding: 12px; border: 1px solid var(--hg-line); border-radius: 16px; background: var(--hg-panel); }
+.hata-intro .hguis-deck h3 { font-size: 14px; display: flex; gap: 8px; }
+.hata-intro .hguis-deck .hguis-note { grid-template-columns: minmax(0, 1fr); }
+.hata-intro .hguis-deck .hguis-note-actions { gap: 12px; }
+.hata-intro .hguis-settings-layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px; padding: 18px; }
+.hata-intro .hguis-setting { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--hg-line); }
+.hata-intro .hguis-setting small { display: block; font-size: 12px; color: var(--hg-muted); }
+.hata-intro .hguis-setting select { max-width: 100%; padding: 10px; min-height: 44px; border: 1px solid var(--hg-line); border-radius: 10px; background: var(--hg-panel); color: var(--hg-fg); }
+.hata-intro .hguis-setting input, .hata-intro .hguis-nav-setting input { accent-color: var(--hg-accent); min-width: 24px; min-height: 24px; }
+.hata-intro .hguis-bottom-settings { padding-top: 18px; }
+.hata-intro .hguis-bottom-settings h3 { font-size: 14px; margin-bottom: 7px; }
+.hata-intro .hguis-nav-setting { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 3px; border-bottom: 1px solid var(--hg-line); padding: 5px 0; font-size: 13px; }
+.hata-intro .hguis-nav-setting > span { display: flex; gap: 8px; }
+.hata-intro .hguis-nav-setting > div { display: flex; align-items: center; gap: 2px; }
+.hata-intro .hguis-nav-setting label { display: grid; place-items: center; min-width: 44px; min-height: 44px; }
+.hata-intro .hguis-settings-preview { align-self: start; min-width: 0; border: 1px solid var(--hg-line); border-radius: 16px; background: var(--hg-panel); padding: 16px; }
+.hata-intro .hguis-setting-timeline { display: flex; flex-direction: column; gap: 12px; margin-bottom: 22px; border-radius: 12px; border: 1px solid var(--hg-line); padding: 16px; font-size: 14px; }
+.hata-intro .hguis-setting-timeline[data-size="small"] { font-size: 12px; gap: 8px; padding: 12px; }
+.hata-intro .hguis-setting-timeline[data-glass="true"] { background: color-mix(in srgb, var(--hg-blue-bg) 70%, var(--hg-panel)); }
+.hata-intro .hguis-setting-timeline[data-position="top"] .hguis-mini-compose { order: -1; }
+.hata-intro .hguis-mini-compose { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 12px; border: 1px solid var(--hg-line); border-radius: 12px; background: var(--hg-panel); color: var(--hg-muted); font-size: 12px; }
+.hata-intro .hguis-mini-compose i { color: var(--hg-accent); }
+.hata-intro .hguis-nav-preview { display: flex; flex-wrap: wrap; justify-content: center; margin: 8px 0 14px; gap: 4px; padding: 8px; border: 1px solid var(--hg-line); border-radius: 999px; }
+.hata-intro .hguis-nav-preview > span { display: grid; place-items: center; min-width: 28px; min-height: 28px; font-size: 17px; }
+.hata-intro .hguis-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+@container hguis (max-width: 620px) {
+  .hata-intro .hguis-settings-layout { grid-template-columns: minmax(0, 1fr); }
+  .hata-intro .hguis-settings-preview { order: -1; }
+  .hata-intro .hguis-deck { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hata-intro .hguis-deck > section:last-child { grid-column: 1 / -1; }
+}
+@container hguis (max-width: 420px) {
+  .hata-intro .hguis-overview { grid-template-columns: minmax(0, 1fr) 58px; }
+  .hata-intro .hguis-overview:not([data-hguis-device="mobile"]) .hguis-side { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; align-items: center; padding: 10px; gap: 8px; border-bottom: 1px solid var(--hg-line); }
+  .hata-intro .hguis-overview:not([data-hguis-device="mobile"]) .hguis-timeline-nav { top: 90px; }
+  .hata-intro .hguis-side > .hguis-muted { display: none; }
+  .hata-intro .hguis-reading { padding: 16px 10px; }
+  .hata-intro .hguis-workspace, .hata-intro .hguis-deck { padding: 10px; }
+  .hata-intro .hguis-page, .hata-intro .hguis-workspace-timeline { padding: 10px; }
+  .hata-intro [data-hguis-workspace="split"] .hguis-note { grid-template-columns: minmax(0, 1fr); }
+  .hata-intro [data-hguis-workspace="split"] .hguis-note-actions { gap: 12px; }
+  .hata-intro .hguis-composer { margin-inline: 10px; padding: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hata-intro .hguis-button, .hata-intro .hguis-icon { transition: none; }
+}

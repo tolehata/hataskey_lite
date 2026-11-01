@@ -1,0 +1,47 @@
+/*
+ * SPDX-FileCopyrightText: tolehata
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
+
+.hata-intro .hg-integration-note { margin: 0 0 28px; padding: 16px 20px; border-left: 3px solid var(--hg-accent); background: var(--hg-soft); border-radius: 0 16px 16px 0; line-height: 1.9; }
+.hata-intro .hg-integration-note strong { display: block; }
+.hata-intro .hg-integration-note p { margin: 4px 0 0; }
+.hata-intro .hg-reference-fold { margin-top: 18px; border-top: 1px solid var(--hg-line); padding-top: 10px; }
+.hata-intro .hg-reference-fold summary { cursor: pointer; padding: 12px 0; font-size: 15px; line-height: 1.6; }
+.hata-intro .hg-reference-fold summary span { margin-left: 8px; color: var(--hg-muted); font-size: 13px; }
+.hata-intro .hg-reference-fold summary:focus-visible { outline: 2px solid var(--hg-accent); outline-offset: 3px; border-radius: 6px; }
+.hata-intro .hg-reference-bridge { margin-top: 30px; }
+.hata-intro .hg-reference-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+.hata-intro .hg-reference-card { display: flex; align-items: flex-start; gap: 12px; min-width: 0; padding: 18px; border: 1px solid var(--hg-line); border-radius: 18px; color: var(--hg-fg); background: var(--hg-panel); text-align: left; cursor: pointer; font: inherit; }
+.hata-intro .hg-reference-card > .ti { flex-shrink: 0; font-size: 20px; color: var(--hg-accent); }
+.hata-intro .hg-reference-card > .ti:last-child { margin-left: auto; }
+.hata-intro .hg-reference-card span { min-width: 0; }
+.hata-intro .hg-reference-card strong { display: block; font-size: 16px; line-height: 1.7; overflow-wrap: anywhere; }
+.hata-intro .hg-reference-card small { display: block; font-size: 14px; line-height: 1.8; color: var(--hg-muted); margin-top: 6px; }
+.hata-intro .hg-reference-card:hover { border-color: var(--hg-accent); }
+.hata-intro .hg-reference-card:focus-visible { outline: 2px solid var(--hg-accent); outline-offset: 3px; }
+.hata-intro .hg-reference-reading { max-width: 760px; margin: 26px auto; font-size: 16px; line-height: 2; overflow-wrap: anywhere; }
+.hata-intro .hg-reference-reading > p { margin: 0 0 24px; }
+.hata-intro .hg-reference-reading .hg-note { margin-top: 24px; }
+.hata-intro .hg-reference-reading h2, .hata-intro .hg-reference-practice h2 { font-size: 20px; line-height: 1.6; }
+.hata-intro .hg-reference-practice { border-top: 1px solid var(--hg-line); padding-top: 24px; margin-top: 32px; }
+.hata-intro .hg-reference-practice > p { font-size: 15px; line-height: 1.9; }
+.hata-intro .hg-reference-diagram { margin: 28px 0; padding: 20px; border-radius: 20px; background: var(--hg-soft); color: var(--hg-fg); }
+.hata-intro .hg-reference-diagram figcaption strong, .hata-intro .hg-reference-diagram figcaption span { display: block; }
+.hata-intro .hg-reference-diagram figcaption span { font-size: 13px; color: var(--hg-muted); margin-top: 4px; }
+.hata-intro .hg-reference-diagram ol { list-style: none; padding: 0; margin: 20px 0 0; display: grid; gap: 0; }
+.hata-intro .hg-reference-diagram li { position: relative; display: flex; gap: 14px; padding-bottom: 24px; }
+.hata-intro .hg-reference-diagram li:not(:last-child)::before { content: ''; position: absolute; inset: 32px auto 0 15px; width: 2px; background: var(--hg-line); }
+.hata-intro .hg-reference-diagram li:last-child { padding-bottom: 0; }
+.hata-intro .hg-reference-diagram .hg-number { flex-shrink: 0; width: 32px; height: 32px; }
+.hata-intro .hg-reference-diagram li p { margin: 4px 0 0; font-size: 15px; line-height: 1.9; }
+.hata-intro .hg-reference-diagram-note { margin: 18px 0 0; border-top: 1px solid var(--hg-line); padding-top: 14px; font-size: 14px; }
+.hata-intro .hg-topic-card > p, .hata-intro .hg-step-desc, .hata-intro .hg-reference-reading > p { text-wrap: pretty; word-break: auto-phrase; line-break: strict; overflow-wrap: break-word; }
+.hata-intro .hg-main { padding-block: clamp(16px, 2cqi, 24px); }
+.hata-intro .hg-back-button { display: inline-grid; place-items: center; flex: 0 0 auto; width: 44px; height: 44px; padding: 0; border: 1px solid var(--hg-line); border-radius: 50%; background: var(--hg-panel); color: var(--hg-fg); font-size: 20px; }
+.hata-intro .hg-back-button:hover { background: var(--hg-soft); }
+.hata-intro .hg-hero { padding-top: 0; }
+.hata-intro .hg-hero .hg-eyebrow .hg-brand { font-size: 20px; line-height: 1.4; }
+.hata-intro .hg-footer { display: block; margin-top: 24px; text-align: center; }
+@container hg-guide-a (max-width: 700px) { .hata-intro .hg-reference-grid { grid-template-columns: minmax(0,1fr); } }
+@container hg-guide-a (max-width: 420px) { .hata-intro .hg-reference-diagram { padding: 16px 12px; } .hata-intro .hg-reference-card { padding: 14px; } }

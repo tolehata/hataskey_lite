@@ -1,0 +1,37 @@
+/*
+ * SPDX-FileCopyrightText: Tolehata and hatasaba-project
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
+
+/* Size the decoration without reserving space in the note's layout. */
+[data-note-charm-layout='on'] {
+	--note-charm-slot-size: 64px;
+	--note-charm-effective: min(var(--note-charm-size, 60px), var(--note-charm-slot-size));
+}
+
+[data-note-charm-host='on'] {
+	content-visibility: visible;
+}
+
+[data-note-charm-layout='on']:where([data-note-charm-compact='true']) {
+	--note-charm-slot-size: 56px;
+}
+
+/* Query the surrounding column while keeping the original note width. */
+@container (max-width: 580px) {
+	[data-note-charm-layout='on'] {
+		--note-charm-slot-size: 56px;
+	}
+}
+
+@container (max-width: 450px) {
+	[data-note-charm-layout='on'] {
+		--note-charm-slot-size: 52px;
+	}
+}
+
+@container (max-width: 300px) {
+	[data-note-charm-layout='on'] {
+		--note-charm-slot-size: 48px;
+	}
+}

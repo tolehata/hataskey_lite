@@ -1,0 +1,46 @@
+{
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"compilerOptions": {
+		// 旗鯖fork: TS6.0 baseUrl非推奨(TS5101)対応。G3申し送り参照。
+		"ignoreDeprecations": "6.0",
+		"target": "ES2022",
+		"module": "nodenext",
+		"moduleResolution": "nodenext",
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": false,
+		"outDir": "./js-built/",
+		"rootDir": "./js",
+		"removeComments": true,
+		"skipLibCheck": true,
+		"resolveJsonModule": true,
+		"strict": true,
+		"strictFunctionTypes": true,
+		"strictNullChecks": true,
+		"experimentalDecorators": true,
+		"noImplicitReturns": true,
+		"esModuleInterop": true,
+		"verbatimModuleSyntax": true,
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["./*"],
+			"@@/*": ["./*"]
+		},
+		"typeRoots": [
+			"./@types",
+			"./node_modules/@types"
+		],
+		"lib": [
+			"esnext",
+			"dom"
+		]
+	},
+	"include": [
+		"@types/**/*.ts",
+		"js/**/*"
+	],
+	"exclude": [
+		"node_modules",
+		"test/**/*"
+	]
+}

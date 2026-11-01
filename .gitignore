@@ -1,0 +1,151 @@
+# Visual Studio Code
+/.vscode
+!/.vscode/extensions.json
+
+# Intelij-IDEA
+/.idea
+
+# Node.js
+node_modules
+report.*.json
+
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+packages/frontend/.yarn/cache
+packages/backend/.yarn/cache
+packages/sw/.yarn/cache
+
+# pnpm
+.pnpm-store
+
+# Cypress
+cypress/screenshots
+cypress/videos
+
+# Coverage
+coverage
+
+# config
+/.config/*
+!/.config/example.yml
+!/.config/docker_example.yml
+!/.config/docker_example.env
+!/.config/cypress-devcontainer.yml
+docker-compose.yml
+/compose.yml
+.devcontainer/compose.yml
+!/.devcontainer/compose.yml
+
+# cherrypick
+/build
+built
+built-test
+js-built
+/data
+/.cache-loader
+/db
+/meili_data
+npm-debug.log
+*.pem
+run.bat
+api-docs.json
+*.log
+/redis
+*.code-workspace
+.DS_Store
+._*
+/files
+ormconfig.json
+temp
+/packages/frontend/src/**/*.stories.ts
+tsdoc-metadata.json
+misskey-assets
+
+# Vite temporary files
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+vite.config.local-dev.js.timestamp-*
+vite.config.local-dev.ts.timestamp-*
+
+# blender backups
+*.blend1
+*.blend2
+*.blend3
+*.blend4
+*.blend5
+
+# VSCode addon
+.favorites.json
+
+# Claude Code 関連ファイル (ローカル設定・指示・作業ディレクトリ。共有リポジトリにはコミットしない)
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+claude.md
+
+# Codex 等のエージェント向け指示ファイル (上と同じ扱い)
+AGENTS.md
+AGENTS.macOS.md
+HATA-PITFALLS.md
+.codex/
+/.agents/
+
+# 作業ドラフト・作業資料 (計画書・実装メモ・引き継ぎ・試作。共有リポジトリにはコミットしない)
+# idea/ 直下の追跡済みファイルは上流由来の保管コードなので対象外
+/docs/
+/idea/*/
+# モックはローカルに保持
+/mockups/
+
+# 一時出力・競合バックアップ・ヒープダンプ
+*.tmp
+*.bak
+*.swp
+*.swo
+*.orig
+*.rej
+*.heapsnapshot
+
+# ローカルの環境変数・秘密鍵・証明書
+.env
+.env.*
+!.env.example
+!**/.env.example
+!.env.sample
+!**/.env.sample
+!.env.template
+!**/.env.template
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# 上流追随時のローカル調査出力
+/cmp.json
+/backend-pkg-imports.txt
+
+# ローカル型検査の一時出力
+/vuetsc_out.txt
+/packages/frontend/tsc_out.txt
+
+# Serena
+.serena
+/tarball/
+/compose.yml
+*.save
+
+# Zone.Identifier (Windows mark-of-the-web ADS。WSL/Windows でコロンが別文字に化けるため両方無視)
+*:Zone.Identifier
+*Zone.Identifier
+
+# 花常の開発書類・作業進捗・画像生成用リファレンス（実行時アセットではないため配布しない）
+/packages/frontend/hanaawase/
+
+# HataIgo の法務調査・実装指示書・デザイン handoff（特許の分析を含むため公開しない）
+/packages/frontend/hataigo/

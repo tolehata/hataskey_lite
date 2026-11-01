@@ -1,0 +1,602 @@
+<!--
+SPDX-FileCopyrightText: syuilo and misskey-project
+SPDX-License-Identifier: AGPL-3.0-only
+-->
+
+<template>
+<Transition
+	:name="transitionName"
+	:enterActiveClass="normalizeClass({
+		[$style.transition_hatagoes_enterActive]: transitionName === 'hatagoes',
+		[$style.transition_modalDrawer_enterActive]: transitionName === 'modal-drawer',
+		[$style.transition_modalPopup_enterActive]: transitionName === 'modal-popup',
+		[$style.transition_modal_enterActive]: transitionName === 'modal',
+		[$style.transition_send_enterActive]: transitionName === 'send',
+	})"
+	:leaveActiveClass="normalizeClass({
+		[$style.transition_hatagoes_leaveActive]: transitionName === 'hatagoes',
+		[dissolveStyles.leaveActive]: motionPreset === 'dissolve' && transitionName === 'modal',
+		[$style.transition_modalDrawer_leaveActive]: transitionName === 'modal-drawer',
+		[$style.transition_modalPopup_leaveActive]: transitionName === 'modal-popup',
+		[$style.transition_modal_leaveActive]: transitionName === 'modal' && motionPreset !== 'dissolve',
+		[$style.transition_send_leaveActive]: transitionName === 'send',
+	})"
+	:enterFromClass="normalizeClass({
+		[$style.transition_hatagoes_enterFrom]: transitionName === 'hatagoes',
+		[$style.transition_modalDrawer_enterFrom]: transitionName === 'modal-drawer',
+		[$style.transition_modalPopup_enterFrom]: transitionName === 'modal-popup',
+		[$style.transition_modal_enterFrom]: transitionName === 'modal',
+		[$style.transition_send_enterFrom]: transitionName === 'send',
+	})"
+	:leaveToClass="normalizeClass({
+		[$style.transition_hatagoes_leaveTo]: transitionName === 'hatagoes',
+		[dissolveStyles.leaveTo]: motionPreset === 'dissolve' && transitionName === 'modal',
+		[$style.transition_modalDrawer_leaveTo]: transitionName === 'modal-drawer',
+		[$style.transition_modalPopup_leaveTo]: transitionName === 'modal-popup',
+		[$style.transition_modal_leaveTo]: transitionName === 'modal' && motionPreset !== 'dissolve',
+		[$style.transition_send_leaveTo]: transitionName === 'send',
+	})"
+	:duration="transitionDuration" appear @afterLeave="onClosed" @enter="emit('opening')" @afterEnter="onOpened"
+>
+	<div v-show="manualShowing != null ? manualShowing : showing" ref="modalRootEl" v-hotkey.global="keymap" tabindex="-1" :class="[$style.root, hataGoesTheme?.className, { [$style.drawer]: type === 'drawer', [$style.dialog]: type === 'dialog', [$style.popup]: type === 'popup', [$style.postFormMotion]: motionPreset === 'postform' }]" :data-hatagoes-palette="hataGoesTheme ? '' : undefined" :data-hatask-theme="hataGoesTheme?.hataskTheme" :data-hatask-mode="hataGoesTheme?.hataskMode" :data-hatady-theme="hataGoesTheme?.hatadyTheme" :style="{ zIndex, pointerEvents: (manualShowing != null ? manualShowing : showing) ? 'auto' : 'none', '--transformOrigin': transformOrigin, ...hataGoesTheme?.style }">
+		<div data-modal-backdrop data-cy-bg :data-cy-transparent="isEnableBgTransparent" class="_modalBg" :class="[$style.bg, { [$style.bgTransparent]: isEnableBgTransparent, [$style.bgWithoutBlur]: disableBgBlur, [$style.removeModalBgColorForBlur]: prefer.s.useBlurEffectForModal && prefer.s.removeModalBgColorForBlur }]" :style="{ zIndex }" @click="onBgClick" @mousedown="onBgClick" @contextmenu.prevent.stop="() => {}"></div>
+		<div ref="content" data-modal-content :class="[$style.content, { [$style.fixed]: fixed }]" :style="{ zIndex }" @click.self="onBgClick">
+			<slot :max-height="maxHeight" :type="type"></slot>
+		</div>
+	</div>
+</Transition>
+</template>
+
+<script lang="ts" setup>
+import { nextTick, normalizeClass, onBeforeUnmount, onMounted, onUnmounted, provide, watch, ref, useTemplateRef, computed, inject } from 'vue';
+import type { Keymap } from '@/utility/hotkey.js';
+import * as os from '@/os.js';
+import { isTouchUsing } from '@/utility/touch.js';
+import { deviceKind } from '@/utility/device-kind.js';
+import { focusTrap } from '@/utility/focus-trap.js';
+import { focusParent } from '@/utility/focus.js';
+import { prefer } from '@/preferences.js';
+import { DI } from '@/di.js';
+import { getViewportTopInset } from '@/utility/viewport-inset.js';
+import { HATA_GOES_HOST, HATA_GOES_THEME } from '@/utility/hatagoes-context.js';
+import { hatagoesModalTransition } from '@/utility/hatagoes-motion.js';
+import dissolveStyles from './modal-dissolve.module.css';
+
+function getFixedContainer(el: Element | null): Element | null {
+	if (el == null || el.tagName === 'BODY') return null;
+	const position = window.getComputedStyle(el).getPropertyValue('position');
+	if (position === 'fixed') {
+		return el;
+	} else {
+		return getFixedContainer(el.parentElement);
+	}
+}
+
+type ModalTypes = 'popup' | 'dialog' | 'drawer';
+
+const props = withDefaults(defineProps<{
+	manualShowing?: boolean | null;
+	anchor?: { x: string; y: string; };
+	anchorElement?: HTMLElement | null;
+	preferType?: ModalTypes | 'auto';
+	zPriority?: 'low' | 'middle' | 'high';
+	noOverlap?: boolean;
+	transparentBg?: boolean;
+	/** 背景色は維持したまま、モーダル外のぼかしだけを無効化する。 */
+	disableBgBlur?: boolean;
+	hasInteractionWithOtherFocusTrappedEls?: boolean;
+	returnFocusTo?: HTMLElement | null;
+	motionPreset?: 'postform' | 'dissolve' | 'none';
+	/** Opt in when a shared popup is mounted outside the embedded app's injection tree. */
+	forceMotion?: boolean;
+}>(), {
+	manualShowing: null,
+	anchorElement: null,
+	anchor: () => ({ x: 'center', y: 'bottom' }),
+	preferType: 'auto',
+	zPriority: 'low',
+	noOverlap: true,
+	transparentBg: false,
+	disableBgBlur: false,
+	hasInteractionWithOtherFocusTrappedEls: false,
+	returnFocusTo: null,
+	motionPreset: undefined,
+	forceMotion: false,
+});
+
+const emit = defineEmits<{
+	(ev: 'opening'): void;
+	(ev: 'opened'): void;
+	(ev: 'click'): void;
+	(ev: 'esc', event: KeyboardEvent): void;
+	(ev: 'close'): void; // TODO: (refactor) closing に改名する
+	(ev: 'closed'): void;
+}>();
+
+provide(DI.inModal, true);
+const hataGoesHost = inject(HATA_GOES_HOST, null);
+const themeContext = inject(HATA_GOES_THEME, null);
+const hataGoesTheme = computed(() => themeContext?.value);
+
+const maxHeight = ref<number>();
+const fixed = ref(false);
+const transformOrigin = ref('center');
+const showing = ref(true);
+const modalRootEl = useTemplateRef('modalRootEl');
+const content = useTemplateRef('content');
+const zIndex = os.claimZIndex(props.zPriority);
+const useSendAnime = ref(false);
+const type = computed<ModalTypes>(() => {
+	if (props.preferType === 'auto') {
+		if ((prefer.s.menuStyle === 'drawer') || (prefer.s.menuStyle === 'auto' && isTouchUsing && deviceKind === 'smartphone')) {
+			return 'drawer';
+		} else {
+			return props.anchorElement != null ? 'popup' : 'dialog';
+		}
+	} else {
+		return props.preferType!;
+	}
+});
+const isEnableBgTransparent = computed(() => props.transparentBg && (type.value === 'popup'));
+const transitionName = computed(() => hatagoesModalTransition({
+	legacyAnimation: prefer.s.animation,
+	forceMotion: props.forceMotion || hataGoesHost != null,
+	preset: props.motionPreset,
+	type: type.value,
+	send: useSendAnime.value,
+}));
+const transitionDuration = computed(() => {
+	const name = transitionName.value;
+	if (name === 'hatagoes') return { enter: 180, leave: 140 };
+	if (props.motionPreset === 'dissolve' && name === 'modal') return { enter: 200, leave: 650 };
+	if (props.motionPreset === 'postform' && name === 'modal-popup') return 260;
+	if (props.motionPreset === 'postform' && name === 'modal-drawer') return 300;
+	if (name === 'send') return 400;
+	if (name === 'modal-popup') return 100;
+	if (name === 'modal' || name === 'modal-drawer') return 200;
+	return 0;
+});
+
+let releaseFocusTrap: (() => void) | null = null;
+let contentClicking = false;
+
+function close(opts: { useSendAnimation?: boolean } = {}) {
+	if (opts.useSendAnimation) {
+		useSendAnime.value = true;
+	}
+
+	if (props.anchorElement) props.anchorElement.style.pointerEvents = 'auto';
+	showing.value = false;
+	emit('close');
+}
+
+function onBgClick() {
+	if (contentClicking) return;
+	emit('click');
+}
+
+if (type.value === 'drawer') {
+	maxHeight.value = (window.innerHeight - getViewportTopInset()) / 1.5;
+}
+
+const keymap = {
+	'esc': {
+		allowRepeat: true,
+		callback: (ev) => emit('esc', ev),
+	},
+} as const satisfies Keymap;
+
+const MARGIN = 16;
+const SCROLLBAR_THICKNESS = 16;
+
+const align = () => {
+	if (props.anchorElement == null) return;
+	if (type.value === 'drawer') return;
+	if (type.value === 'dialog') return;
+
+	if (content.value == null) return;
+
+	const anchorRect = props.anchorElement.getBoundingClientRect();
+	const viewportInset = getViewportTopInset();
+	const topInset = getViewportTopInset(content.value);
+	// A contained shell has already moved its fixed-position origin below the band.
+	const originTop = viewportInset - topInset;
+	const anchorTop = anchorRect.top - originTop;
+	const viewportBottom = window.innerHeight - originTop;
+
+	const width = content.value!.offsetWidth;
+	const height = content.value!.offsetHeight;
+
+	let left;
+	let top;
+
+	const x = anchorRect.left + (fixed.value ? 0 : window.scrollX);
+	const y = anchorTop + (fixed.value ? 0 : window.scrollY);
+
+	if (props.anchor.x === 'center') {
+		left = x + (props.anchorElement.offsetWidth / 2) - (width / 2);
+	} else if (props.anchor.x === 'left') {
+		// TODO
+	} else if (props.anchor.x === 'right') {
+		left = x + props.anchorElement.offsetWidth;
+	}
+
+	if (props.anchor.y === 'center') {
+		top = (y - (height / 2));
+	} else if (props.anchor.y === 'top') {
+		// TODO
+	} else if (props.anchor.y === 'bottom') {
+		top = y + props.anchorElement.offsetHeight;
+	}
+
+	if (fixed.value) {
+		// 画面から横にはみ出る場合
+		if (left + width > (window.innerWidth - SCROLLBAR_THICKNESS)) {
+			left = (window.innerWidth - SCROLLBAR_THICKNESS) - width;
+		}
+
+		const underSpace = ((viewportBottom - SCROLLBAR_THICKNESS) - MARGIN) - top;
+		const upperSpace = anchorTop - topInset - MARGIN;
+
+		// 画面から縦にはみ出る場合
+		if (top + height > ((viewportBottom - SCROLLBAR_THICKNESS) - MARGIN)) {
+			if (props.noOverlap && props.anchor.x === 'center') {
+				if (underSpace >= (upperSpace / 3)) {
+					maxHeight.value = underSpace;
+				} else {
+					maxHeight.value = upperSpace;
+					top = (upperSpace + topInset + MARGIN) - height;
+				}
+			} else {
+				top = ((viewportBottom - SCROLLBAR_THICKNESS) - MARGIN) - height;
+			}
+		} else {
+			maxHeight.value = underSpace;
+		}
+	} else {
+		// 画面から横にはみ出る場合
+		if (left + width - window.scrollX > (window.innerWidth - SCROLLBAR_THICKNESS)) {
+			left = (window.innerWidth - SCROLLBAR_THICKNESS) - width + window.scrollX - 1;
+		}
+
+		const underSpace = ((viewportBottom - SCROLLBAR_THICKNESS) - MARGIN) - (top - window.scrollY);
+		const upperSpace = anchorTop - topInset - MARGIN;
+
+		// 画面から縦にはみ出る場合
+		if (top + height - window.scrollY > ((viewportBottom - SCROLLBAR_THICKNESS) - MARGIN)) {
+			if (props.noOverlap && props.anchor.x === 'center') {
+				if (underSpace >= (upperSpace / 3)) {
+					maxHeight.value = underSpace;
+				} else {
+					maxHeight.value = upperSpace;
+					top = window.scrollY + ((upperSpace + topInset + MARGIN) - height);
+				}
+			} else {
+				top = ((viewportBottom - SCROLLBAR_THICKNESS) - MARGIN) - height + window.scrollY - 1;
+			}
+		} else {
+			maxHeight.value = underSpace;
+		}
+	}
+
+	const minimumTop = viewportInset > 0 ? topInset + (fixed.value ? 0 : window.scrollY) : 0;
+	if (top < minimumTop) {
+		top = minimumTop + MARGIN;
+	}
+
+	if (left < 0) {
+		left = 0;
+	}
+
+	let transformOriginX = 'center';
+	let transformOriginY = 'center';
+
+	if (top >= anchorTop + props.anchorElement.offsetHeight + (fixed.value ? 0 : window.scrollY)) {
+		transformOriginY = 'top';
+	} else if ((top + height) <= anchorTop + (fixed.value ? 0 : window.scrollY)) {
+		transformOriginY = 'bottom';
+	}
+
+	if (left >= anchorRect.left + props.anchorElement.offsetWidth + (fixed.value ? 0 : window.scrollX)) {
+		transformOriginX = 'left';
+	} else if ((left + width) <= anchorRect.left + (fixed.value ? 0 : window.scrollX)) {
+		transformOriginX = 'right';
+	}
+
+	transformOrigin.value = `${transformOriginX} ${transformOriginY}`;
+
+	content.value.style.left = left + 'px';
+	content.value.style.top = top + 'px';
+};
+
+const onOpened = () => {
+	emit('opened');
+
+	// contentの子要素にアクセスするためレンダリングの完了を待つ必要がある（nextTickが必要）
+	nextTick(() => {
+		// NOTE: Chromatic テストの際に undefined になる場合がある
+		if (content.value == null) return;
+
+		// モーダルコンテンツにマウスボタンが押され、コンテンツ外でマウスボタンが離されたときにモーダルバックグラウンドクリックと判定させないためにマウスイベントを監視しフラグ管理する
+		const el = content.value.children[0];
+		if (el == null) return;
+		el.addEventListener('mousedown', ev => {
+			contentClicking = true;
+			window.addEventListener('mouseup', ev => {
+				// click イベントより先に mouseup イベントが発生するかもしれないのでちょっと待つ
+				window.setTimeout(() => {
+					contentClicking = false;
+				}, 100);
+			}, { passive: true, once: true });
+		}, { passive: true });
+	});
+};
+
+const onClosed = () => {
+	emit('closed');
+};
+
+const alignObserver = new ResizeObserver((entries, observer) => {
+	align();
+});
+
+onMounted(() => {
+	watch(() => props.anchorElement, async () => {
+		if (props.anchorElement) {
+			props.anchorElement.style.pointerEvents = 'none';
+		}
+		fixed.value = (type.value === 'drawer') || (getFixedContainer(props.anchorElement) != null);
+
+		await nextTick();
+
+		align();
+	}, { immediate: true });
+
+	watch([showing, () => props.manualShowing], ([showing, manualShowing]) => {
+		if (manualShowing === true || (manualShowing == null && showing === true)) {
+			if (modalRootEl.value != null) {
+				const { release } = focusTrap(modalRootEl.value, props.hasInteractionWithOtherFocusTrappedEls);
+
+				releaseFocusTrap = release;
+				// 入力欄の autofocus は維持しつつ、背景側に残ったキャレットだけを
+				// モーダルへ移す。フォーカス不能な div へ focus() しても移動せず、
+				// inert 化された背景のキャレットが Chrome で左上へ描画されるため。
+				if (!modalRootEl.value.contains(window.document.activeElement)) {
+					modalRootEl.value.focus({ preventScroll: true });
+				}
+			}
+		} else {
+			releaseFocusTrap?.();
+			releaseFocusTrap = null;
+			focusParent(props.returnFocusTo ?? props.anchorElement, true, false);
+		}
+	}, { immediate: true });
+
+	nextTick(() => {
+		alignObserver.observe(content.value!);
+	});
+});
+
+// A conditional parent can remove this modal without calling close(). Release
+// while its DOM ancestors still exist, so background inert state is restored.
+onBeforeUnmount(() => {
+	releaseFocusTrap?.();
+	releaseFocusTrap = null;
+	if (showing.value && props.anchorElement) props.anchorElement.style.pointerEvents = 'auto';
+});
+
+onUnmounted(() => {
+	alignObserver.disconnect();
+});
+
+defineExpose({
+	close,
+});
+</script>
+
+<style lang="scss" module>
+.transition_hatagoes_enterActive > .bg { transition: opacity 180ms ease !important; }
+.transition_hatagoes_leaveActive > .bg { transition: opacity 140ms ease !important; }
+.transition_hatagoes_enterActive > .content { transition: opacity 180ms ease, transform 180ms cubic-bezier(.2,.8,.2,1) !important; }
+.transition_hatagoes_leaveActive > .content { transition: opacity 140ms ease, transform 140ms ease-in !important; }
+.transition_hatagoes_enterFrom > .bg, .transition_hatagoes_leaveTo > .bg { opacity: 0; }
+.transition_hatagoes_enterFrom > .content, .transition_hatagoes_leaveTo > .content { pointer-events: none; opacity: 0; transform: translateY(6px); }
+.transition_send_enterActive,
+.transition_send_leaveActive {
+	> .bg {
+		transition: opacity 0.3s !important;
+	}
+
+	> .content {
+    transform: translateY(0px);
+		transition: opacity 0.3s ease-in, transform 0.3s cubic-bezier(.5,-0.5,1,.5) !important;
+	}
+}
+.transition_send_enterFrom,
+.transition_send_leaveTo {
+	> .bg {
+		opacity: 0;
+	}
+
+	> .content {
+		pointer-events: none;
+		opacity: 0;
+		transform: translateY(-300px);
+	}
+}
+
+.transition_modal_enterActive,
+.transition_modal_leaveActive {
+	> .bg {
+		transition: opacity 0.2s !important;
+	}
+
+	> .content {
+		transform-origin: var(--transformOrigin);
+		transition: opacity 0.2s, transform 0.2s !important;
+	}
+}
+.transition_modal_enterFrom,
+.transition_modal_leaveTo {
+	> .bg {
+		opacity: 0;
+	}
+
+	> .content {
+		pointer-events: none;
+		opacity: 0;
+		transform-origin: var(--transformOrigin);
+		transform: scale(0.9);
+	}
+}
+
+.transition_modalPopup_enterActive,
+.transition_modalPopup_leaveActive {
+	> .bg {
+		transition: opacity 0.1s !important;
+	}
+
+	> .content {
+		transform-origin: var(--transformOrigin);
+		transition: opacity 0.1s cubic-bezier(0, 0, 0.2, 1), transform 0.1s cubic-bezier(0, 0, 0.2, 1) !important;
+	}
+}
+.transition_modalPopup_enterFrom,
+.transition_modalPopup_leaveTo {
+	> .bg {
+		opacity: 0;
+	}
+
+	> .content {
+		pointer-events: none;
+		opacity: 0;
+		transform-origin: var(--transformOrigin);
+		transform: scale(0.9);
+	}
+}
+
+.postFormMotion.transition_modalPopup_enterActive > .bg,
+.postFormMotion.transition_modalPopup_leaveActive > .bg {
+	transition: opacity .2s ease !important;
+}
+
+.postFormMotion.transition_modalPopup_enterActive > .content {
+	transition: opacity .22s ease, transform .26s cubic-bezier(.2,.9,.2,1) !important;
+}
+
+.postFormMotion.transition_modalPopup_leaveActive > .content {
+	transition: opacity .16s ease, transform .2s cubic-bezier(.4,0,1,1) !important;
+}
+
+.postFormMotion.transition_modalPopup_enterFrom > .content {
+	transform: translateY(7px) scale(.96);
+}
+
+.postFormMotion.transition_modalPopup_leaveTo > .content {
+	transform: translateY(4px) scale(.975);
+}
+
+.postFormMotion.transition_modalDrawer_enterActive > .content {
+	transition: transform .3s cubic-bezier(.2,.8,.2,1) !important;
+}
+
+.postFormMotion.transition_modalDrawer_leaveActive > .content {
+	transition: transform .22s cubic-bezier(.4,0,1,1) !important;
+}
+
+.transition_modalDrawer_enterActive {
+	> .bg {
+		transition: opacity 0.2s !important;
+	}
+
+	> .content {
+		transition: transform 0.2s cubic-bezier(0,.5,0,1) !important;
+	}
+}
+.transition_modalDrawer_leaveActive {
+	> .bg {
+		transition: opacity 0.2s !important;
+	}
+
+	> .content {
+		transition: transform 0.2s cubic-bezier(0,.5,0,1) !important;
+	}
+}
+.transition_modalDrawer_enterFrom,
+.transition_modalDrawer_leaveTo {
+	> .bg {
+		opacity: 0;
+	}
+
+	> .content {
+		pointer-events: none;
+		transform: translateY(100%);
+	}
+}
+
+.root {
+	outline: none;
+
+	&.dialog {
+		> .content {
+			position: fixed;
+			top: var(--MI-fixed-top-inset, 0px);
+			bottom: 0;
+			left: 0;
+			right: 0;
+			margin: auto;
+			padding: 32px;
+			display: flex;
+			overflow: auto;
+
+			@media (max-width: 500px) {
+				padding: 16px;
+			}
+		}
+	}
+
+	&.popup {
+		> .content {
+			position: absolute;
+
+			&.fixed {
+				position: fixed;
+			}
+		}
+	}
+
+	&.drawer {
+		position: fixed;
+		top: var(--MI-fixed-top-inset, 0px);
+		left: 0;
+		width: 100%;
+		height: calc(100% - var(--MI-fixed-top-inset, 0px));
+		overflow: clip;
+
+		> .content {
+			position: fixed;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			margin: auto;
+		}
+	}
+}
+
+.bg {
+	&.bgWithoutBlur {
+		-webkit-backdrop-filter: none;
+		backdrop-filter: none;
+	}
+
+	&.bgTransparent {
+		background: transparent;
+		-webkit-backdrop-filter: none;
+		backdrop-filter: none;
+	}
+}
+
+.removeModalBgColorForBlur {
+  background: initial !important;
+}
+</style>

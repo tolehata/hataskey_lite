@@ -1,0 +1,61 @@
+{
+	"compilerOptions": {
+		// 旗鯖fork: TypeScript 6.0 で baseUrl が非推奨(TS5101)になったための一時的な抑制。
+		// G3(依存関係同期)での typescript 5.9.3→6.0.2 バンプに伴う最小限の対応。
+		// baseUrl 自体の撤去(paths正規化)は行っていない — 後続の関所の判断事項。
+		"ignoreDeprecations": "6.0",
+		"allowJs": true,
+		"noEmitOnError": true,
+		"noImplicitAny": true,
+		"noImplicitReturns": true,
+		"noUnusedParameters": false,
+		"noUnusedLocals": false,
+		"noFallthroughCasesInSwitch": true,
+		"declaration": false,
+		"sourceMap": false,
+		"target": "ES2022",
+		"module": "nodenext",
+		"moduleResolution": "nodenext",
+		"allowSyntheticDefaultImports": true,
+		"removeComments": false,
+		"noLib": false,
+		"strict": true,
+		"strictNullChecks": true,
+		"strictPropertyInitialization": false,
+		"skipLibCheck": true,
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		"jsx": "react-jsx",
+		"jsxImportSource": "@kitajs/html",
+		"rootDir": "./src",
+		"baseUrl": "./",
+		"paths": {
+			"@/*": ["./src/*"]
+		},
+		"outDir": "./built",
+		"plugins": [
+			{"name": "@kitajs/ts-html-plugin"}
+		],
+		"types": [
+			"node"
+		],
+		"typeRoots": [
+			"./src/@types",
+			"./node_modules/@types",
+			"./node_modules"
+		],
+		"lib": [
+			"esnext"
+		]
+	},
+	"compileOnSave": false,
+	"include": [
+		"./src/**/*.ts",
+		"./src/**/*.tsx"
+	],
+	"exclude": [
+		"./src/**/*.test.ts"
+	]
+}

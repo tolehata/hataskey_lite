@@ -1,0 +1,383 @@
+/*
+ * SPDX-FileCopyrightText: syuilo and misskey-project
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
+
+import { Inject, Injectable } from '@nestjs/common';
+//import bcrypt from 'bcryptjs';
+import * as argon2 from 'argon2';
+import { IsNull, LessThanOrEqual } from 'typeorm';
+import { DI } from '@/di-symbols.js';
+import type { RegistrationTicketsRepository, UsedUsernamesRepository, UserPendingsRepository, UserProfilesRepository, UsersRepository, MiRegistrationTicket, MiMeta } from '@/models/_.js';
+import type { Config } from '@/config.js';
+import { CaptchaService } from '@/core/CaptchaService.js';
+import { IdService } from '@/core/IdService.js';
+import { SignupService } from '@/core/SignupService.js';
+import { UserEntityService } from '@/core/entities/UserEntityService.js';
+import { EmailService } from '@/core/EmailService.js';
+import { MiLocalUser } from '@/models/User.js';
+import { FastifyReplyError } from '@/misc/fastify-reply-error.js';
+import { bindThis } from '@/decorators.js';
+import { L_CHARS, secureRndstr } from '@/misc/secure-rndstr.js';
+import { SigninService } from './SigninService.js';
+import type { FindOptionsWhere } from 'typeorm';
+import type { FastifyRequest, FastifyReply } from 'fastify';
+
+const invitationCodeMailTimeoutMs = 1000 * 60 * 30;
+
+@Injectable()
+export class SignupApiService {
+	constructor(
+		@Inject(DI.config)
+		private config: Config,
+
+		@Inject(DI.meta)
+		private meta: MiMeta,
+
+		@Inject(DI.usersRepository)
+		private usersRepository: UsersRepository,
+
+		@Inject(DI.userProfilesRepository)
+		private userProfilesRepository: UserProfilesRepository,
+
+		@Inject(DI.userPendingsRepository)
+		private userPendingsRepository: UserPendingsRepository,
+
+		@Inject(DI.usedUsernamesRepository)
+		private usedUsernamesRepository: UsedUsernamesRepository,
+
+		@Inject(DI.registrationTicketsRepository)
+		private registrationTicketsRepository: RegistrationTicketsRepository,
+
+		private userEntityService: UserEntityService,
+		private idService: IdService,
+		private captchaService: CaptchaService,
+		private signupService: SignupService,
+		private signinService: SigninService,
+		private emailService: EmailService,
+	) {
+	}
+
+	@bindThis
+	public async signup(
+		request: FastifyRequest<{
+			Body: {
+				username: string;
+				password: string;
+				host?: string;
+				invitationCode?: string;
+				emailAddress?: string;
+				'hcaptcha-response'?: string;
+				'g-recaptcha-response'?: string;
+				'turnstile-response'?: string;
+				'm-captcha-response'?: string;
+				'testcaptcha-response'?: string;
+			}
+		}>,
+		reply: FastifyReply,
+	) {
+		if (this.meta.registrationClosed) throw new FastifyReplyError(403, 'REGISTRATION_CLOSED');
+		const body = request.body;
+
+		// Verify *Captcha
+		// ただしテスト時はこの機構は障害となるため無効にする
+		if (process.env.NODE_ENV !== 'test') {
+			if (this.meta.enableHcaptcha) {
+				if (!this.meta.hcaptchaSecretKey?.trim()) {
+					throw new FastifyReplyError(400, 'hcaptcha-failed: missing configuration');
+				}
+				await this.captchaService.verifyHcaptcha(this.meta.hcaptchaSecretKey, body['hcaptcha-response']).catch(err => {
+					throw new FastifyReplyError(400, err);
+				});
+			}
+
+			if (this.meta.enableMcaptcha) {
+				if (!this.meta.mcaptchaSecretKey?.trim() || !this.meta.mcaptchaSitekey?.trim() || !this.meta.mcaptchaInstanceUrl?.trim()) {
+					throw new FastifyReplyError(400, 'mcaptcha-failed: missing configuration');
+				}
+				await this.captchaService.verifyMcaptcha(this.meta.mcaptchaSecretKey, this.meta.mcaptchaSitekey, this.meta.mcaptchaInstanceUrl, body['m-captcha-response']).catch(err => {
+					throw new FastifyReplyError(400, err);
+				});
+			}
+
+			if (this.meta.enableRecaptcha) {
+				if (!this.meta.recaptchaSecretKey?.trim()) {
+					throw new FastifyReplyError(400, 'recaptcha-failed: missing configuration');
+				}
+				await this.captchaService.verifyRecaptcha(this.meta.recaptchaSecretKey, body['g-recaptcha-response']).catch(err => {
+					throw new FastifyReplyError(400, err);
+				});
+			}
+
+			if (this.meta.enableTurnstile) {
+				if (!this.meta.turnstileSecretKey?.trim()) {
+					throw new FastifyReplyError(400, 'turnstile-failed: missing configuration');
+				}
+				await this.captchaService.verifyTurnstile(this.meta.turnstileSecretKey, body['turnstile-response']).catch(err => {
+					throw new FastifyReplyError(400, err);
+				});
+			}
+
+			if (this.meta.enableTestcaptcha) {
+				await this.captchaService.verifyTestcaptcha(body['testcaptcha-response']).catch(err => {
+					throw new FastifyReplyError(400, err);
+				});
+			}
+		}
+
+		const username = body['username'];
+		const password = body['password'];
+		const host: string | null = process.env.NODE_ENV === 'test' ? (body['host'] ?? null) : null;
+		const invitationCode = body['invitationCode'];
+		const emailAddress = body['emailAddress'];
+
+		if (this.meta.emailRequiredForSignup) {
+			if (emailAddress == null || typeof emailAddress !== 'string') {
+				reply.code(400);
+				return;
+			}
+
+			const res = await this.emailService.validateEmailForAccount(emailAddress);
+			if (!res.available) {
+				reply.code(400);
+				return;
+			}
+		}
+
+		let ticket: MiRegistrationTicket | null = null;
+
+		// テスト時はこの機構は障害となるため無効にする
+		if (process.env.NODE_ENV !== 'test' && this.meta.disableRegistration) {
+			if (invitationCode == null || typeof invitationCode !== 'string') {
+				reply.code(400);
+				return;
+			}
+
+			// 事前確認だけでは同時リクエストを防げないため、消費直前にも原子的に確保する。
+			ticket = await this.registrationTicketsRepository.findOneBy({
+				code: invitationCode,
+			});
+
+			if (ticket == null || ticket.usedById != null) {
+				reply.code(400);
+				return;
+			}
+
+			if (ticket.expiresAt && ticket.expiresAt < new Date()) {
+				reply.code(400);
+				return;
+			}
+
+			// メアド認証が有効の場合
+			if (this.meta.emailRequiredForSignup) {
+				// メアド認証済みならエラー
+				if (ticket.usedBy) {
+					reply.code(400);
+					return;
+				}
+
+				// 認証しておらず、メール送信から30分以内ならエラー
+				if (ticket.usedAt && ticket.usedAt.getTime() + invitationCodeMailTimeoutMs > Date.now()) {
+					reply.code(400);
+					return;
+				}
+			} else if (ticket.usedAt) {
+				reply.code(400);
+				return;
+			}
+		}
+
+		if (this.meta.emailRequiredForSignup) {
+			if (await this.usersRepository.exists({ where: { usernameLower: username.toLowerCase(), host: IsNull() } })) {
+				throw new FastifyReplyError(400, 'DUPLICATED_USERNAME');
+			}
+
+			// Check deleted username duplication
+			if (await this.usedUsernamesRepository.exists({ where: { username: username.toLowerCase() } })) {
+				throw new FastifyReplyError(400, 'USED_USERNAME');
+			}
+
+			const isPreserved = this.meta.preservedUsernames.map(x => x.toLowerCase()).includes(username.toLowerCase());
+			if (isPreserved) {
+				throw new FastifyReplyError(400, 'DENIED_USERNAME');
+			}
+
+			const code = secureRndstr(16, { chars: L_CHARS });
+
+			// Generate hash of password
+			//const salt = await bcrypt.genSalt(8);
+			const hash = await argon2.hash(password);
+
+			// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Metadata can change while password hashing awaits.
+			if (this.meta.registrationClosed) throw new FastifyReplyError(403, 'REGISTRATION_CLOSED');
+			if (ticket && !await this.claimRegistrationTicket(ticket)) {
+				reply.code(400);
+				return;
+			}
+
+			try {
+				const pendingUser = await this.userPendingsRepository.insertOne({
+					id: this.idService.gen(),
+					code,
+					email: emailAddress!,
+					username: username,
+					password: hash,
+				});
+
+				const link = `${this.config.url}/signup-complete/${code}`;
+
+				this.emailService.sendTemplateEmail(emailAddress!, { kind: 'signup', url: link });
+
+				if (ticket) {
+					await this.registrationTicketsRepository.update(ticket.id, {
+						pendingUserId: pendingUser.id,
+					});
+				}
+			} catch (err) {
+				if (ticket) await this.releaseRegistrationTicket(ticket);
+				throw err;
+			}
+
+			reply.code(204);
+			return;
+		} else {
+			if (ticket && !await this.claimRegistrationTicket(ticket)) {
+				reply.code(400);
+				return;
+			}
+
+			try {
+				const { account, secret } = await this.signupService.signup({
+					username, password, host,
+				});
+
+				if (ticket) {
+					await this.registrationTicketsRepository.update(ticket.id, {
+						usedBy: account,
+						usedById: account.id,
+					});
+				}
+
+				const res = await this.userEntityService.pack(account, account, {
+					schema: 'MeDetailed',
+					includeSecrets: true,
+				});
+
+				return {
+					...res,
+					token: secret,
+				};
+			} catch (err) {
+				// アカウントに紐付け済みの場合は release 側の条件により戻らない。
+				if (ticket) await this.releaseRegistrationTicket(ticket);
+				throw new FastifyReplyError(400, typeof err === 'string' ? err : (err as Error).toString());
+			}
+		}
+	}
+
+	@bindThis
+	private async claimRegistrationTicket(ticket: MiRegistrationTicket): Promise<boolean> {
+		const where: FindOptionsWhere<MiRegistrationTicket>[] = [
+			{ id: ticket.id, usedById: IsNull(), usedAt: IsNull() },
+		];
+
+		// メアド認証が有効の場合、認証されないままメール送信から30分経過したコードは再び使用できる
+		if (this.meta.emailRequiredForSignup) {
+			where.push({
+				id: ticket.id,
+				usedById: IsNull(),
+				usedAt: LessThanOrEqual(new Date(Date.now() - invitationCodeMailTimeoutMs)),
+				// pendingUser は usedAt より後に作られるので、usedAt 起点だと pendingUser の有効期限内に再使用できてしまう
+				pendingUserId: IsNull(),
+			});
+		}
+
+		const result = await this.registrationTicketsRepository.update(where, {
+			usedAt: new Date(),
+		});
+
+		if ((result.affected ?? 0) > 0) return true;
+
+		// 期限切れの pendingUser に紐付いたままのコードは、紐付けを解除してから確保し直す
+		if (this.meta.emailRequiredForSignup) {
+			const stale = await this.registrationTicketsRepository.findOneBy({
+				id: ticket.id,
+				usedById: IsNull(),
+			});
+			if (stale?.pendingUserId != null) {
+				const pending = await this.userPendingsRepository.findOneBy({ id: stale.pendingUserId });
+				const pendingExpired = pending == null
+					|| this.idService.parse(pending.id).date.getTime() + invitationCodeMailTimeoutMs < Date.now();
+				if (pendingExpired) {
+					const detached = await this.registrationTicketsRepository.update({
+						id: stale.id,
+						pendingUserId: stale.pendingUserId,
+						usedById: IsNull(),
+					}, { pendingUserId: null });
+					if ((detached.affected ?? 0) === 0) return false;
+					if (pending != null) await this.userPendingsRepository.delete({ id: pending.id });
+					return this.claimRegistrationTicket(ticket);
+				}
+			}
+		}
+
+		return false;
+	}
+
+	@bindThis
+	private async releaseRegistrationTicket(ticket: MiRegistrationTicket): Promise<void> {
+		await this.registrationTicketsRepository.update({
+			id: ticket.id,
+			usedById: IsNull(),
+		}, {
+			usedAt: null,
+			pendingUserId: null,
+		});
+	}
+
+	@bindThis
+	public async signupPending(request: FastifyRequest<{ Body: { code: string; } }>, reply: FastifyReply) {
+		if (this.meta.registrationClosed) throw new FastifyReplyError(403, 'REGISTRATION_CLOSED');
+		const body = request.body;
+
+		const code = body['code'];
+
+		try {
+			const pendingUser = await this.userPendingsRepository.findOneByOrFail({ code });
+
+			if (this.idService.parse(pendingUser.id).date.getTime() + invitationCodeMailTimeoutMs < Date.now()) {
+				throw new FastifyReplyError(400, 'EXPIRED');
+			}
+
+			const { account, secret } = await this.signupService.signup({
+				username: pendingUser.username,
+				passwordHash: pendingUser.password,
+			});
+
+			this.userPendingsRepository.delete({
+				id: pendingUser.id,
+			});
+
+			const profile = await this.userProfilesRepository.findOneByOrFail({ userId: account.id });
+
+			await this.userProfilesRepository.update({ userId: profile.userId }, {
+				email: pendingUser.email,
+				emailVerified: true,
+				emailVerifyCode: null,
+			});
+
+			const ticket = await this.registrationTicketsRepository.findOneBy({ pendingUserId: pendingUser.id });
+			if (ticket) {
+				await this.registrationTicketsRepository.update(ticket.id, {
+					usedBy: account,
+					usedById: account.id,
+					pendingUserId: null,
+				});
+			}
+
+			return this.signinService.signin(request, reply, account as MiLocalUser);
+		} catch (err) {
+			throw new FastifyReplyError(400, typeof err === 'string' ? err : (err as Error).toString());
+		}
+	}
+}

@@ -1,0 +1,256 @@
+<!--
+SPDX-FileCopyrightText: syuilo and misskey-project
+SPDX-License-Identifier: AGPL-3.0-only
+-->
+
+<template>
+<MkModal ref="modal" :preferType="'dialog'" :zPriority="'high'" @click="done(true)" @closed="emit('closed')" @esc="cancel()">
+	<div :class="$style.root">
+		<!-- Hataskey fork: 既存の icon / type別アイコンの優先順位に割り込まないよう、hatakyuAsset は独立した最優先の枝として先頭に置く -->
+		<div v-if="hatakyuAsset && useHatakyuBranding()" :class="$style.icon">
+			<MkHatakyuIllustration :asset="hatakyuAsset" :size="96"/>
+		</div>
+		<div v-else-if="icon" :class="$style.icon">
+			<i :class="icon"></i>
+		</div>
+		<div
+			v-else-if="!input && !select"
+			:class="[$style.icon]"
+		>
+			<MkSystemIcon v-if="type === 'success'" :class="$style.iconInner" :style="{ width: useHatakyuBranding() ? '88px' : '45px' }" type="success"/>
+			<MkSystemIcon v-else-if="type === 'error'" :class="$style.iconInner" :style="{ width: useHatakyuBranding() ? '88px' : '45px' }" type="error"/>
+			<MkSystemIcon v-else-if="type === 'warning'" :class="$style.iconInner" :style="{ width: useHatakyuBranding() ? '88px' : '45px' }" type="warn"/>
+			<MkSystemIcon v-else-if="type === 'info'" :class="$style.iconInner" :style="{ width: useHatakyuBranding() ? '88px' : '45px' }" type="info"/>
+			<MkSystemIcon v-else-if="type === 'question'" :class="$style.iconInner" :style="{ width: useHatakyuBranding() ? '88px' : '45px' }" type="question"/>
+			<MkLoading v-else-if="type === 'waiting'" :class="$style.iconInner" :em="true"/>
+		</div>
+		<header v-if="title" :class="$style.title" class="_selectable"><Mfm :text="title"/></header>
+		<div v-if="text" :class="$style.text" class="_selectable"><Mfm :text="text"/></div>
+		<div v-if="caption" :class="$style.caption"><small><Mfm :text="caption"/></small></div>
+		<MkInput v-if="input" ref="inputValueEl" v-model="inputValue" autofocus :type="input.type || 'text'" :placeholder="input.placeholder || undefined" :autocomplete="input.autocomplete" @keydown="onInputKeydown">
+			<template v-if="input.type === 'password'" #prefix><i class="ti ti-lock"></i></template>
+			<template v-if="inputValue != null && inputValue !== ''" #suffix><button type="button" :class="$style.deleteBtn" tabindex="-1" @click="inputValue = ''; inputValueEl?.focus();"><i class="ti ti-x"></i></button></template>
+			<template #caption>
+				<span v-if="okButtonDisabledReason === 'charactersExceeded'" v-text="i18n.tsx._dialog.charactersExceeded({ current: (inputValue as string)?.length ?? 0, max: input.maxLength ?? 'NaN' })"/>
+				<span v-else-if="okButtonDisabledReason === 'charactersBelow'" v-text="i18n.tsx._dialog.charactersBelow({ current: (inputValue as string)?.length ?? 0, min: input.minLength ?? 'NaN' })"/>
+			</template>
+		</MkInput>
+		<MkSelect v-if="select" v-model="selectedValue" :items="selectDef" autofocus></MkSelect>
+		<div v-if="(showOkButton || showCancelButton) && !actions" :class="$style.buttons">
+			<MkButton v-if="showOkButton" data-testid="modal-dialog-ok" inline primary rounded :autofocus="!input && !select" :disabled="okButtonDisabledReason != null" @click="ok">{{ okText ?? ((showCancelButton || input || select) ? i18n.ts.ok : i18n.ts.gotIt) }}</MkButton>
+			<MkButton v-if="showCancelButton || input || select" data-testid="modal-dialog-cancel" inline rounded @click="cancel">{{ cancelText ?? i18n.ts.cancel }}</MkButton>
+		</div>
+		<div v-if="actions" :class="[$style.buttons, { [$style.changeButtonAlign]: actions.length > 2 }]">
+			<MkButton v-for="action in actions" :key="action.text" inline rounded :primary="action.primary" :danger="action.danger" @click="() => { action.callback(); modal?.close(); }">{{ action.text }}</MkButton>
+		</div>
+	</div>
+</MkModal>
+</template>
+
+<script lang="ts" setup>
+import { ref, useTemplateRef, computed } from 'vue';
+import type { MkSelectItem, OptionValue } from '@/components/MkSelect.vue';
+import MkModal from '@/components/MkModal.vue';
+import MkButton from '@/components/MkButton.vue';
+import MkInput from '@/components/MkInput.vue';
+import MkSelect from '@/components/MkSelect.vue';
+import { useMkSelect } from '@/composables/use-mkselect.js';
+import { i18n } from '@/i18n.js';
+// Hataskey fork: ダイアログの既定アイコンをハタキュ立ち絵へ差し替え可能にするための任意プロパティ
+import MkHatakyuIllustration from '@/components/MkHatakyuIllustration.vue';
+import { useHatakyuBranding } from '@/utility/hatakyu-assets.js';
+import type { HatakyuAssetKey } from '@/utility/hatakyu-assets.js';
+
+type Input = {
+	type?: 'text' | 'number' | 'password' | 'email' | 'url' | 'date' | 'time' | 'search' | 'datetime-local';
+	placeholder?: string | null;
+	autocomplete?: string;
+	default: string | number | null;
+	minLength?: number;
+	maxLength?: number;
+};
+
+type Select = {
+	items: MkSelectItem[];
+	default: OptionValue | null;
+};
+
+type Result = string | number | true | null;
+
+const props = withDefaults(defineProps<{
+	type?: 'success' | 'error' | 'warning' | 'info' | 'question' | 'waiting';
+	title?: string;
+	text?: string;
+	caption?: string | null;
+	input?: Input;
+	select?: Select;
+	icon?: string;
+	/** Hataskey fork: 指定時はデフォルトアイコンの代わりにハタキュ立ち絵を表示する（icon/type別アイコンより優先） */
+	hatakyuAsset?: HatakyuAssetKey;
+	actions?: {
+		text: string;
+		primary?: boolean,
+		danger?: boolean,
+		callback: (...args: unknown[]) => void;
+	}[];
+	showOkButton?: boolean;
+	showCancelButton?: boolean;
+	cancelableByBgClick?: boolean;
+	okText?: string;
+	cancelText?: string;
+}>(), {
+	type: 'info',
+	showOkButton: true,
+	showCancelButton: false,
+	cancelableByBgClick: true,
+});
+
+const emit = defineEmits<{
+	(ev: 'done', v: { canceled: true } | { canceled: false, result: Result }): void;
+	(ev: 'closed'): void;
+}>();
+
+const modal = useTemplateRef('modal');
+
+const inputValue = ref<string | number | null>(props.input?.default ?? null);
+
+const okButtonDisabledReason = computed<null | 'charactersExceeded' | 'charactersBelow'>(() => {
+	if (props.input) {
+		if (props.input.minLength) {
+			if (inputValue.value == null || (inputValue.value as string).length < props.input.minLength) {
+				return 'charactersBelow';
+			}
+		}
+		if (props.input.maxLength) {
+			if (inputValue.value && (inputValue.value as string).length > props.input.maxLength) {
+				return 'charactersExceeded';
+			}
+		}
+	}
+
+	return null;
+});
+
+const {
+	def: selectDef,
+	model: selectedValue,
+} = useMkSelect({
+	items: computed(() => props.select?.items ?? []),
+	initialValue: props.select?.default ?? null,
+});
+
+const inputValueEl = useTemplateRef('inputValueEl');
+
+// overload function を使いたいので lint エラーを無視する
+function done(canceled: true): void;
+function done(canceled: false, result: Result): void; // eslint-disable-line no-redeclare
+
+function done(canceled: boolean, result?: Result): void { // eslint-disable-line no-redeclare
+	emit('done', { canceled, result } as { canceled: true } | { canceled: false, result: Result });
+	modal.value?.close();
+}
+
+async function ok() {
+	if (!props.showOkButton) return;
+
+	const result =
+		props.input ? inputValue.value :
+		props.select ? selectedValue.value :
+		true;
+	done(false, result);
+}
+
+function cancel() {
+	done(true);
+}
+
+/*
+function onBgClick() {
+	if (props.cancelableByBgClick) cancel();
+}
+*/
+
+function onInputKeydown(evt: KeyboardEvent) {
+	if (evt.key === 'Enter' && okButtonDisabledReason.value === null) {
+		evt.preventDefault();
+		evt.stopPropagation();
+		ok();
+	}
+}
+</script>
+
+<style lang="scss" module>
+.root {
+	position: relative;
+	margin: auto;
+	padding: 32px;
+	min-width: 320px;
+	max-width: 480px;
+	box-sizing: border-box;
+	text-align: center;
+	background: var(--MI_THEME-panel);
+	border-radius: 16px;
+}
+
+.icon {
+	font-size: 24px;
+
+	/* Hataskey fork: ハタキュ立ち絵はブロック要素なので、親の text-align では中央に寄らない。 */
+	> img {
+		margin: 0 auto;
+	}
+
+	& + .title {
+		margin-top: 8px;
+	}
+}
+
+.iconInner {
+	display: block;
+	margin: 0 auto;
+}
+
+.title {
+	margin: 0 0 8px 0;
+	font-weight: bold;
+	font-size: 1.1em;
+
+	& + .text {
+		margin-top: 8px;
+	}
+}
+
+.text {
+	margin: 16px 0 0 0;
+}
+
+.caption {
+  margin: 4px 0 0 0;
+	color: color(from var(--MI_THEME-fg) srgb r g b / 0.75);
+}
+
+.buttons {
+	margin-top: 16px;
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+	justify-content: center;
+
+	&.changeButtonAlign {
+		flex-direction: column;
+	}
+}
+
+.deleteBtn {
+	position: relative;
+	z-index: 2;
+	margin: 0 auto;
+	border: none;
+	background: none;
+	color: inherit;
+	font-size: 0.8em;
+	cursor: pointer;
+	pointer-events: auto;
+	-webkit-tap-highlight-color: transparent;
+}
+</style>

@@ -1,0 +1,2506 @@
+<!--
+SPDX-FileCopyrightText: syuilo and misskey-project
+SPDX-License-Identifier: AGPL-3.0-only
+-->
+
+<template>
+<div
+	data-htk-weather-postform
+	:data-post-form-visibility-border="visibilityBorderStyle ? 'on' : null"
+	:class="[$style.root, { [$style.modal]: modal, [$style.postDelayActive]: postDelay.active.value, _popup: modal && (!prefer.s.useBlurEffect || !prefer.s.useBlurEffectForModal || !prefer.s.removeModalBgColorForBlur), _popupAcrylic: modal && prefer.s.useBlurEffect && prefer.s.useBlurEffectForModal && prefer.s.removeModalBgColorForBlur }]"
+	:style="visibilityBorderStyle"
+	@dragover.stop="onDragover"
+	@dragenter="onDragenter"
+	@dragleave="onDragleave"
+	@drop.stop="onDrop"
+>
+	<Teleport :to="props.postDelayStatusTarget ?? 'body'" :disabled="props.postDelayStatusTarget == null"><Transition :name="prefer.s.animation ? `hata-delay-status-${postDelay.exitMode.value}` : ''"><MkHataPostDelayStatus v-if="postDelay.active.value" compact :class="[$style.postDelayStatus, { [$style.postDelayStatusExternal]: props.postDelayStatusTarget != null }]" :pattern="i18n.ts._hata._postDelay.countdown" :seconds="postDelay.remainingSeconds.value" :progress="postDelay.progress.value" :cancelLabel="i18n.ts._hata._postDelay.cancel" :sendNowLabel="i18n.ts._hata._postDelay.sendNow" @cancel="postDelay.cancel()" @sendNow="postDelay.sendNow()"/></Transition></Teleport>
+	<Transition :name="prefer.s.animation ? 'hata-visibility-flash' : ''"><div v-if="visibilityFlashIcon" :class="$style.visibilityFlash" aria-hidden="true"><i :class="visibilityFlashIcon"></i></div></Transition>
+	<header :class="$style.header">
+		<div :class="$style.headerLeft">
+			<button v-if="!fixed" :class="$style.cancel" class="_button" @click="cancel"><i class="ti ti-x"></i></button>
+			 <button v-click-anime v-tooltip="i18n.ts.account" :class="[$style.account, { [$style.fixed]: fixed }]" class="_button" @click="openAccountMenu">
+	                 <img :class="[$style.avatar, { [$style.square]: prefer.s.squareAvatars }]" :src="currentAccountAvatar"/>
+	                 <span v-if="useExternalAccount" :class="$style.externalBadge"><i class="ti ti-external-link" style="font-size: 0.7em;"></i></span>
+			</button>
+		</div>
+		<div :class="$style.headerRight">
+			<template v-if="!(targetChannel != null && fixed)">
+				<button v-if="targetChannel == null" ref="visibilityButton" v-click-anime v-tooltip="i18n.ts.visibility" :class="['_button', $style.headerRightItem, $style.visibility]" @click="playHataIconMotion($event, visibility === 'public' ? 'globe-spin' : visibility === 'home' ? 'home-rock' : visibility === 'followers' ? 'user-rise' : 'mention-orbit', 620); setVisibility()">
+					<span v-if="visibility === 'public'"><i class="ti ti-world"></i></span>
+					<span v-if="visibility === 'home'"><i class="ti ti-home"></i></span>
+					<span v-if="visibility === 'followers'"><i class="ti ti-lock"></i></span>
+					<span v-if="visibility === 'specified'"><i class="ti ti-mail"></i></span>
+					<span :class="$style.headerRightButtonText">{{ i18n.ts._visibility[visibility] }}</span>
+				</button>
+				<button v-else class="_button" :class="[$style.headerRightItem, $style.visibility]" disabled>
+					<span><i class="ti ti-device-tv"></i></span>
+					<span :class="$style.headerRightButtonText">{{ targetChannel.name }}</span>
+				</button>
+			</template>
+			<button v-click-anime v-tooltip="i18n.ts._visibility.disableFederation" class="_button" :class="[$style.headerRightItem, { [$style.danger]: localOnly }]" :disabled="targetChannel != null || visibility === 'specified'" @click="playHataIconMotion($event, 'rocket-launch', 560); toggleLocalOnly()">
+				<span v-if="!localOnly"><i class="ti ti-rocket"></i></span>
+				<span v-else><i class="ti ti-rocket-off"></i></span>
+			</button>
+			<button ref="otherSettingsButton" v-tooltip="i18n.ts.other" class="_button" :class="$style.headerRightItem" @click="playHataIconMotion($event, 'more-dots', 540); showOtherSettings()"><i class="ti ti-dots"></i></button>
+			<div :class="$style.submit">
+				<button v-click-anime class="_button" :class="$style.submitButton" :disabled="!canPost" data-cy-open-post-form-submit @click="post">
+					<div :class="$style.submitInner">
+						<MkHataPostSubmitVisual :state="submitMotionState" :idleText="submitText" :idleIcon="submitIcon" :countdownSeconds="postDelay.remainingSeconds.value"/>
+					</div>
+				</button>
+				<button v-click-anime class="_button" style="margin-left: 2px;" :class="$style.submitButton" @click="showPostMenu">
+					<div :class="$style.submitInnerMenu">
+						<i class="ti ti-caret-down-filled"></i>
+					</div>
+				</button>
+			</div>
+		</div>
+	</header>
+	<MkNoteSimple v-if="replyTargetNote" :class="$style.targetNote" :note="replyTargetNote" :enableNoteClick="false"/>
+	<div v-else-if="externalReplyTarget" :class="[$style.targetNote, $style.externalReplyTarget]">
+		<img v-if="externalReplyTarget.user.avatarUrl" :class="$style.externalTargetAvatar" :src="externalReplyTarget.user.avatarUrl" :alt="externalReplyTarget.user.username"/>
+		<span v-else :class="[$style.externalTargetAvatar, $style.externalTargetAvatarFallback]" aria-hidden="true"><i class="ti ti-user"></i></span>
+		<div :class="$style.externalTargetBody">
+			<div :class="$style.externalTargetNote">
+				<span :class="$style.externalBadgeInline"><i class="ti ti-external-link"></i></span>
+				<I18n :src="i18n.ts._hata._postFormCustom.externalReplyTo" tag="span">
+					<template #account>
+						<b>@{{ externalReplyTarget.user.username }}@{{ externalReplyTarget.user.host || externalHost }}</b>
+					</template>
+				</I18n>
+			</div>
+			<div v-if="externalReplyTarget.text" :class="$style.externalTargetText">{{ externalReplyTarget.text }}</div>
+		</div>
+	</div>
+	<MkNoteSimple v-if="renoteTargetNote" :class="$style.targetNote" :note="renoteTargetNote" :enableNoteClick="false"/>
+	<div v-if="quoteId" :class="$style.withQuote"><i class="ti ti-quote"></i> {{ i18n.ts.quoteAttached }}<button class="_button" @click="quoteId = null; renoteTargetNote = null;"><i class="ti ti-x"></i></button></div>
+	<MkEventEditor v-if="event" v-model="event" @destroyed="event = null"/>
+	<div v-if="visibility === 'specified'" :class="$style.toSpecified">
+		<span style="margin-right: 8px;">{{ i18n.ts.recipient }}</span>
+		<div :class="$style.visibleUsers">
+			<span v-for="u in visibleUsers" :key="u.id" :class="$style.visibleUser">
+				<MkAcct :user="u"/>
+				<button class="_button" style="padding: 4px 8px;" @click="removeVisibleUser(u)"><i class="ti ti-x"></i></button>
+			</span>
+			<button class="_buttonPrimary" style="padding: 4px; border-radius: 8px;" @click="addVisibleUser"><i class="ti ti-plus ti-fw"></i></button>
+		</div>
+	</div>
+	<MkInfo v-if="visibleRecipients.loading.value" role="status">{{ i18n.ts.recipient }}: {{ i18n.ts.loading }}</MkInfo>
+	<MkInfo v-else-if="visibleRecipients.failed.value" warn role="alert">
+		{{ i18n.ts.recipient }}: {{ i18n.ts.somethingHappened }}
+		<button class="_textButton" @click="visibleRecipients.retry()">{{ i18n.ts.retry }}</button>
+		<div v-for="id in visibleRecipients.missingIds.value" :key="id">
+			{{ i18n.ts.unknown }} ({{ id }})
+			<button class="_textButton" :aria-label="`${i18n.ts.remove}: ${id}`" @click="visibleRecipients.remove(id)">{{ i18n.ts.remove }}</button>
+		</div>
+	</MkInfo>
+	<MkInfo v-if="scheduledAt != null" :class="$style.scheduledAt">
+		<I18n :src="i18n.ts.scheduleToPostOnX" tag="span">
+			<template #x>
+				<MkTime :time="scheduledAt" :mode="'detail'" style="font-weight: bold;"/>
+			</template>
+		</I18n> - <button class="_textButton" @click="cancelSchedule()">{{ i18n.ts.cancel }}</button>
+	</MkInfo>
+	<MkInfo v-if="scheduledNoteDelete != null" warn :class="$style.scheduledAt">
+		<I18n :src="i18n.ts.scheduledToDeleteOnX" tag="span">
+			<template #x>
+				<MkTime v-if="scheduledDeleteAt" :key="scheduledDeleteAt" :time="scheduledDeleteAt" :mode="'detail'" style="font-weight: bold;"/>
+			</template>
+		</I18n> - <button class="_textButton" @click="cancelScheduleDelete()">{{ i18n.ts.cancel }}</button>
+	</MkInfo>
+	<MkInfo v-if="hasNotSpecifiedMentions" warn :class="$style.hasNotSpecifiedMentions">{{ i18n.ts.notSpecifiedMentionWarning }} - <button class="_textButton" @click="addMissingMention()">{{ i18n.ts.add }}</button></MkInfo>
+	<div v-show="useCw" :class="$style.cwOuter">
+		<input ref="cwInputEl" v-model="cw" :class="$style.cw" :placeholder="i18n.ts.annotation" @keydown="onKeydown" @keyup="onKeyup" @compositionend="onCompositionEnd">
+		<div v-if="maxCwTextLength - cwTextLength < 20" :class="['_acrylic', $style.cwTextCount, { [$style.cwTextOver]: cwTextLength > maxCwTextLength }]">{{ maxCwTextLength - cwTextLength }}</div>
+		<button class="_button" :class="$style.cwSwapButton" @click="swapCwText">
+			<i class="ti ti-switch-vertical"></i>
+		</button>
+	</div>
+	<div :class="[$style.textOuter, { [$style.withCw]: useCw }]">
+		<div v-if="targetChannel" :class="$style.colorBar" :style="{ background: targetChannel.color }"></div>
+		<textarea ref="textareaEl" v-model="text" :class="[$style.text]" :disabled="posting || posted" :readonly="textAreaReadOnly" :placeholder="placeholder" data-cy-post-form-text @keydown="onKeydown" @keyup="onKeyup" @paste="onPaste" @compositionupdate="onCompositionUpdate" @compositionend="onCompositionEnd"/>
+		<div v-if="maxTextLength - textLength < 100" :class="['_acrylic', $style.textCount, { [$style.textOver]: textLength > maxTextLength }]">{{ maxTextLength - textLength }}</div>
+	</div>
+	<input v-show="withHashtags" ref="hashtagsInputEl" v-model="hashtags" :class="$style.hashtags" :placeholder="i18n.ts.hashtags" list="hashtags">
+	<XPostFormAttaches v-model="files" @detach="detachFile" @changeSensitive="updateFileSensitive" @changeName="updateFileName"/>
+	<div v-if="uploader.items.value.length > 0" style="padding: 12px;">
+		<MkTip k="postFormUploader" style="margin-bottom: 10px;">
+			{{ i18n.ts._postForm.uploaderTip }}
+		</MkTip>
+		<MkUploaderItems :items="uploader.items.value" @showMenu="(item, ev) => showPerUploadItemMenu(item, ev)" @showMenuViaContextmenu="(item, ev) => showPerUploadItemMenuViaContextmenu(item, ev)"/>
+	</div>
+	<MkPollEditor v-if="poll && !props.updateMode" v-model="poll" @destroyed="poll = null"/>
+	<MkScheduledNoteDelete v-if="scheduledNoteDelete" v-model="scheduledNoteDelete" @destroyed="scheduledNoteDelete = null"/>
+	<MkDeliveryTargetEditor v-if="deliveryTargets" v-model="deliveryTargets" @destroyed="deliveryTargets = null"/>
+	<MkNotePreview v-if="showPreview && textLength > 0" :class="$style.preview" :text="text" :files="files" :poll="poll ?? undefined" :useCw="useCw" :cw="cw" :user="postAccount ?? $i" :showProfile="showProfilePreview"/>
+	<div v-if="showingOptions" style="padding: 8px 16px;">
+	</div>
+	<footer :class="$style.footer">
+		<div :class="$style.footerLeft">
+			<button v-tooltip="i18n.ts.attachFile + ' (' + i18n.ts.upload + ')'" class="_button" :class="$style.footerButton" @click="playHataIconMotion($event, 'image-rise'); chooseFileFromPc($event)"><i class="ti ti-photo-plus"></i></button>
+			<button v-tooltip="i18n.ts.attachFile + ' (' + i18n.ts.fromDrive + ')'" class="_button" :class="$style.footerButton" @click="playHataIconMotion($event, 'drive-drop'); chooseFileFromDrive($event)"><i class="ti ti-cloud-download"></i></button>
+			<button v-if="!props.updateMode" v-tooltip="i18n.ts.poll" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: poll }]" @click="playHataIconMotion($event, 'poll-grow'); togglePoll()"><i class="ti ti-chart-arrows"></i></button>
+			<button v-tooltip="i18n.ts.useCw" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: useCw }]" @click="playHataIconMotion($event, 'eye-close'); useCw = !useCw"><i class="ti ti-eye-off"></i></button>
+			<button v-if="prefer.s.showHashtagButtonInPostForm" v-tooltip="i18n.ts.hashtags" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: withHashtags }]" @click="playHataIconMotion($event, 'hash-tilt'); withHashtags = !withHashtags"><i class="ti ti-hash"></i></button>
+			<button v-tooltip="i18n.ts.mention" class="_button" :class="$style.footerButton" @click="playHataIconMotion($event, 'mention-orbit'); insertMention()"><i class="ti ti-at"></i></button>
+                        <button v-if="prefer.s.showEventButtonInPostForm" v-tooltip="i18n.ts.event" class="_button" :class="$style.footerButton" @click="playHataIconMotion($event, 'calendar-page'); toggleEvent()"><i class="ti ti-calendar"></i></button>
+			<button v-if="prefer.s.showDrawingButtonInPostForm" v-tooltip="i18n.ts._hata._drawingTool.drawing" class="_button" :class="$style.footerButton" :aria-label="i18n.ts._hata._drawingTool.drawing" @click="playHataIconMotion($event, 'pencil-write'); openDrawingTool()"><i class="ti ti-brush" aria-hidden="true"></i></button>
+			<button v-if="showAddMfmFunction" v-tooltip="i18n.ts.addMfmFunction" class="_button" :class="$style.footerButton" :aria-label="i18n.ts.addMfmFunction" @click="playHataIconMotion($event, 'simple-lift'); insertMfmFunction($event)"><i class="ti ti-typography" aria-hidden="true"></i></button>
+			<button v-if="postFormActions.length > 0" v-tooltip="i18n.ts.plugins" class="_button" :class="$style.footerButton" @click="playHataIconMotion($event, 'plug-connect'); showActions($event)"><i class="ti ti-plug"></i></button>
+			<!-- 旗鯖fork: 絵文字挿入ボタンを footerRight から footerLeft の末尾に移動。
+			     従来は他ボタンから離れた右端に表示されていたため、他の投稿フォームボタン群と
+			     並べて表示してほしいというユーザー要望に対応。 -->
+			<button v-tooltip="i18n.ts.emoji" class="_button" :class="$style.footerButton" :aria-label="i18n.ts.emoji" @click="playHataIconMotion($event, 'emoji-pop'); insertEmoji($event)"><i class="ti ti-mood-happy" aria-hidden="true"></i></button>
+		</div>
+	</footer>
+	<datalist id="hashtags">
+		<option v-for="hashtag in recentHashtags" :key="hashtag" :value="hashtag"/>
+	</datalist>
+</div>
+</template>
+
+<script lang="ts" setup>
+import { getExternalAccount, isExternalAccountLinked, callExternalApi, uploadDriveFilesToExternal } from '@/utility/external-api.js';
+import { inject, watch, nextTick, onMounted, defineAsyncComponent, provide, shallowRef, ref, computed, useTemplateRef, onUnmounted } from 'vue';
+import * as mfm from 'mfc-js';
+import * as Misskey from 'cherrypick-js';
+import insertTextAtCursor from 'insert-text-at-cursor';
+import { toASCII } from 'punycode.js';
+import { host, url } from '@@/js/config.js';
+import { unique } from '@@/js/array.js';
+import MkUploaderItems from './MkUploaderItems.vue';
+import { createPostFormRecipients } from './post-form-recipients.js';
+import type { ShallowRef } from 'vue';
+import type { PostFormProps } from '@/types/post-form.js';
+import type { MenuItem } from '@/types/menu.js';
+import type { PollEditorModelValue } from '@/components/MkPollEditor.vue';
+import type { UploaderItem } from '@/composables/use-uploader.js';
+import type { DeleteScheduleEditorModelValue } from '@/components/MkScheduledNoteDelete.vue';
+import type { DeliveryTargetEditorModelValue } from '@/components/MkDeliveryTargetEditor.vue';
+import { parseMfmCached } from '@/utility/mfm-cache.js';
+import MkNotePreview from '@/components/MkNotePreview.vue';
+import XPostFormAttaches from '@/components/MkPostFormAttaches.vue';
+import XTextCounter from '@/components/MkPostForm.TextCounter.vue';
+import MkPollEditor from '@/components/MkPollEditor.vue';
+import * as os from '@/os.js';
+import MkDrawingTool from '@/components/MkDrawingTool.vue';
+const MkExternalReactionPicker = defineAsyncComponent(() => import('@/components/MkExternalReactionPicker.vue'));
+import MkEventEditor from '@/components/MkEventEditor.vue';
+import MkScheduledNoteDelete from '@/components/MkScheduledNoteDelete.vue';
+import MkNoteSimple from '@/components/MkNoteSimple.vue';
+import MkHataPostDelayStatus from '@/components/MkHataPostDelayStatus.vue';
+import MkHataPostSubmitVisual from '@/components/MkHataPostSubmitVisual.vue';
+import type { HataPostSubmitState } from '@/components/MkHataPostSubmitVisual.vue';
+import { playHataIconMotion } from '@/utility/hata-icon-motion.js';
+import { extractMentions } from '@/utility/extract-mentions.js';
+import { formatTimeString } from '@/utility/format-time-string.js';
+import { Autocomplete } from '@/utility/autocomplete.js';
+import { misskeyApi } from '@/utility/misskey-api.js';
+import { chooseDriveFile } from '@/utility/drive.js';
+import { store } from '@/store.js';
+import MkInfo from '@/components/MkInfo.vue';
+import { i18n } from '@/i18n.js';
+import { instance } from '@/instance.js';
+import { ensureSignin, notesCount, incNotesCount } from '@/i.js';
+import { getAccounts, getAccountMenu } from '@/accounts.js';
+import { deepClone } from '@/utility/clone.js';
+import type { Cloneable } from '@/utility/clone.js';
+import MkRippleEffect from '@/components/MkRippleEffect.vue';
+import { miLocalStorage } from '@/local-storage.js';
+import { claimAchievement } from '@/utility/achievements.js';
+import { emojiPicker } from '@/utility/emoji-picker.js';
+import { mfmFunctionPicker } from '@/utility/mfm-function-picker.js';
+import { prefer } from '@/preferences.js';
+import { getPluginHandlers } from '@/plugin.js';
+import { DI } from '@/di.js';
+import { globalEvents } from '@/events.js';
+import { checkDragDataType, getDragData } from '@/drag-and-drop.js';
+import { useUploader } from '@/composables/use-uploader.js';
+import { haptic } from '@/utility/haptic.js';
+import * as sound from '@/utility/sound.js';
+import MkDeliveryTargetEditor from '@/components/MkDeliveryTargetEditor.vue';
+import { createPostSendDelayController, postSendDelayEnabled, postSendDelaySeconds } from '@/utility/post-send-delay.js';
+
+const $i = ensureSignin();
+
+const modal = inject(DI.inModal, false);
+
+const props = withDefaults(defineProps<PostFormProps & {
+	fixed?: boolean;
+	autofocus?: boolean;
+	freezeAfterPosted?: boolean;
+	mock?: boolean;
+	postDelayStatusTarget?: HTMLElement | null;
+}>(), {
+	initialVisibleUsers: () => [],
+	autofocus: true,
+	mock: false,
+	initialLocalOnly: undefined,
+	restoreDraft: true,
+	postDelayStatusTarget: null,
+});
+
+provide(DI.mock, props.mock);
+
+const emit = defineEmits<{
+	(ev: 'posted'): void;
+	(ev: 'cancel'): void;
+	(ev: 'esc'): void;
+
+	// Mock用
+	(ev: 'fileChangeSensitive', fileId: string, to: boolean): void;
+}>();
+
+const textareaEl = useTemplateRef('textareaEl');
+const cwInputEl = useTemplateRef('cwInputEl');
+const hashtagsInputEl = useTemplateRef('hashtagsInputEl');
+const visibilityButton = useTemplateRef('visibilityButton');
+const otherSettingsButton = useTemplateRef('otherSettingsButton');
+
+const posting = ref(false);
+const posted = ref(false);
+const submitMotionState = ref<HataPostSubmitState>('idle');
+const postDelay = createPostSendDelayController();
+const visibilityFlashIcon = ref<string | null>(null);
+let visibilityFlashTimer: number | null = null;
+
+function waitForSubmitMotion(duration: number): Promise<void> {
+	if (!prefer.s.animation || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return Promise.resolve();
+	return new Promise(resolve => window.setTimeout(resolve, duration));
+}
+
+const text = ref(props.initialText ?? '');
+const files = shallowRef(props.initialFiles ?? ([] as Misskey.entities.DriveFile[]));
+const poll = ref<PollEditorModelValue | null>(deepClone(props.initialPoll ?? null));
+const event = ref<any>(deepClone((props.initialEvent ?? null) as Cloneable));
+const useCw = ref<boolean>(!!props.initialCw);
+const showPreview = ref(prefer.s.showPreview);
+const showProfilePreview = ref(prefer.s.showProfilePreview);
+watch(showPreview, () => prefer.commit('showPreview', showPreview.value));
+watch(showProfilePreview, () => prefer.commit('showProfilePreview', showProfilePreview.value));
+const showAddMfmFunction = ref(prefer.s.enableQuickAddMfmFunction);
+watch(showAddMfmFunction, () => prefer.commit('enableQuickAddMfmFunction', showAddMfmFunction.value));
+const cw = ref<string | null>(props.initialCw ?? null);
+const localOnly = ref(props.initialLocalOnly ?? (prefer.s.rememberNoteVisibility ? store.s.localOnly : prefer.s.defaultNoteLocalOnly));
+const visibility = ref(props.initialVisibility ?? (prefer.s.rememberNoteVisibility ? store.s.visibility : prefer.s.defaultNoteVisibility));
+const visibleRecipients = createPostFormRecipients(userIds => misskeyApi('users/show', { userIds }));
+const visibleUsers = visibleRecipients.users;
+
+// 旗鯖fork: 投稿範囲に応じて投稿フォームの枠色を変える(アクセシビリティ)。レイアウトに影響しないよう inset box-shadow で枠を描く。
+const visibilityBorderStyle = computed(() => {
+	// カウント中は同じ位置を進捗枠へ譲り、公開範囲色との二重枠を防ぐ。終了後は元の色へ戻る。
+	if (postDelay.active.value) return undefined;
+	if (!prefer.r['postFormVisibilityBorder.enabled'].value) return undefined;
+	const w = prefer.r['postFormVisibilityBorder.width'].value;
+	let color: string;
+	switch (visibility.value) {
+		case 'home': color = prefer.r['postFormVisibilityBorder.color.home'].value; break;
+		case 'followers': color = prefer.r['postFormVisibilityBorder.color.followers'].value; break;
+		case 'specified': color = prefer.r['postFormVisibilityBorder.color.specified'].value; break;
+		default: color = prefer.r['postFormVisibilityBorder.color.public'].value; break;
+	}
+	return { boxShadow: `inset 0 0 0 ${w}px ${color}` };
+});
+if (props.initialVisibleUsers) {
+	props.initialVisibleUsers.forEach(u => pushVisibleUser(u));
+}
+const reactionAcceptance = ref(props.initialReactionAcceptance !== undefined ? props.initialReactionAcceptance : store.s.reactionAcceptance);
+const scheduledAt = ref<number | null>(null);
+const draghover = ref(false);
+const quoteId = ref<string | null>(null);
+const hasNotSpecifiedMentions = ref(false);
+const recentHashtags = ref(JSON.parse(miLocalStorage.getItem('hashtags') ?? '[]'));
+const imeText = ref('');
+const showingOptions = ref(false);
+const disableRightClick = ref(false);
+const saveToDraft = ref(false);
+const textAreaReadOnly = ref(false);
+const justEndedComposition = ref(false);
+const renoteTargetNote: ShallowRef<PostFormProps['renote'] | null> = shallowRef(props.renote);
+const replyTargetNote: ShallowRef<PostFormProps['reply'] | null> = shallowRef(props.reply);
+const targetChannel = shallowRef(props.channel);
+const deliveryTargets = ref<DeliveryTargetEditorModelValue | null>(null);
+
+function normalizeDeliveryTargets(targets: Misskey.entities.Note['deliveryTargets']): DeliveryTargetEditorModelValue | null {
+	if (!targets) return null;
+	return {
+		mode: targets.mode,
+		hosts: targets.hosts ?? [],
+	};
+}
+
+const serverDraftId = ref<string | null>(null);
+const postFormActions = getPluginHandlers('post_form_action');
+
+const scheduledNoteDelete = ref<DeleteScheduleEditorModelValue | null>(null);
+const scheduledDeleteAt = computed(() => {
+	if (scheduledNoteDelete.value?.deleteAt) return scheduledNoteDelete.value.deleteAt;
+	else if (scheduledNoteDelete.value?.deleteAfter) return Date.now() + scheduledNoteDelete.value.deleteAfter;
+	return null;
+});
+
+const uploader = useUploader({
+	multiple: true,
+});
+
+onUnmounted(() => {
+	visibleRecipients.dispose();
+	postDelay.dispose();
+	uploader.dispose();
+	if (visibilityFlashTimer != null) window.clearTimeout(visibilityFlashTimer);
+});
+
+uploader.events.on('itemUploaded', ctx => {
+	files.value = [...files.value, ctx.item.uploaded!];
+	uploader.removeItem(ctx.item);
+});
+
+const draftKey = computed((): string => {
+	let key = targetChannel.value ? `channel:${targetChannel.value.id}` : '';
+
+	if (renoteTargetNote.value) {
+		key += `renote:${renoteTargetNote.value.id}`;
+	} else if (replyTargetNote.value) {
+		key += `reply:${replyTargetNote.value.id}`;
+	} else {
+		key += `note:${$i.id}`;
+	}
+
+	return key;
+});
+
+const placeholder = computed((): string => {
+	let postTo: string;
+	postTo = '[' + i18n.ts._visibility[visibility.value] + '] ';
+
+	if (renoteTargetNote.value) {
+		return postTo + i18n.ts._postForm.quotePlaceholder;
+	} else if (replyTargetNote.value) {
+		return postTo + i18n.ts._postForm.replyPlaceholder;
+	} else if (targetChannel.value) {
+		return postTo + i18n.ts._postForm.channelPlaceholder;
+	} else {
+		const xs = [
+			i18n.ts._postForm._placeholders.a,
+			i18n.ts._postForm._placeholders.b,
+			i18n.ts._postForm._placeholders.c,
+			i18n.ts._postForm._placeholders.d,
+			i18n.ts._postForm._placeholders.e,
+			i18n.ts._postForm._placeholders.f,
+		];
+		return postTo + xs[Math.floor(Math.random() * xs.length)];
+	}
+});
+
+const submitText = computed((): string => {
+	return saveToDraft.value
+		? i18n.ts.draft
+		: scheduledAt.value != null
+			? i18n.ts.schedule
+			: renoteTargetNote.value
+				? i18n.ts.quote
+				: replyTargetNote.value
+					? i18n.ts.reply
+					: props.updateMode
+						? i18n.ts.edit
+						: prefer.s.renameTheButtonInPostFormToNya
+							? i18n.ts.nya
+							: i18n.ts.note;
+});
+
+const submitIcon = computed((): string => {
+	return posted.value ? 'ti ti-check' : scheduledAt.value != null ? 'ti ti-calendar-time' : saveToDraft.value ? 'ti ti-pencil-minus' : replyTargetNote.value ? 'ti ti-arrow-back-up' : renoteTargetNote.value ? 'ti ti-quote' : props.updateMode ? 'ti ti-pencil' : prefer.s.renameTheButtonInPostFormToNya ? 'ti ti-paw-filled' : 'ti ti-send';
+});
+
+const textLength = computed((): number => {
+	return (text.value + imeText.value).length;
+});
+
+const maxTextLength = computed((): number => {
+	return instance ? instance.maxNoteTextLength : 1000;
+});
+
+const cwTextLength = computed((): number => {
+	return cw.value?.length ?? 0;
+});
+
+const maxCwTextLength = 100;
+
+const canPost = computed((): boolean => {
+	return visibleRecipients.ready.value && !props.mock && !posting.value && !posted.value && !postDelay.active.value && !uploader.uploading.value && (uploader.items.value.length === 0 || uploader.readyForUpload.value) &&
+		(
+			1 <= textLength.value ||
+			1 <= files.value.length ||
+			1 <= uploader.items.value.length ||
+			poll.value != null ||
+			event.value != null ||
+			renoteTargetNote.value != null ||
+			quoteId.value != null
+		) &&
+		(textLength.value <= maxTextLength.value) &&
+		(
+			useCw.value ?
+				(
+					cw.value != null && cw.value.trim() !== '' &&
+					cwTextLength.value <= maxCwTextLength
+				) : true
+		) &&
+		(files.value.length <= 16) &&
+		(!poll.value || poll.value.choices.length >= 2);
+});
+
+const withHashtags = computed(store.makeGetterSetter('postFormWithHashtags'));
+const hashtags = computed(store.makeGetterSetter('postFormHashtags'));
+
+watch(text, () => {
+	checkMissingMention();
+}, { immediate: true });
+
+watch(visibility, () => {
+	checkMissingMention();
+}, { immediate: true });
+
+watch(visibleUsers, () => {
+	checkMissingMention();
+}, {
+	deep: true,
+});
+
+if (props.mention) {
+	text.value = props.mention.host ? `@${props.mention.username}@${toASCII(props.mention.host)}` : `@${props.mention.username}`;
+	text.value += ' ';
+}
+
+if (replyTargetNote.value && (replyTargetNote.value.user.username !== $i.username || (replyTargetNote.value.user.host != null && replyTargetNote.value.user.host !== host))) {
+	text.value = `@${replyTargetNote.value.user.username}${replyTargetNote.value.user.host != null ? '@' + toASCII(replyTargetNote.value.user.host) : ''} `;
+}
+
+if (replyTargetNote.value && replyTargetNote.value.text != null) {
+	const ast = parseMfmCached(replyTargetNote.value.text);
+	const otherHost = replyTargetNote.value.user.host;
+
+	for (const x of extractMentions(ast)) {
+		const mention = x.host ?
+			`@${x.username}@${toASCII(x.host)}` :
+			(otherHost == null || otherHost === host) ?
+				`@${x.username}` :
+				`@${x.username}@${toASCII(otherHost)}`;
+
+		// 自分は除外
+		if ($i.username === x.username && (x.host == null || x.host === host)) continue;
+
+		// 重複は除外
+		if (text.value.includes(`${mention} `)) continue;
+
+		text.value += `${mention} `;
+	}
+}
+
+if ($i.isSilenced && visibility.value === 'public') {
+	visibility.value = 'home';
+}
+
+if (targetChannel.value) {
+	visibility.value = 'public';
+	localOnly.value = true; // TODO: チャンネルが連合するようになった折には消す
+}
+
+// 公開以外へのリプライ時は元の公開範囲を引き継ぐ
+if (replyTargetNote.value && ['home', 'followers', 'specified'].includes(replyTargetNote.value.visibility)) {
+	if (replyTargetNote.value.visibility === 'home' && visibility.value === 'followers') {
+		visibility.value = 'followers';
+	} else if (['home', 'followers'].includes(replyTargetNote.value.visibility) && visibility.value === 'specified') {
+		visibility.value = 'specified';
+	} else {
+		visibility.value = replyTargetNote.value.visibility;
+	}
+
+	if (visibility.value === 'specified') {
+		void visibleRecipients.load([
+			...visibleRecipients.userIds.value,
+			...(replyTargetNote.value.visibleUserIds ?? []),
+			replyTargetNote.value.userId,
+		].filter(id => id !== $i.id));
+	}
+}
+
+if (props.specified) {
+	visibility.value = 'specified';
+	pushVisibleUser(props.specified);
+}
+
+// keep cw when reply
+if (prefer.s.keepCw && replyTargetNote.value && replyTargetNote.value.cw) {
+	useCw.value = true;
+	cw.value = replyTargetNote.value.cw;
+}
+
+function watchForDraft() {
+	watch(text, () => saveDraft());
+	watch(useCw, () => saveDraft());
+	watch(cw, () => saveDraft());
+	watch(disableRightClick, () => saveDraft());
+	watch(saveToDraft, () => saveDraft());
+	watch(poll, () => saveDraft());
+	watch(event, () => saveDraft());
+	watch(files, () => saveDraft(), { deep: true });
+	watch(visibility, () => saveDraft());
+	watch(localOnly, () => saveDraft());
+	watch(quoteId, () => saveDraft());
+	watch(reactionAcceptance, () => saveDraft());
+	watch(scheduledAt, () => saveDraft());
+	watch(scheduledNoteDelete, () => saveDraft());
+	watch(deliveryTargets, () => saveDraft(), { deep: true });
+	watch(visibleRecipients.userIds, () => saveDraft());
+}
+
+function checkMissingMention() {
+	if (visibility.value === 'specified') {
+		const ast = parseMfmCached(text.value);
+
+		for (const x of extractMentions(ast)) {
+			if (!visibleUsers.value.some(u => (u.username === x.username) && ((u.host === x.host) || (x.host === host && u.host == null)))) {
+				hasNotSpecifiedMentions.value = true;
+				return;
+			}
+		}
+	}
+	hasNotSpecifiedMentions.value = false;
+}
+
+function addMissingMention() {
+	const ast = parseMfmCached(text.value);
+
+	for (const x of extractMentions(ast)) {
+		if (!visibleUsers.value.some(u => (u.username === x.username) && (u.host === x.host))) {
+			misskeyApi('users/show', { username: x.username, host: x.host }).then(user => {
+				pushVisibleUser(user);
+			});
+		}
+	}
+}
+
+function swapCwText() {
+	if (useCw.value) {
+		// textの一行目を取り出す
+		const temp = text.value.split(/\r?\n/).join(' ');
+		text.value = cw.value ?? '';
+		cw.value = temp;
+	}
+}
+
+function togglePoll() {
+	if (poll.value) {
+		poll.value = null;
+	} else {
+		poll.value = {
+			choices: ['', ''],
+			multiple: false,
+			expiresAt: null,
+			expiredAfter: null,
+		};
+	}
+}
+
+function toggleEvent() {
+	if (event.value) {
+		event.value = null;
+	} else {
+		event.value = {
+			title: '',
+			start: (new Date()).getTime(),
+			end: null,
+			metadata: {} as Record<string, never>,
+		};
+	}
+}
+
+function focus() {
+	if (textareaEl.value) {
+		textareaEl.value.focus();
+		textareaEl.value.setSelectionRange(textareaEl.value.value.length, textareaEl.value.value.length);
+	}
+}
+
+function chooseFileFromPc(ev: MouseEvent) {
+	if (props.mock) return;
+
+	os.chooseFileFromPc({ multiple: true }).then(files => {
+		if (files.length === 0) return;
+		uploader.addFiles(files);
+	});
+}
+
+function chooseFileFromDrive(ev: MouseEvent) {
+	if (props.mock) return;
+
+	chooseDriveFile({ multiple: true }).then(driveFiles => {
+		files.value = [...files.value, ...driveFiles];
+	});
+}
+
+function openDrawingTool() {
+	if (props.mock) return;
+	const { dispose } = os.popup(MkDrawingTool, { canAttach: true }, {
+		done: (file: Misskey.entities.DriveFile) => {
+			if (files.value.some(item => item.id === file.id)) return;
+			if (files.value.length >= 16) {
+				void os.alert({ type: 'warning', text: i18n.ts._hata._drawingTool.attachmentLimit });
+				return;
+			}
+			files.value = [...files.value, file];
+		},
+		closed: () => dispose(),
+	});
+}
+
+function detachFile(id) {
+	files.value = files.value.filter(x => x.id !== id);
+}
+
+function updateFileSensitive(file, sensitive) {
+	if (props.mock) {
+		emit('fileChangeSensitive', file.id, sensitive);
+	}
+	files.value[files.value.findIndex(x => x.id === file.id)].isSensitive = sensitive;
+}
+
+function updateFileName(file, name) {
+	files.value[files.value.findIndex(x => x.id === file.id)].name = name;
+}
+
+function setVisibility() {
+	if (targetChannel.value) {
+		visibility.value = 'public';
+		localOnly.value = true; // TODO: チャンネルが連合するようになった折には消す
+		return;
+	}
+
+	const { dispose } = os.popup(defineAsyncComponent(() => import('@/components/MkVisibilityPicker.vue')), {
+		currentVisibility: visibility.value,
+		isSilenced: $i.isSilenced,
+		localOnly: localOnly.value,
+		motionPreset: 'postform',
+		anchorElement: visibilityButton.value,
+		...(replyTargetNote.value ? { isReplyVisibilitySpecified: replyTargetNote.value.visibility === 'specified' } : {}),
+	}, {
+		changeVisibility: v => {
+			const changed = visibility.value !== v;
+			visibility.value = v;
+			if (prefer.s.rememberNoteVisibility) {
+				store.set('visibility', visibility.value);
+			}
+			if (changed) showVisibilityFlash(v);
+		},
+		closed: () => dispose(),
+	});
+}
+
+function showVisibilityFlash(value: typeof Misskey.noteVisibilities[number]): void {
+	if (!prefer.s.animation || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+	if (visibilityFlashTimer != null) window.clearTimeout(visibilityFlashTimer);
+	visibilityFlashIcon.value = ({ public: 'ti ti-world', home: 'ti ti-home', followers: 'ti ti-lock', specified: 'ti ti-mail' })[value];
+	visibilityFlashTimer = window.setTimeout(() => {
+		visibilityFlashIcon.value = null;
+		visibilityFlashTimer = null;
+	}, 560);
+}
+
+async function toggleLocalOnly() {
+	if (targetChannel.value) {
+		visibility.value = 'public';
+		localOnly.value = true; // TODO: チャンネルが連合するようになった折には消す
+		return;
+	}
+
+	const neverShowInfo = miLocalStorage.getItem('neverShowLocalOnlyInfo');
+
+	if (!localOnly.value && neverShowInfo !== 'true') {
+		const confirm = await os.actions({
+			type: 'question',
+			title: i18n.ts.disableFederationConfirm,
+			text: i18n.ts.disableFederationConfirmWarn,
+			actions: [
+				{
+					value: 'ok' as const,
+					text: i18n.ts.disableFederationOk,
+				},
+				{
+					value: 'neverShow' as const,
+					text: `${i18n.ts.disableFederationOk} (${i18n.ts.neverShow})`,
+					danger: true,
+				},
+				{
+					value: 'cancel' as const,
+					text: i18n.ts.cancel,
+					primary: true,
+				},
+			],
+		});
+
+		if (confirm.canceled) return;
+		if (confirm.result === 'cancel') return;
+
+		if (confirm.result === 'neverShow') {
+			miLocalStorage.setItem('neverShowLocalOnlyInfo', 'true');
+		}
+	}
+
+	localOnly.value = !localOnly.value;
+	if (prefer.s.rememberNoteVisibility) {
+		store.set('localOnly', localOnly.value);
+	}
+}
+
+async function toggleReactionAcceptance() {
+	const select = await os.select({
+		title: i18n.ts.reactionAcceptance,
+		items: [
+			{ value: null, label: i18n.ts.all },
+			{ value: 'likeOnlyForRemote' as const, label: i18n.ts.likeOnlyForRemote },
+			{ value: 'nonSensitiveOnly' as const, label: i18n.ts.nonSensitiveOnly },
+			{ value: 'nonSensitiveOnlyForLocalLikeOnlyForRemote' as const, label: i18n.ts.nonSensitiveOnlyForLocalLikeOnlyForRemote },
+			{ value: 'likeOnly' as const, label: i18n.ts.likeOnly },
+		],
+		default: reactionAcceptance.value,
+	});
+	if (select.canceled) return;
+	reactionAcceptance.value = select.result;
+}
+
+//#region その他の設定メニューpopup
+function showOtherSettings() {
+	let reactionAcceptanceIcon = 'ti ti-icons';
+
+	if (reactionAcceptance.value === 'likeOnly') {
+		reactionAcceptanceIcon = 'ti ti-heart _love';
+	} else if (reactionAcceptance.value === 'likeOnlyForRemote') {
+		reactionAcceptanceIcon = 'ti ti-heart-plus';
+	}
+
+	const menuItems = [{
+		type: 'component',
+		component: XTextCounter,
+		props: {
+			textLength: textLength,
+		},
+	}, { type: 'divider' }, {
+		icon: reactionAcceptanceIcon,
+		text: i18n.ts.reactionAcceptance,
+		action: () => {
+			toggleReactionAcceptance();
+		},
+	}, {
+		icon: 'ti ti-truck-delivery',
+		text: i18n.ts._deliveryTargetControl.deliveryTargetControl,
+		action: () => {
+			toggleDeliveryTargets();
+		},
+	}, { type: 'divider' }, ...($i.policies.scheduledNoteLimit > 0 ? [{
+		icon: 'ti ti-calendar-time',
+		text: i18n.ts.schedulePost + '...',
+		action: () => {
+			schedule();
+		},
+	}] : []), {
+		icon: 'ti ti-clock-hour-9',
+		text: i18n.ts.scheduledNoteDelete + '...',
+		action: () => {
+			toggleScheduledNoteDelete();
+		},
+	}, { type: 'divider' }, {
+		icon: 'ti ti-help-circle',
+		text: i18n.ts._mfc.cheatSheet,
+		action: () => {
+			openMfmCheatSheet();
+		},
+	}, { type: 'divider' }, {
+		type: 'parent',
+		icon: 'ti ti-eye',
+		text: i18n.ts.preview,
+		children: [{
+			type: 'switch',
+			text: i18n.ts.previewNoteText,
+			icon: 'ti ti-eye',
+			ref: showPreview,
+		}, {
+			type: 'switch',
+			text: i18n.ts.previewNoteProfile,
+			icon: 'ti ti-user-circle',
+			ref: showProfilePreview,
+		}],
+	}, {
+		icon: 'ti ti-trash',
+		text: i18n.ts.reset,
+		danger: true,
+		action: async () => {
+			if (props.mock) return;
+			const { canceled } = await os.confirm({
+				type: 'question',
+				text: i18n.ts.resetAreYouSure,
+			});
+			if (canceled) return;
+			clear();
+		},
+	}] satisfies MenuItem[];
+
+	os.popupMenu(menuItems, otherSettingsButton.value, { motionPreset: 'postform' });
+}
+//#endregion
+
+function pushVisibleUser(user: Misskey.entities.UserDetailed) {
+	visibleRecipients.add(user);
+}
+
+function addVisibleUser() {
+	const selectionToken = visibleRecipients.selectionToken();
+	os.selectUser().then(user => {
+		if (!visibleRecipients.isCurrentSelection(selectionToken)) return;
+		pushVisibleUser(user);
+
+		if (!text.value.toLowerCase().includes(`@${user.username.toLowerCase()}`)) {
+			text.value = `@${Misskey.acct.toString(user)} ${text.value}`;
+		}
+	});
+}
+
+function removeVisibleUser(user: Misskey.entities.UserDetailed) {
+	visibleRecipients.remove(user.id);
+}
+
+function clear() {
+	visibleRecipients.invalidateSelection();
+	text.value = '';
+	files.value = [];
+	poll.value = null;
+	event.value = null;
+	quoteId.value = null;
+	scheduledAt.value = null;
+	scheduledNoteDelete.value = null;
+	saveToDraft.value = false;
+	disableRightClick.value = false;
+	deliveryTargets.value = null;
+	externalReplyTarget.value = null;
+	externalRenoteTarget.value = null;
+	useExternalAccount.value = false;
+	// 旗鯖fork: 本家 2026.6.0 から取り込み: 下書きリセット時に未アップロードのファイルも解除されるように
+	uploader.reset();
+}
+
+function onKeydown(ev: KeyboardEvent) {
+	if (prefer.s.useEnterToSend && !ev.shiftKey) {
+		if (ev.key === 'Enter' && canPost.value) post();
+	} else {
+		if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey) && canPost.value) post();
+	}
+
+	if (prefer.s.postFormVisibilityHotkey) {
+		if (ev.ctrlKey && ev.shiftKey && (visibility.value === 'specified')) visibility.value = 'public';
+		else if (ev.ctrlKey && ev.shiftKey && (visibility.value === 'public')) visibility.value = 'home';
+		else if (ev.ctrlKey && ev.shiftKey && (visibility.value === 'home')) visibility.value = 'followers';
+		else if (ev.ctrlKey && ev.shiftKey && (visibility.value === 'followers')) visibility.value = 'specified';
+		if ((ev.ctrlKey || ev.metaKey) && ev.altKey) localOnly.value = !localOnly.value;
+	}
+
+	// justEndedComposition.value is for Safari, which keyDown occurs after compositionend.
+	// ev.isComposing is for another browsers.
+	if (ev.key === 'Escape' && !justEndedComposition.value && !ev.isComposing) emit('esc');
+}
+
+function onKeyup(ev: KeyboardEvent) {
+	justEndedComposition.value = false;
+}
+
+function onCompositionUpdate(ev: CompositionEvent) {
+	imeText.value = ev.data;
+}
+
+function onCompositionEnd(ev: CompositionEvent) {
+	imeText.value = '';
+	justEndedComposition.value = true;
+}
+
+const pastedFileName = 'yyyy-MM-dd HH-mm-ss [{{number}}]';
+
+async function onPaste(ev: ClipboardEvent) {
+	if (props.mock) return;
+	if (!ev.clipboardData) return;
+
+	let pastedFiles: File[] = [];
+	for (const { item, i } of Array.from(ev.clipboardData.items, (data, x) => ({ item: data, i: x }))) {
+		if (item.kind === 'file') {
+			const file = item.getAsFile();
+			if (!file) continue;
+			const lio = file.name.lastIndexOf('.');
+			const ext = lio >= 0 ? file.name.slice(lio) : '';
+			const formattedName = `${formatTimeString(new Date(file.lastModified), pastedFileName).replace(/{{number}}/g, `${i + 1}`)}${ext}`;
+			const renamedFile = new File([file], formattedName, { type: file.type });
+			pastedFiles.push(renamedFile);
+		}
+	}
+	if (pastedFiles.length > 0) {
+		ev.preventDefault();
+		uploader.addFiles(pastedFiles);
+		return;
+	}
+
+	const paste = ev.clipboardData.getData('text');
+
+	if (!renoteTargetNote.value && !quoteId.value && paste.startsWith(url + '/notes/')) {
+		ev.preventDefault();
+
+		os.confirm({
+			type: 'info',
+			text: i18n.ts.quoteQuestion,
+		}).then(({ canceled }) => {
+			if (canceled) {
+				insertTextAtCursor(textareaEl.value, paste);
+				return;
+			}
+
+			quoteId.value = paste.substring(url.length).match(/^\/notes\/(.+?)\/?$/)?.[1] ?? null;
+		});
+	}
+
+	if (paste.length > 1000) {
+		ev.preventDefault();
+		os.confirm({
+			type: 'info',
+			text: i18n.ts.attachAsFileQuestion,
+		}).then(({ canceled }) => {
+			if (canceled) {
+				insertTextAtCursor(textareaEl.value, paste);
+				return;
+			}
+
+			const fileName = formatTimeString(new Date(), pastedFileName).replace(/{{number}}/g, '0');
+			const file = new File([paste], `${fileName}.txt`, { type: 'text/plain' });
+			uploader.addFiles([file]);
+		});
+	}
+}
+
+function onDragover(ev) {
+	if (!ev.dataTransfer.items[0]) return;
+	const isFile = ev.dataTransfer.items[0].kind === 'file';
+	if (isFile || checkDragDataType(ev, ['driveFiles'])) {
+		ev.preventDefault();
+		draghover.value = true;
+		switch (ev.dataTransfer.effectAllowed) {
+			case 'all':
+			case 'uninitialized':
+			case 'copy':
+			case 'copyLink':
+			case 'copyMove':
+				ev.dataTransfer.dropEffect = 'copy';
+				break;
+			case 'linkMove':
+			case 'move':
+				ev.dataTransfer.dropEffect = 'move';
+				break;
+			default:
+				ev.dataTransfer.dropEffect = 'none';
+				break;
+		}
+	}
+}
+
+function onDragenter() {
+	draghover.value = true;
+}
+
+function onDragleave() {
+	draghover.value = false;
+}
+
+function onDrop(ev: DragEvent): void {
+	draghover.value = false;
+
+	// ファイルだったら
+	if (ev.dataTransfer && ev.dataTransfer.files.length > 0) {
+		ev.preventDefault();
+		uploader.addFiles(Array.from(ev.dataTransfer.files));
+		return;
+	}
+
+	//#region ドライブのファイル
+	{
+		const droppedData = getDragData(ev, 'driveFiles');
+		if (droppedData != null) {
+			files.value = [...files.value, ...droppedData];
+			ev.preventDefault();
+		}
+	}
+	//#endregion
+}
+
+function saveDraft() {
+	if (props.instant || props.mock) return;
+
+	const draftData = JSON.parse(miLocalStorage.getItem('drafts') ?? '{}');
+
+	draftData[draftKey.value] = {
+		updatedAt: new Date(),
+		data: {
+			text: text.value,
+			useCw: useCw.value,
+			cw: cw.value,
+			disableRightClick: disableRightClick.value,
+			saveToDraft: text.value === '' ? false : saveToDraft.value,
+			visibility: visibility.value,
+			localOnly: localOnly.value,
+			files: files.value,
+			poll: poll.value,
+			event: event.value,
+			visibleUserIds: visibleRecipients.userIds.value,
+			quoteId: quoteId.value,
+			reactionAcceptance: reactionAcceptance.value,
+			scheduledAt: scheduledAt.value,
+			scheduledNoteDelete: scheduledNoteDelete.value,
+			deliveryTargets: deliveryTargets.value,
+		},
+	};
+
+	miLocalStorage.setItem('drafts', JSON.stringify(draftData));
+}
+
+function deleteDraft() {
+	const draftData = JSON.parse(miLocalStorage.getItem('drafts') ?? '{}');
+
+	delete draftData[draftKey.value];
+
+	miLocalStorage.setItem('drafts', JSON.stringify(draftData));
+}
+
+async function saveServerDraft(options: {
+	isActuallyScheduled?: boolean;
+} = {}) {
+	if (!visibleRecipients.ready.value) return;
+
+	return await misskeyApi(serverDraftId.value == null ? 'notes/drafts/create' : 'notes/drafts/update', {
+		...(serverDraftId.value == null ? {} : { draftId: serverDraftId.value }),
+		text: text.value,
+		cw: useCw.value ? cw.value || null : null,
+		disableRightClick: disableRightClick.value,
+		visibility: visibility.value,
+		localOnly: localOnly.value,
+		hashtag: hashtags.value,
+		fileIds: files.value.map(f => f.id),
+		poll: poll.value,
+		event: event.value,
+		visibleUserIds: visibleRecipients.userIds.value,
+		renoteId: renoteTargetNote.value ? renoteTargetNote.value.id : quoteId.value ? quoteId.value : null,
+		replyId: replyTargetNote.value ? replyTargetNote.value.id : null,
+		channelId: targetChannel.value ? targetChannel.value.id : null,
+		reactionAcceptance: reactionAcceptance.value,
+		scheduledAt: scheduledAt.value,
+		isActuallyScheduled: options.isActuallyScheduled ?? false,
+		scheduledDelete: scheduledNoteDelete.value,
+		deliveryTargets: deliveryTargets.value,
+	}).then(() => {
+		if (scheduledAt.value != null && options.isActuallyScheduled === true) os.toast(i18n.ts.createSchedulePost, 'scheduled');
+		else os.toast(i18n.ts.noteDrafted, 'drafted');
+		clear();
+		emit('posted');
+	});
+}
+
+function isAnnoying(text: string): boolean {
+	return text.includes('$[x2') ||
+		text.includes('$[x3') ||
+		text.includes('$[x4') ||
+		text.includes('$[scale') ||
+		text.includes('$[position');
+}
+
+async function uploadFiles() {
+	await uploader.upload();
+
+	for (const uploadedItem of uploader.items.value.filter(x => x.uploaded != null)) {
+		files.value = [...files.value, uploadedItem.uploaded!];
+		uploader.removeItem(uploadedItem);
+	}
+}
+
+async function post(ev?: MouseEvent) {
+	if (!visibleRecipients.ready.value) return;
+
+	if (ev) {
+		const el = (ev.currentTarget ?? ev.target) as HTMLElement | null;
+
+		if (el && prefer.s.animation) {
+			const rect = el.getBoundingClientRect();
+			const x = rect.left + (el.offsetWidth / 2);
+			const y = rect.top + (el.offsetHeight / 2);
+			const { dispose } = os.popup(MkRippleEffect, { x, y }, {
+				end: () => dispose(),
+			});
+		}
+	}
+
+	if (scheduledAt.value != null) {
+		if (uploader.items.value.some(x => x.uploaded == null)) {
+			await uploadFiles();
+
+			// アップロード失敗したものがあったら中止
+			if (uploader.items.value.some(x => x.uploaded == null)) {
+				return;
+			}
+		}
+
+		await postAsScheduled();
+		return;
+	}
+
+	if (props.mock) return;
+
+	if (saveToDraft.value) return await saveServerDraft();
+
+	if (useCw.value && (cw.value == null || cw.value.trim() === '')) {
+		os.alert({
+			type: 'error',
+			text: i18n.ts.cwNotationRequired,
+		});
+		return;
+	}
+
+	if (prefer.s.showNoAltTextWarning && files.value.some((f) => f.comment == null || f.comment.length === 0)) {
+		const confirm = await os.actions({
+			type: 'warning',
+			title: i18n.ts.showNoAltWarning,
+			text: i18n.ts._altWarning.noAltWarning,
+			caption: i18n.ts._altWarning.noAltWarningDescription,
+			actions: [
+				{
+					value: 'ok' as const,
+					text: i18n.ts.thisPostMayBeAnnoyingIgnore,
+				},
+				{
+					value: 'neverShow' as const,
+					text: `${i18n.ts.thisPostMayBeAnnoyingIgnore} (${i18n.ts.neverShow})`,
+					danger: true,
+				},
+				{
+					value: 'cancel' as const,
+					text: i18n.ts.goBack,
+					primary: true,
+				},
+			],
+		});
+
+		if (confirm.canceled) return;
+		if (confirm.result === 'cancel') return;
+
+		if (confirm.result === 'neverShow') {
+			prefer.commit('showNoAltTextWarning', false);
+		}
+	}
+
+	if (visibility.value === 'public' && (
+		(useCw.value && cw.value != null && cw.value.trim() !== '' && isAnnoying(cw.value)) || // CWが迷惑になる場合
+		((!useCw.value || cw.value == null || cw.value.trim() === '') && text.value != null && text.value.trim() !== '' && isAnnoying(text.value)) // CWが無い かつ 本文が迷惑になる場合
+	)) {
+		const { canceled, result } = await os.actions({
+			type: 'warning',
+			text: i18n.ts.thisPostMayBeAnnoying,
+			actions: [{
+				value: 'home',
+				text: i18n.ts.thisPostMayBeAnnoyingHome,
+				primary: true,
+			}, {
+				value: 'cancel',
+				text: i18n.ts.thisPostMayBeAnnoyingCancel,
+			}, {
+				value: 'ignore',
+				text: i18n.ts.thisPostMayBeAnnoyingIgnore,
+			}],
+		});
+
+		if (canceled) return;
+		if (result === 'cancel') return;
+		if (result === 'home') {
+			visibility.value = 'home';
+		}
+	}
+
+	if (uploader.items.value.some(x => x.uploaded == null)) {
+		await uploadFiles();
+
+		// アップロード失敗したものがあったら中止
+		if (uploader.items.value.some(x => x.uploaded == null)) {
+			return;
+		}
+	}
+
+	// Recipient restoration may have started while a warning or upload was open.
+	if (!visibleRecipients.ready.value) return;
+
+	let postData = {
+		text: text.value === '' ? null : text.value,
+		fileIds: files.value.length > 0 ? files.value.map(f => f.id) : undefined,
+		replyId: replyTargetNote.value ? replyTargetNote.value.id : undefined,
+		renoteId: renoteTargetNote.value ? renoteTargetNote.value.id : quoteId.value ? quoteId.value : undefined,
+		channelId: targetChannel.value ? targetChannel.value.id : undefined,
+		poll: poll.value,
+		event: event.value,
+		cw: useCw.value ? cw.value ?? '' : null,
+		localOnly: localOnly.value,
+		visibility: visibility.value,
+		visibleUserIds: visibility.value === 'specified' ? [...visibleRecipients.userIds.value] : undefined,
+		reactionAcceptance: reactionAcceptance.value,
+		disableRightClick: disableRightClick.value,
+		noteId: props.updateMode ? props.initialNote?.id : undefined,
+		scheduledDelete: scheduledNoteDelete.value,
+		deliveryTargets: deliveryTargets.value,
+	};
+
+	if (withHashtags.value && hashtags.value && hashtags.value.trim() !== '') {
+		const hashtags_ = hashtags.value.trim().split(' ').map(x => x.startsWith('#') ? x : '#' + x).join(' ');
+		if (!postData.text) {
+			postData.text = hashtags_;
+		} else {
+			const postTextLines = postData.text.split('\n');
+			if (postTextLines[postTextLines.length - 1].trim() === '') {
+				postTextLines[postTextLines.length - 1] += hashtags_;
+			} else {
+				postTextLines[postTextLines.length - 1] += ' ' + hashtags_;
+			}
+			postData.text = postTextLines.join('\n');
+		}
+	}
+
+	// plugin
+	const notePostInterruptors = getPluginHandlers('note_post_interruptor');
+	if (notePostInterruptors.length > 0) {
+		for (const interruptor of notePostInterruptors) {
+			try {
+				postData = await interruptor.handler(deepClone(postData)) as typeof postData;
+			} catch (err) {
+				console.error(err);
+			}
+		}
+	}
+
+	let token: string | undefined = undefined;
+
+	if (postAccount.value) {
+		const storedAccounts = await getAccounts();
+		const storedAccount = storedAccounts.find(x => x.id === postAccount.value?.id);
+		if (storedAccount && storedAccount.token != null) {
+			token = storedAccount.token;
+		} else {
+			await os.alert({
+				type: 'error',
+				text: 'cannot find the token of the selected account.',
+			});
+			return;
+		}
+	}
+
+	// 旗鯖fork(ベータ): 警告・添付アップロード・プラグイン処理を終えた後、notes/create の直前でだけ待つ。
+	// 編集・予約・下書き・外部アカウント投稿は対象外。待機中はサーバーや連合へ予約状態を送らない。
+	if (postSendDelayEnabled.value && !props.updateMode && !useExternalAccount.value) {
+		submitMotionState.value = 'countdown';
+		const shouldSend = await postDelay.begin(postSendDelaySeconds.value);
+		if (!shouldSend) {
+			submitMotionState.value = 'idle';
+			return;
+		}
+	}
+
+	posting.value = true;
+	submitMotionState.value = 'sending';
+
+	// 外部アカウントでの投稿
+	if (useExternalAccount.value) {
+		if (!externalAccount.value) {
+			submitMotionState.value = 'failure';
+			await waitForSubmitMotion(980);
+			await os.alert({
+				type: 'error',
+				text: i18n.ts._hata._postFormCustom.externalAccountNotLinked,
+			});
+			posting.value = false;
+			submitMotionState.value = 'idle';
+			return;
+		}
+
+		try {
+			// ファイルがある場合は外部サーバーにアップロード
+			let externalFileIds: string[] | undefined;
+			if (files.value.length > 0) {
+				try {
+					externalFileIds = await uploadDriveFilesToExternal(files.value);
+				} catch (uploadErr) {
+					console.error('External file upload error:', uploadErr);
+					const { canceled } = await os.confirm({
+						type: 'warning',
+						text: i18n.ts._hata._postFormCustom.externalFileUploadFailed,
+					});
+					if (canceled) {
+						posting.value = false;
+						submitMotionState.value = 'idle';
+						return;
+					}
+				}
+			}
+
+			const externalPostData = {
+				text: postData.text,
+				cw: postData.cw,
+				visibility: postData.visibility,
+				localOnly: postData.localOnly,
+				replyId: externalReplyTarget.value?.id,
+				renoteId: externalRenoteTarget.value?.id,
+				fileIds: externalFileIds,
+			};
+
+			await callExternalApi('notes/create', externalPostData);
+
+			posted.value = true;
+			submitMotionState.value = 'success';
+			await waitForSubmitMotion(720);
+			if (!props.freezeAfterPosted) {
+				clear();
+				posted.value = false;
+				submitMotionState.value = 'idle';
+			}
+
+			nextTick(() => {
+				deleteDraft();
+				emit('posted');
+
+				if (externalReplyTarget.value) os.toast(i18n.ts._hata._postFormCustom.externalReplyPosted, 'reply');
+				else if (externalRenoteTarget.value) os.toast(i18n.ts._hata._postFormCustom.externalQuotePosted, 'quote');
+				else os.toast(i18n.ts._hata._postFormCustom.externalPostPosted, 'posted');
+
+				posting.value = false;
+				useExternalAccount.value = false;
+			});
+		} catch (err) {
+			console.error('External post error:', err);
+			submitMotionState.value = 'failure';
+			await waitForSubmitMotion(980);
+			await os.alert({
+				type: 'error',
+				text: i18n.ts._hata._postFormCustom.externalPostFailed,
+			});
+			posting.value = false;
+			submitMotionState.value = 'idle';
+		}
+
+		return;
+	}
+
+	if (props.updateMode && postData.noteId == null) {
+		posting.value = false;
+		submitMotionState.value = 'idle';
+		throw new Error('Cannot update a note without a note ID');
+	}
+	const request: Promise<Misskey.entities.Note | null> = props.updateMode
+		? misskeyApi('notes/update', { ...postData, noteId: postData.noteId!, text: postData.text ?? '' }, token).then(() => null)
+		: misskeyApi('notes/create', postData, token).then(res => res.createdNote);
+	request.then(async (createdNote) => {
+		posted.value = true;
+		submitMotionState.value = 'success';
+		await waitForSubmitMotion(720);
+		if (!props.freezeAfterPosted) {
+			clear();
+			posted.value = false;
+			submitMotionState.value = 'idle';
+		}
+
+		if (createdNote) {
+			globalEvents.emit('notePosted', createdNote);
+		}
+
+		nextTick(() => {
+			deleteDraft();
+			emit('posted');
+
+			if (props.updateMode) os.toast(i18n.ts.noteEdited, 'edited');
+			else if (replyTargetNote.value) os.toast(i18n.ts.replied, 'reply');
+			else if (renoteTargetNote.value) os.toast(i18n.ts.quoted, 'quote');
+
+			if (postData.text && postData.text !== '') {
+				const hashtags_ = parseMfmCached(postData.text).map(x => x.type === 'hashtag' && x.props.hashtag).filter(x => x) as string[];
+				const history = JSON.parse(miLocalStorage.getItem('hashtags') ?? '[]') as string[];
+				miLocalStorage.setItem('hashtags', JSON.stringify(unique(hashtags_.concat(history))));
+			}
+			posting.value = false;
+			postAccount.value = null;
+
+			incNotesCount();
+			if (notesCount === 1) {
+				claimAchievement('notes1');
+			}
+
+			poll.value = null;
+
+			const text = postData.text ?? '';
+			const lowerCase = text.toLowerCase();
+			if ((lowerCase.includes('love') || lowerCase.includes('❤')) && (lowerCase.includes('cherrypick') || lowerCase.includes('hataskey'))) {
+				claimAchievement('iLoveCherryPick');
+			}
+			if ([
+				'https://youtu.be/Efrlqw8ytg4',
+				'https://www.youtube.com/watch?v=Efrlqw8ytg4',
+				'https://m.youtube.com/watch?v=Efrlqw8ytg4',
+
+				'https://youtu.be/XVCwzwxdHuA',
+				'https://www.youtube.com/watch?v=XVCwzwxdHuA',
+				'https://m.youtube.com/watch?v=XVCwzwxdHuA',
+
+				'https://open.spotify.com/track/3Cuj0mZrlLoXx9nydNi7RB',
+				'https://open.spotify.com/track/7anfcaNPQWlWCwyCHmZqNy',
+				'https://open.spotify.com/track/5Odr16TvEN4my22K9nbH7l',
+				'https://open.spotify.com/album/5bOlxyl4igOrp2DwVQxBco',
+			].some(url => text.includes(url))) {
+				claimAchievement('brainDiver');
+			}
+
+			if (renoteTargetNote.value && (renoteTargetNote.value.userId === $i.id) && text.length > 0) {
+				claimAchievement('selfQuote');
+			}
+
+			const date = new Date();
+			const h = date.getHours();
+			const m = date.getMinutes();
+			const s = date.getSeconds();
+			if (h >= 0 && h <= 3) {
+				claimAchievement('postedAtLateNight');
+			}
+			if (m === 0 && s === 0) {
+				claimAchievement('postedAt0min0sec');
+			}
+
+			if (serverDraftId.value != null) {
+				misskeyApi('notes/drafts/delete', { draftId: serverDraftId.value });
+			}
+		});
+	}).catch(async err => {
+		submitMotionState.value = 'failure';
+		await waitForSubmitMotion(980);
+		posting.value = false;
+		submitMotionState.value = 'idle';
+		os.alert({
+			type: 'error',
+			text: `${err.message}\n${(err as any).id}`,
+		});
+	});
+	if (textareaEl.value) textareaEl.value.style.height = '140px';
+	if (props.updateMode) sound.playMisskeySfx('noteEdited');
+	haptic();
+}
+
+async function postAsScheduled() {
+	if (props.mock || !visibleRecipients.ready.value) return;
+
+	await saveServerDraft({
+		isActuallyScheduled: true,
+	});
+
+	sound.playMisskeySfx('noteSchedulePost');
+}
+
+function cancel() {
+	emit('cancel');
+}
+
+function insertMention() {
+	os.selectUser({ localOnly: localOnly.value, includeSelf: true }).then(user => {
+		insertTextAtCursor(textareaEl.value, '@' + Misskey.acct.toString(user) + ' ');
+	});
+}
+
+async function insertEmoji(ev: MouseEvent) {
+	textAreaReadOnly.value = true;
+	const target = ev.currentTarget ?? ev.target;
+	if (target == null) return;
+
+	// 外部アカウント使用時は外部サーバーの絵文字ピッカーを使用
+	if (useExternalAccount.value) {
+		let pos = textareaEl.value?.selectionStart ?? 0;
+		let posEnd = textareaEl.value?.selectionEnd ?? text.value.length;
+		const { dispose } = os.popup(MkExternalReactionPicker, {
+			anchorElement: target as HTMLElement,
+		}, {
+			done: (emoji: string) => {
+				const textBefore = text.value.substring(0, pos);
+				const textAfter = text.value.substring(posEnd);
+				text.value = textBefore + emoji + textAfter;
+				pos += emoji.length;
+				posEnd += emoji.length;
+			},
+			closed: () => {
+				dispose();
+				textAreaReadOnly.value = false;
+				nextTick(() => focus());
+			},
+		});
+		return;
+	}
+
+	// emojiPickerはダイアログが閉じずにtextareaとやりとりするので、
+	// focustrapをかけているとinsertTextAtCursorが効かない
+	// そのため、投稿フォームのテキストに直接注入する
+	// See: https://github.com/misskey-dev/misskey/pull/14282
+	//      https://github.com/misskey-dev/misskey/issues/14274
+
+	let pos = textareaEl.value?.selectionStart ?? 0;
+	let posEnd = textareaEl.value?.selectionEnd ?? text.value.length;
+	emojiPicker.show(
+		target as HTMLElement,
+		emoji => {
+			const textBefore = text.value.substring(0, pos);
+			const textAfter = text.value.substring(posEnd);
+			text.value = textBefore + emoji + textAfter;
+			pos += emoji.length;
+			posEnd += emoji.length;
+		},
+		() => {
+			textAreaReadOnly.value = false;
+			nextTick(() => focus());
+		},
+	);
+}
+
+async function insertMfmFunction(ev: MouseEvent) {
+	if (textareaEl.value == null) return;
+	mfmFunctionPicker(
+		ev.currentTarget ?? ev.target,
+		textareaEl.value,
+		text,
+	);
+}
+
+function showActions(ev: MouseEvent) {
+	os.popupMenu(postFormActions.map(action => ({
+		text: action.title,
+		action: () => {
+			action.handler({
+				text: text.value,
+				cw: cw.value,
+			}, (key, value) => {
+				if (typeof key !== 'string' || typeof value !== 'string') return;
+				if (key === 'text') { text.value = value; }
+				if (key === 'cw') { useCw.value = value !== null; cw.value = value; }
+			});
+		},
+	})), ev.currentTarget ?? ev.target, { motionPreset: 'postform' });
+}
+
+async function openMfmCheatSheet() {
+	const { dispose } = os.popup(defineAsyncComponent(() => import('@/components/MkMfmCheatSheetDialog.vue')), {}, {
+		cancel: () => {
+
+		},
+		closed: () => {
+			dispose();
+		},
+	});
+}
+
+const postAccount = ref<Misskey.entities.UserDetailed | null>(null);
+const useExternalAccount = ref(props.initialUseExternalAccount ?? false);
+const externalReplyTarget = shallowRef(props.externalReply ?? null);
+const externalRenoteTarget = shallowRef(props.externalRenote ?? null);
+
+// 外部サーバー情報
+const externalAccount = computed(() => getExternalAccount());
+const externalHost = computed(() => externalAccount.value?.host ?? '');
+const isExternalLinked = computed(() => isExternalAccountLinked());
+
+// 現在のアカウントのアバター
+const currentAccountAvatar = computed(() => {
+	if (useExternalAccount.value && externalAccount.value) {
+		return externalAccount.value.avatarUrl ?? `https://${externalAccount.value.host}/identicon/${externalAccount.value.userId}`;
+	}
+	return (postAccount.value ?? $i).avatarUrl;
+});
+
+async function openAccountMenu(ev: MouseEvent) {
+	if (props.mock) return;
+
+	function showDraftsDialog(scheduled: boolean) {
+		const { dispose } = os.popup(defineAsyncComponent(() => import('@/components/MkNoteDraftsDialog.vue')), {
+			scheduled,
+		}, {
+			restore: async (draft: Misskey.entities.NoteDraft) => {
+				text.value = draft.text ?? '';
+				useCw.value = draft.cw != null;
+				cw.value = draft.cw ?? null;
+				disableRightClick.value = draft.disableRightClick ?? false;
+				visibility.value = draft.visibility;
+				localOnly.value = draft.localOnly ?? false;
+				files.value = draft.files ?? [];
+				hashtags.value = draft.hashtag ?? '';
+				if (draft.deleteAt) {
+					scheduledNoteDelete.value = null;
+					nextTick(() => {
+						scheduledNoteDelete.value = {
+							deleteAt: draft.deleteAt ? (new Date(draft.deleteAt)).getTime() : null,
+							deleteAfter: null,
+						};
+					});
+				}
+				if (draft.hashtag) withHashtags.value = true;
+				if (draft.poll) {
+					// 投票を一時的に空にしないと反映されないため
+					poll.value = null;
+					nextTick(() => {
+						poll.value = {
+							choices: draft.poll!.choices,
+							multiple: draft.poll!.multiple,
+							expiresAt: draft.poll!.expiresAt ? (new Date(draft.poll!.expiresAt)).getTime() : null,
+							expiredAfter: null,
+						};
+					});
+				}
+				if (draft.event) {
+					event.value = null;
+					nextTick(() => {
+						const startValue = typeof draft.event!.start === 'string'
+							? (new Date(draft.event!.start)).getTime()
+							: draft.event!.start;
+						const endValue = typeof draft.event!.end === 'string'
+							? (new Date(draft.event!.end)).getTime()
+							: draft.event!.end;
+						event.value = {
+							title: draft.event!.title,
+							start: startValue,
+							end: endValue,
+							metadata: draft.event!.metadata,
+						};
+					});
+				}
+				void visibleRecipients.load(draft.visibleUserIds ?? []);
+				quoteId.value = draft.renoteId ?? null;
+				renoteTargetNote.value = draft.renote;
+				replyTargetNote.value = draft.reply;
+				reactionAcceptance.value = draft.reactionAcceptance;
+				scheduledAt.value = draft.scheduledAt ?? null;
+				deliveryTargets.value = normalizeDeliveryTargets(draft.deliveryTargets);
+				targetChannel.value = draft.channel ? draft.channel as unknown as Misskey.entities.Channel : null;
+
+				serverDraftId.value = draft.id;
+			},
+			cancel: () => {
+
+			},
+			closed: () => {
+				dispose();
+			},
+		});
+	}
+
+	const items = await getAccountMenu({
+		withExtraOperation: false,
+		includeCurrentAccount: true,
+		active: postAccount.value != null ? postAccount.value.id : $i.id,
+		onChoose: (account) => {
+			if (account.id === $i.id) {
+				postAccount.value = null;
+			} else {
+				postAccount.value = account;
+			}
+		},
+	});
+
+       const externalItems: MenuItem[] = [];
+                if (isExternalLinked.value && externalAccount.value) {
+	        externalItems.push({ type: 'divider' });
+	        externalItems.push({
+		  type: 'button',
+		  text: `🔗 @${externalAccount.value.username}@${externalAccount.value.host}`,
+		  icon: useExternalAccount.value ? 'ti ti-check' : undefined,
+		  action: () => {
+	            useExternalAccount.value = true;
+		    postAccount.value = null;
+		  },
+	   });
+        }
+
+	os.popupMenu([{
+		type: 'button',
+		text: i18n.ts._drafts.listDrafts,
+		icon: 'ti ti-cloud-download',
+		action: () => {
+			showDraftsDialog(false);
+		},
+	}, {
+		type: 'button',
+		text: i18n.ts._drafts.listScheduledNotes,
+		icon: 'ti ti-clock-down',
+		action: () => {
+			showDraftsDialog(true);
+		},
+	}, { type: 'divider' }, ...items, ...externalItems], (ev.currentTarget ?? ev.target ?? undefined) as HTMLElement | undefined, { motionPreset: 'postform' });
+}
+
+function showPerUploadItemMenu(item: UploaderItem, ev: MouseEvent) {
+	const menu = uploader.getMenu(item);
+	os.popupMenu(menu, ev.currentTarget ?? ev.target, { motionPreset: 'postform' });
+}
+
+function showPerUploadItemMenuViaContextmenu(item: UploaderItem, ev: MouseEvent) {
+	const menu = uploader.getMenu(item);
+	os.contextMenu(menu, ev);
+}
+
+async function schedule() {
+	const { canceled, result } = await os.inputDatetime({
+		title: i18n.ts.schedulePost,
+	});
+	if (canceled) return;
+	if (result.getTime() <= Date.now()) return;
+
+	scheduledAt.value = result.getTime();
+}
+
+function cancelSchedule() {
+	scheduledAt.value = null;
+}
+
+function toggleScheduledNoteDelete() {
+	if (scheduledNoteDelete.value) {
+		scheduledNoteDelete.value = null;
+	} else {
+		scheduledNoteDelete.value = {
+			deleteAt: null,
+			deleteAfter: null,
+		};
+	}
+}
+
+function cancelScheduleDelete() {
+	scheduledNoteDelete.value = null;
+}
+
+function showPostMenu(ev: MouseEvent) {
+	const menuItems: MenuItem[] = [];
+
+	if ($i.policies.noteDraftLimit > 0) {
+		menuItems.push({
+			type: 'switch',
+			text: i18n.ts._drafts.saveToDraft,
+			icon: 'ti ti-pencil-minus',
+			ref: saveToDraft,
+		});
+	}
+
+	menuItems.push({ type: 'divider' }, {
+		type: 'switch',
+		text: i18n.ts.disableRightClick,
+		icon: 'ti ti-mouse-off',
+		ref: disableRightClick,
+		disabled: files.value.length < 1,
+	});
+
+	os.popupMenu(menuItems, ev.currentTarget ?? ev.target, { motionPreset: 'postform' });
+}
+
+function toggleDeliveryTargets() {
+	if (deliveryTargets.value) {
+		deliveryTargets.value = null;
+	} else {
+		deliveryTargets.value = {
+			mode: 'include',
+			hosts: [],
+		};
+	}
+}
+
+onMounted(() => {
+	if (props.autofocus) {
+		focus();
+
+		nextTick(() => {
+			focus();
+		});
+	}
+
+	// TODO: detach when unmount
+	if (textareaEl.value) new Autocomplete(textareaEl.value, text);
+	if (cwInputEl.value) new Autocomplete(cwInputEl.value, cw);
+	if (hashtagsInputEl.value) new Autocomplete(hashtagsInputEl.value, hashtags);
+
+	nextTick(() => {
+		// 書きかけの投稿を復元
+		if (props.restoreDraft !== false && !props.instant && !props.mention && !props.specified && !props.mock) {
+			const draft = JSON.parse(miLocalStorage.getItem('drafts') ?? '{}')[draftKey.value];
+			if (draft) {
+				text.value = draft.data.text;
+				useCw.value = draft.data.useCw;
+				cw.value = draft.data.cw;
+				disableRightClick.value = draft.data.disableRightClick;
+				saveToDraft.value = draft.data.saveToDraft;
+				visibility.value = draft.data.visibility;
+				localOnly.value = draft.data.localOnly;
+				files.value = (draft.data.files || []).filter(draftFile => draftFile);
+				if (draft.data.poll) {
+					poll.value = draft.data.poll;
+				}
+				if (draft.data.event) {
+					event.value = draft.data.event;
+				}
+				if (draft.data.visibleUserIds) {
+					void visibleRecipients.load(draft.data.visibleUserIds);
+				}
+				quoteId.value = draft.data.quoteId;
+				reactionAcceptance.value = draft.data.reactionAcceptance;
+				scheduledAt.value = draft.data.scheduledAt ?? null;
+				scheduledNoteDelete.value = draft.data.scheduledNoteDelete ?? null;
+				deliveryTargets.value = normalizeDeliveryTargets(draft.data.deliveryTargets);
+			}
+		}
+
+		// 削除して編集
+		if (props.initialNote) {
+			const init = props.initialNote;
+			text.value = init.text ? init.text : '';
+			useCw.value = init.cw != null;
+			cw.value = init.cw ?? null;
+			visibility.value = init.visibility;
+			localOnly.value = init.localOnly ?? false;
+			files.value = init.files ?? [];
+			if (init.poll) {
+				poll.value = {
+					choices: init.poll.choices.map(x => x.text),
+					multiple: init.poll.multiple,
+					expiresAt: init.poll.expiresAt ? (new Date(init.poll.expiresAt)).getTime() : null,
+					expiredAfter: null,
+				};
+			}
+			if (init.event) {
+				const startValue = typeof init.event.start === 'string'
+					? (new Date(init.event.start)).getTime()
+					: init.event.start;
+				const endValue = typeof init.event.end === 'string'
+					? (new Date(init.event.end)).getTime()
+					: init.event.end;
+				event.value = {
+					title: init.event.title,
+					start: startValue,
+					end: endValue,
+					metadata: init.event.metadata,
+				};
+			}
+			void visibleRecipients.load(init.visibleUserIds ?? []);
+			quoteId.value = renoteTargetNote.value ? renoteTargetNote.value.id : null;
+			reactionAcceptance.value = init.reactionAcceptance;
+			disableRightClick.value = init.disableRightClick != null;
+			saveToDraft.value = false;
+			if (init.deletedAt) {
+				scheduledNoteDelete.value = {
+					deleteAt: init.deletedAt ? (new Date(init.deletedAt)).getTime() : null,
+					deleteAfter: null,
+				};
+			}
+			deliveryTargets.value = normalizeDeliveryTargets(init.deliveryTargets);
+		}
+
+		nextTick(() => watchForDraft());
+	});
+});
+
+async function canClose() {
+	if (!uploader.allItemsUploaded.value) {
+		const { canceled } = await os.confirm({
+			type: 'question',
+			text: i18n.ts._postForm.quitInspiteOfThereAreUnuploadedFilesConfirm,
+			okText: i18n.ts.yes,
+			cancelText: i18n.ts.no,
+		});
+		if (canceled) return false;
+	}
+
+	return true;
+}
+
+defineExpose({
+	clear,
+	abortUploader: () => uploader.abortAll(),
+	canClose,
+});
+</script>
+
+<style lang="scss" module>
+.root {
+	position: relative;
+	container-type: inline-size;
+	max-width: 800px;
+
+	&.modal {
+		width: 100%;
+		max-width: 640px;
+		overflow-x: clip;
+		overflow-y: auto;
+	}
+}
+
+.postDelayActive > :not(.postDelayStatus) {
+	pointer-events: none;
+}
+
+.postDelayStatus {
+	position: absolute;
+	left: 50%;
+	bottom: 10px;
+	z-index: 1100;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: min(330px, calc(100% - 20px));
+	max-width: calc(100% - 20px);
+	min-width: 0;
+	padding: 7px 8px 7px 12px;
+	border: 1px solid color-mix(in srgb, var(--MI_THEME-accent) 45%, var(--MI_THEME-divider));
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--MI_THEME-panel) 94%, transparent);
+	box-shadow: 0 6px 24px color-mix(in srgb, var(--MI_THEME-shadow) 32%, transparent);
+	box-sizing: border-box;
+	overflow: hidden;
+	white-space: nowrap;
+	backdrop-filter: blur(10px);
+	--hata-delay-base-transform: translateX(-50%);
+	transform: var(--hata-delay-base-transform);
+}
+
+.postDelayStatusExternal {
+	position: relative;
+	left: auto;
+	bottom: auto;
+	z-index: 1;
+	width: min(330px, 100%);
+	max-width: 100%;
+	--hata-delay-base-transform: none;
+}
+
+.visibilityFlash{display:grid;position:absolute;left:50%;top:50%;z-index:1110;width:58px;height:58px;place-items:center;border:1px solid color-mix(in srgb,var(--MI_THEME-accent) 42%,var(--MI_THEME-divider));border-radius:18px;background:color-mix(in srgb,var(--MI_THEME-panel) 88%,transparent);color:var(--MI_THEME-accent);box-shadow:0 14px 38px color-mix(in srgb,var(--MI_THEME-shadow) 24%,transparent);backdrop-filter:blur(12px);pointer-events:none;transform:translate(-50%,-50%);font-size:30px}
+:global(.hata-visibility-flash-enter-active){transition:opacity .18s ease-out,transform .24s cubic-bezier(.16,1,.3,1)}:global(.hata-visibility-flash-leave-active){transition:opacity .22s ease-in,transform .24s cubic-bezier(.4,0,1,1)}:global(.hata-visibility-flash-enter-from){opacity:0;transform:translate(-50%,-44%) scale(.82)}:global(.hata-visibility-flash-leave-to){opacity:0;transform:translate(-50%,-56%) scale(.96)}
+
+.postDelayAction,
+.postDelayActionPrimary {
+	padding: 5px 9px;
+	border-radius: 999px;
+	font-weight: 700;
+}
+
+.postDelayAction {
+	color: var(--MI_THEME-fg);
+	background: color-mix(in srgb, var(--MI_THEME-fg) 8%, transparent);
+}
+
+.postDelayActionPrimary {
+	color: var(--MI_THEME-fgOnAccent);
+	background: var(--MI_THEME-accent);
+}
+
+//#region header
+.header {
+	z-index: 1000;
+	min-height: 50px;
+	display: flex;
+	flex-wrap: nowrap;
+	gap: 4px;
+	padding: 8px 12px;
+}
+
+.headerLeft {
+	display: flex;
+	flex: 1;
+	flex-wrap: nowrap;
+	align-items: center;
+	gap: 6px;
+	padding-left: 12px;
+}
+
+.cancel {
+	padding: 8px;
+}
+
+.account {
+  position: relative;
+}
+
+.avatar {
+	width: 28px;
+	height: 28px;
+	margin: auto 0;
+	border-radius: 100%;
+
+	&.square {
+		border-radius: 20%;
+	}
+}
+
+.headerRight {
+	display: flex;
+	min-height: 48px;
+	font-size: 0.9em;
+	flex-wrap: nowrap;
+	align-items: center;
+	margin-left: auto;
+	gap: 4px;
+	overflow: clip;
+	padding-left: 4px;
+}
+
+.submit {
+	display: flex;
+	margin: 12px 12px 12px 6px;
+	vertical-align: bottom;
+}
+
+.submitButton {
+	&:focus-visible {
+		outline: none;
+
+		> .submitInner {
+			outline: 2px solid var(--MI_THEME-fgOnAccent);
+			outline-offset: -4px;
+		}
+	}
+
+	&:disabled {
+		opacity: 0.7;
+	}
+
+	&.posting {
+		cursor: wait;
+	}
+
+	&:not(:disabled):hover {
+		> .submitInner, .submitInnerMenu {
+			// background: linear-gradient(90deg, hsl(from var(--MI_THEME-accent) h s calc(l + 5)), hsl(from var(--MI_THEME-accent) h s calc(l + 5)));
+			background: light-dark(var(--MI_THEME-buttonGradateB), var(--MI_THEME-buttonGradateA))
+		}
+	}
+
+	&:not(:disabled):active {
+		> .submitInner, .submitInnerMenu {
+			// background: linear-gradient(90deg, hsl(from var(--MI_THEME-accent) h s calc(l + 5)), hsl(from var(--MI_THEME-accent) h s calc(l + 5)));
+			background: light-dark(var(--MI_THEME-buttonGradateB), var(--MI_THEME-buttonGradateA))
+		}
+	}
+}
+
+.colorBar {
+	position: absolute;
+	top: 0px;
+	left: 12px;
+	width: 5px;
+	height: 100% ;
+	border-radius: 999px;
+	pointer-events: none;
+}
+
+.submitInner, .submitInnerMenu {
+	display: flex;
+	height: 34px;
+	align-items: center;
+	justify-content: center;
+	padding: 0 8px;
+	line-height: 1;
+	font-weight: bold;
+	border-radius: 6px 0 0 6px;
+	min-width: 90px;
+	box-sizing: border-box;
+	color: var(--MI_THEME-fgOnAccent);
+	// background: linear-gradient(90deg, var(--MI_THEME-buttonGradateA), var(--MI_THEME-buttonGradateB));
+	background: var(--MI_THEME-accent);
+}
+
+.submitInner {
+	width: 90px;
+	min-width: 90px;
+}
+
+.submitInnerMenu {
+	padding: 0 5px;
+	border-radius: 0 6px 6px 0;
+	min-width: 0;
+}
+
+.headerRightItem {
+	margin: 0;
+	padding: 8px;
+	border-radius: 6px;
+
+	&:hover {
+		background: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.05));
+	}
+
+	&:disabled {
+		background: none;
+	}
+
+	&.danger {
+		color: #ff2a2a;
+	}
+}
+
+.headerRightButtonText {
+	padding-left: 6px;
+}
+
+.visibility {
+	overflow: clip;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 210px;
+
+	&:enabled {
+		> .headerRightButtonText {
+			opacity: 0.8;
+		}
+	}
+}
+//#endregion
+
+.cwSwapButton {
+	margin-left: 8px;
+	padding: 8px;
+	border-radius: 6px;
+	&:hover {
+		background: var(--X4);
+	}
+}
+
+.preview {
+	padding: 16px 20px;
+	// min-height: 75px;
+	max-height: 150px;
+	overflow: auto;
+	background-size: auto auto;
+}
+
+html[data-color-scheme=dark] .preview {
+	background-image: repeating-linear-gradient(135deg, transparent, transparent 5px, #0004 5px, #0004 10px);
+}
+
+html[data-color-scheme=light] .preview {
+	background-image: repeating-linear-gradient(135deg, transparent, transparent 5px, #00000005 5px, #00000005 10px);
+}
+
+.targetNote {
+	padding: 0 30px 16px 30px;
+}
+
+.withQuote {
+	display: flex;
+	align-items: center;
+	gap: .2em;
+	margin-inline: 30px;
+	margin-bottom: 12px;
+	color: var(--MI_THEME-accent);
+
+	i {
+		display: flex;
+	}
+
+	button {
+		display: flex;
+		padding: 0;
+	}
+}
+
+.toSpecified {
+	padding: 6px 30px;
+	margin-bottom: 8px;
+	overflow: auto;
+	white-space: nowrap;
+}
+
+.visibleUsers {
+	display: inline;
+	top: -1px;
+	font-size: 14px;
+}
+
+.visibleUser {
+	margin-right: 14px;
+	padding: 8px 0 8px 8px;
+	border-radius: 8px;
+	background: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
+}
+
+.hasNotSpecifiedMentions {
+	margin: 0 20px 16px 20px;
+}
+
+.scheduledAt {
+	margin: 0 20px 16px 20px;
+}
+
+.cw,
+.hashtags,
+.text {
+	display: block;
+	box-sizing: border-box;
+	padding: 0 30px;
+	margin: 0;
+	width: 100%;
+	font-size: 110%;
+	border: none;
+	border-radius: 0;
+	background: transparent;
+	color: var(--MI_THEME-fg);
+	font-family: inherit;
+
+	&:focus {
+		outline: none;
+	}
+
+	&:disabled {
+		opacity: 0.5;
+	}
+}
+
+.cwOuter {
+	display: flex;
+	width: 100%;
+	position: relative;
+}
+
+.cw {
+	z-index: 1;
+	padding-bottom: 8px;
+	border-bottom: solid 0.5px var(--MI_THEME-divider);
+}
+
+.cwTextCount {
+	position: absolute;
+	top: 0;
+	right: 2px;
+	padding: 2px 6px;
+	font-size: .9em;
+	color: var(--MI_THEME-warn);
+	border-radius: 6px;
+	max-width: 100%;
+	min-width: 1.6em;
+	text-align: center;
+
+	&.cwTextOver {
+		color: #ff2a2a;
+	}
+}
+
+.hashtags {
+	z-index: 1;
+	padding-top: 8px;
+	padding-bottom: 8px;
+	border-top: solid 0.5px var(--MI_THEME-divider);
+}
+
+.textOuter {
+	width: 100%;
+	position: relative;
+
+	&.withCw {
+		padding-top: 8px;
+	}
+}
+
+.text {
+	max-width: 100%;
+	min-width: 100%;
+	width: 100%;
+	min-height: 140px;
+	height: 100%;
+}
+
+.textCount {
+	position: absolute;
+	top: 0;
+	right: 2px;
+	padding: 4px 6px;
+	font-size: .9em;
+	color: var(--MI_THEME-warn);
+	border-radius: 6px;
+	min-width: 1.6em;
+	text-align: center;
+
+	&.textOver {
+		color: #ff2a2a;
+	}
+}
+
+.footer {
+	display: flex;
+	padding: 0 16px 16px 16px;
+	font-size: 1em;
+}
+
+.footerLeft {
+	flex: 1;
+	min-width: 0;
+	display: grid;
+	// 狭いフォームでは行を増やし、末尾の絵文字ボタンまで見える状態を保つ。
+	grid-auto-flow: row;
+	grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+	grid-auto-rows: 44px;
+	max-width: 100%;
+}
+
+.footerRight {
+	flex: 0;
+	margin-left: auto;
+	display: grid;
+	grid-auto-flow: row;
+	grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+	grid-auto-rows: 40px;
+	direction: rtl;
+}
+
+.footerButton {
+	display: inline-block;
+	padding: 0;
+	margin: 0;
+	font-size: 1em;
+	width: auto;
+	height: 100%;
+	border-radius: 6px;
+
+	&:hover {
+		background: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.05));
+	}
+
+	&.footerButtonActive {
+		color: var(--MI_THEME-accent);
+	}
+}
+
+.previewButtonActive {
+	color: var(--MI_THEME-accent);
+}
+
+@container (max-width: 500px) {
+	.header {
+		padding: 4px;
+	}
+
+	.headerRight {
+		font-size: .9em;
+	}
+
+	.headerRightButtonText {
+		display: none;
+	}
+
+	.visibility {
+		overflow: initial;
+	}
+
+	.submit {
+		margin: 8px 8px 8px 4px;
+	}
+
+	.toSpecified {
+		padding: 6px 22px;
+	}
+
+	.preview {
+		padding: 16px 14px;
+	}
+
+	.withQuote {
+		margin-inline: 22px;
+	}
+
+	// .cw,
+	// .hashtags,
+	// .text {
+		// padding: 0 16px;
+	// }
+
+	.cw {
+		padding: 0 22px 8px;
+	}
+
+	.hashtags {
+		padding: 8px 22px;
+	}
+
+	.text {
+		min-height: 120px;
+		padding: 0 22px;
+	}
+
+	.footer {
+		padding: 0 8px 8px 8px;
+	}
+
+	.footerLeft {
+		padding-left: 2px;
+	}
+
+	.footerRight {
+		grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
+	}
+}
+
+@container (max-width: 350px) {
+	.footer {
+		font-size: 0.9em;
+	}
+
+	.headerRight {
+		gap: 0;
+	}
+}
+
+// 外部アカウント関連のスタイル
+.externalBadge {
+	position: absolute;
+	bottom: -2px;
+	right: -2px;
+	font-size: 12px;
+	line-height: 1;
+}
+
+.externalBadgeInline {
+	margin-right: 4px;
+}
+
+.externalReplyTarget {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+}
+
+.externalTargetAvatar {
+	width: 38px;
+	height: 38px;
+	flex: 0 0 auto;
+	border-radius: 50%;
+	object-fit: cover;
+}
+
+.externalTargetAvatarFallback {
+	display: grid;
+	place-items: center;
+	background: var(--MI_THEME-buttonBg);
+	color: var(--MI_THEME-fg);
+}
+
+.externalTargetBody {
+	min-width: 0;
+	flex: 1;
+}
+
+.externalTargetNote {
+	font-size: 0.9em;
+}
+
+.externalTargetText {
+	margin-top: 4px;
+	opacity: 0.7;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+</style>

@@ -1,0 +1,49 @@
+{
+	"compilerOptions": {
+		// 旗鯖fork: TS6.0 baseUrl非推奨(TS5101)対応。G3申し送り参照。
+		"ignoreDeprecations": "6.0",
+		"allowJs": true,
+		"noEmitOnError": false,
+		"noImplicitAny": false,
+		"noImplicitReturns": true,
+		"noUnusedParameters": false,
+		"noUnusedLocals": true,
+		"noFallthroughCasesInSwitch": true,
+		"declaration": false,
+		"sourceMap": false,
+		"target": "ES2022",
+		"module": "nodenext",
+		"moduleResolution": "nodenext",
+		"removeComments": false,
+		// 上流2026.7.0 hunk: 型のみ影響。中和方式で移植。
+		"skipLibCheck": true,
+		// 旗鯖fork(G9): package.jsonの`@typescript/lib-webworker`(→@types/serviceworker)を
+		//   実際に有効化するフラグ。これが無いとTS6.0.2同梱のlib.webworker.d.tsが使われ、
+		//   NotificationOptions.actions/renotifyやServiceWorkerGlobalScope固有のイベント型が
+		//   欠落してsw tscが24件赤くなる(G3申し送り)。挙動は変えず型のみ解決。
+		"libReplacement": true,
+		"noLib": false,
+		"strict": true,
+		"strictNullChecks": true,
+		"experimentalDecorators": true,
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["./src/*"],
+			"@@/*": ["../frontend-shared/*"]
+		},
+		"typeRoots": [
+			"./node_modules/@types",
+			"./src/@types"
+		],
+		"lib": [
+			"esnext",
+			"webworker"
+		]
+	},
+	"compileOnSave": false,
+	"include": [
+		"./**/*.ts"
+	]
+}

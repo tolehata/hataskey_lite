@@ -1,0 +1,322 @@
+<!--
+SPDX-FileCopyrightText: syuilo and misskey-project
+SPDX-License-Identifier: AGPL-3.0-only
+-->
+
+<template>
+<div v-if="note == null" :class="$style.deleted">
+	{{ i18n.ts.deletedNote }}
+</div>
+<div v-else-if="!muted" :class="[$style.root, { [$style.children]: depth > 1 }]">
+	<div v-if="!prefer.s.hideAvatarsInNote && !hideLine" :class="$style.line"></div>
+	<div :class="$style.main">
+		<div v-if="note.channel" :class="$style.colorBar" :style="{ background: note.channel.color }"></div>
+		<MkAvatar v-if="!prefer.s.hideAvatarsInNote" :class="$style.avatar" :user="note.user" link preview/>
+		<div :class="$style.body" :style="{ cursor: expandOnNoteClick ? 'pointer' : '' }" @click.stop="noteClick" @dblclick.stop="noteDblClick">
+			<MkNoteHeader :class="$style.header" :note="note" :mini="true" :showTicker="false"/>
+			<div>
+				<MkInfo v-if="note.deleteAt != null" warn :class="$style.deleteAt">
+					<I18n :src="i18n.ts.scheduledToDeleteOnX" tag="span">
+						<template #x>
+							<MkTime :time="note.deleteAt" :mode="'detail'" style="font-weight: bold;"/>
+						</template>
+					</I18n>
+				</MkInfo>
+				<MkEvent v-if="note.event" :note="note"/>
+				<p v-if="note.cw != null" :class="$style.cw">
+					<Mfm v-if="note.cw != ''" style="margin-right: 8px;" :text="note.cw" :author="note.user" :nyaize="'respect'"/>
+					<MkCwButton v-model="showContent" style="width: 100%" :text="note.text" :files="note.files" :poll="note.poll" @click.stop/>
+				</p>
+				<div v-show="note.cw == null || showContent">
+					<MkSubNoteContent :class="[$style.text, { [$style.showSubNoteFooterButton]: prefer.s.showSubNoteFooterButton }]" :note="note" :showSubNoteFooterButton="prefer.s.showSubNoteFooterButton"/>
+				</div>
+			</div>
+			<div v-if="showTicker" :class="$style.tickerFooter"><MkInstanceTicker :host="note.user.host" :instance="note.user.instance" @click.stop="showOnRemote"/></div>
+		</div>
+	</div>
+	<template v-if="depth < 5">
+		<MkNoteSub v-for="reply in replies" :key="reply.id" :note="reply" :class="$style.reply" :detail="true" :depth="depth + 1"/>
+	</template>
+	<div v-else :class="$style.more">
+		<MkA class="_link" :to="notePage(note)">{{ i18n.ts.continueThread }} <i class="ti ti-chevron-double-right"></i></MkA>
+	</div>
+</div>
+<div v-else :class="$style.muted" @click="muted = false">
+	<I18n :src="i18n.ts.userSaysSomething" tag="small">
+		<template #name>
+			<MkA v-user-preview="note.userId" :to="userPage(note.user)">
+				<MkUserName :user="note.user"/>
+			</MkA>
+		</template>
+	</I18n>
+</div>
+</template>
+
+<script lang="ts" setup>
+import { ref } from 'vue';
+import * as Misskey from 'cherrypick-js';
+import MkNoteHeader from '@/components/MkNoteHeader.vue';
+import MkInstanceTicker from '@/components/MkInstanceTicker.vue';
+import MkSubNoteContent from '@/components/MkSubNoteContent.vue';
+import MkCwButton from '@/components/MkCwButton.vue';
+import MkEvent from '@/components/MkEvent.vue';
+import { notePage } from '@@/js/note.js';
+import { misskeyApi } from '@/utility/misskey-api.js';
+import { i18n } from '@/i18n.js';
+import { $i } from '@/i.js';
+import { userPage } from '@/filters/user.js';
+import { checkWordMute } from '@/utility/check-word-mute.js';
+import { prefer } from '@/preferences.js';
+import { useRouter } from '@/router.js';
+import MkInfo from '@/components/MkInfo.vue';
+
+const hideLine = ref(false);
+
+const props = withDefaults(defineProps<{
+	note: Misskey.entities.Note | null;
+	detail?: boolean;
+
+	// how many notes are in between this one and the note being viewed in detail
+	depth?: number;
+}>(), {
+	depth: 1,
+});
+
+const muted = ref(props.note && $i ? checkWordMute(props.note, $i, $i.mutedWords) : false);
+
+const expandOnNoteClick = prefer.s.expandOnNoteClick;
+const router = useRouter();
+const showTicker = prefer.s.instanceTicker === 'always' || (prefer.s.instanceTicker === 'remote' && !!props.note?.user.instance);
+
+const showContent = ref(false);
+const replies = ref<Misskey.entities.Note[]>([]);
+
+if (props.detail && props.note) {
+	misskeyApi('notes/children', {
+		noteId: props.note.id,
+		limit: 5,
+	}).then(res => {
+		replies.value = res;
+		hideLine.value = true;
+	});
+}
+
+if (prefer.s.alwaysShowCw) showContent.value = true;
+
+function noteClick(ev: MouseEvent) {
+	if (!expandOnNoteClick || window.getSelection()?.toString() !== '' || prefer.s.expandOnNoteClickBehavior === 'doubleClick') ev.stopPropagation();
+	else router.pushByPath(notePage(props.note));
+}
+
+function noteDblClick(ev: MouseEvent) {
+	if (!expandOnNoteClick || window.getSelection()?.toString() !== '' || prefer.s.expandOnNoteClickBehavior === 'click') ev.stopPropagation();
+	else router.pushByPath(notePage(props.note));
+}
+
+function showOnRemote() {
+	if (!props.note) return;
+	if (props.note.user.instance === undefined) router.pushByPath(notePage(props.note));
+	else window.open(props.note.url ?? props.note.uri, '_blank', 'noopener');
+}
+</script>
+
+<style lang="scss" module>
+.root {
+	padding: 28px 32px;
+	font-size: 0.9em;
+	position: relative;
+
+	&.children {
+		padding: 10px 0 0 16px;
+		font-size: 1em;
+	}
+}
+
+.line {
+	position: absolute;
+	height: 100%;
+	left: 60px;
+	border-left: 2.5px dotted rgb(174, 174, 174);
+}
+
+.main {
+	display: flex;
+
+	&::after {
+		content: "";
+		pointer-events: none;
+		display: block;
+		position: absolute;
+		z-index: -1;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		margin: auto;
+		//width: calc(100% - 8px);
+		//height: calc(100% - 8px);
+		background: var(--MI_THEME-panelHighlight);
+		//border: dashed 2px var(--MI_THEME-focus);
+		border-radius: var(--MI-radius);
+		box-sizing: border-box;
+		opacity: 0;
+		transition: opacity .2s, background .2s;
+	}
+
+	:is(.reply, .more) &::after {
+		width: calc(100% + 2.5%);
+		height: calc(100% + 2.5%);
+	}
+
+	&:focus-visible {
+		outline: none;
+		text-decoration: none;
+	}
+
+	@media (hover: hover) {
+		&:hover {
+			outline: none;
+			text-decoration: none;
+			cursor: pointer;
+		}
+
+		&:hover::after {
+			opacity: 1;
+		}
+	}
+}
+
+.colorBar {
+	position: absolute;
+	top: 8px;
+	left: 8px;
+	width: 5px;
+	height: calc(100% - 8px);
+	border-radius: 999px;
+	pointer-events: none;
+}
+
+.avatar {
+	flex-shrink: 0;
+	display: block;
+	margin: 0 14px 0 0;
+	width: 58px;
+	height: 58px;
+	border-radius: 8px;
+	background: var(--MI_THEME-panel);
+}
+
+.body {
+	flex: 1;
+	min-width: 0;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.header {
+	margin-bottom: 2px;
+}
+
+.tickerFooter {
+	display: flex;
+	justify-content: flex-end;
+	min-width: 0;
+	max-width: 100%;
+	margin-top: 4px;
+
+	> :global(*) {
+		min-width: 0;
+		max-width: min(100%, 320px);
+		margin-top: 0;
+	}
+}
+
+.cw {
+	cursor: default;
+	display: grid;
+	margin: 0;
+	padding: 0;
+	overflow-wrap: break-word;
+}
+
+.text {
+	margin: 0;
+	padding: 0;
+}
+
+.reply, .more {
+	border-left: solid 0.5px var(--MI_THEME-divider);
+	margin-top: 10px;
+}
+
+.more {
+	padding: 10px 0 0 16px;
+}
+
+.showSubNoteFooterButton {
+	padding-bottom: 15px;
+}
+
+@container (max-width: 580px) {
+	.root {
+		padding: 28px 26px 0;
+	}
+
+	.line {
+		left: 50.5px;
+	}
+
+	.avatar {
+		width: 50px;
+		height: 50px;
+	}
+}
+
+@container (max-width: 500px) {
+	.root {
+		padding: 23px 25px;
+	}
+}
+
+@container (max-width: 480px) {
+	.root {
+		padding: 22px 24px;
+
+		&.children {
+			padding: 10px 0 0 8px;
+		}
+	}
+}
+
+@container (max-width: 450px) {
+	.line {
+		left: 46px;
+	}
+
+	.avatar {
+		width: 46px;
+		height: 46px;
+	}
+}
+
+.muted {
+	text-align: center;
+	padding: 8px !important;
+	border: 1px solid var(--MI_THEME-divider);
+	margin: 8px 8px 0 8px;
+	border-radius: 8px;
+}
+
+.deleted {
+	text-align: center;
+	padding: 8px !important;
+	margin: 8px 8px 0 8px;
+	--color: light-dark(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.15));
+	background-size: auto auto;
+	background-image: repeating-linear-gradient(135deg, transparent, transparent 10px, var(--color) 4px, var(--color) 14px);
+	border-radius: 8px;
+}
+
+.deleteAt {
+	margin: 0 0 8px 0;
+}
+</style>

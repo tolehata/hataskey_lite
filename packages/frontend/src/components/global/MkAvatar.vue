@@ -1,0 +1,363 @@
+<!--
+SPDX-FileCopyrightText: syuilo and misskey-project
+SPDX-License-Identifier: AGPL-3.0-only
+-->
+
+<template>
+<component :is="link ? MkA : 'span'" v-user-preview="preview ? user.id : undefined" v-bind="bound" class="_noSelect" :class="[$style.root, { [$style.animation]: animation && (!isToastAvatar && !isFloatingBtn), [$style.cat]: user.isCat && (!isToastAvatar && !isFloatingBtn), [$style.square]: squareAvatars && !isFloatingBtn, [$style.isFloatingBtn]: isFloatingBtn }]" :style="{ color }" :title="acct(user)" @click="onClick">
+	<MkImgWithBlurhash
+		v-if="prefer.s.enableHighQualityImagePlaceholders"
+		:class="[$style.inner, { [$style.reduceBlurEffect]: !prefer.s.useBlurEffect, [$style.reduceAnimation]: !prefer.s.animation, [$style.scrollToTransparent]: showEl && !forceOpacity, [$style.isFloatingBtn]: isFloatingBtn }]"
+		:src="url"
+		:hash="user.avatarBlurhash"
+		:cover="true"
+		:onlyAvgColor="true"
+		@mouseover="prefer.s.showingAnimatedImages === 'interaction' ? playAnimation = true : ''"
+		@mouseout="prefer.s.showingAnimatedImages === 'interaction' ? playAnimation = false : ''"
+		@touchstart.passive="prefer.s.showingAnimatedImages === 'interaction' ? playAnimation = true : ''"
+		@touchend="prefer.s.showingAnimatedImages === 'interaction' ? playAnimation = false : ''"
+	/>
+	<img
+		v-else
+		:class="[$style.inner, { [$style.reduceBlurEffect]: !prefer.s.useBlurEffect, [$style.reduceAnimation]: !prefer.s.animation, [$style.scrollToTransparent]: showEl && !forceOpacity, [$style.isFloatingBtn]: isFloatingBtn }]"
+		:src="url"
+		alt=""
+		decoding="async"
+		style="pointer-events: none;"
+		@mouseover="prefer.s.showingAnimatedImages === 'interaction' ? playAnimation = true : ''"
+		@mouseout="prefer.s.showingAnimatedImages === 'interaction' ? playAnimation = false : ''"
+		@touchstart.passive="prefer.s.showingAnimatedImages === 'interaction' ? playAnimation = true : ''"
+		@touchend="prefer.s.showingAnimatedImages === 'interaction' ? playAnimation = false : ''"
+	/>
+	<MkUserOnlineIndicator v-if="indicator && !isToastAvatar" :class="$style.indicator" :user="user"/>
+	<div v-if="user.isCat && !isToastAvatar" :class="[$style.ears]">
+		<div :class="$style.earLeft"/>
+		<div :class="$style.earRight"/>
+	</div>
+	<template v-if="showDecoration">
+		<img
+			v-for="decoration in visibleDecorations"
+			data-avatar-decoration
+			:class="[$style.decoration, { [$style.decorationBlink]: 'blink' in decoration && decoration.blink }]"
+			:src="getDecorationUrl(decoration)"
+			:style="{
+				rotate: getDecorationAngle(decoration),
+				scale: getDecorationScale(decoration),
+				translate: getDecorationOffset(decoration),
+				transform: getDecorationTransform(decoration),
+				opacity: getDecorationOpacity(decoration),
+			}"
+			alt=""
+			draggable="false"
+			style="-webkit-user-drag: none;"
+		>
+	</template>
+</component>
+</template>
+
+<script lang="ts" setup>
+import { onMounted, onUnmounted, watch, ref, computed } from 'vue';
+import * as Misskey from 'cherrypick-js';
+import { extractAvgColorFromBlurhash } from '@@/js/extract-avg-color-from-blurhash.js';
+import MkImgWithBlurhash from '../MkImgWithBlurhash.vue';
+import MkA from './MkA.vue';
+import { getStaticImageUrl } from '@/utility/media-proxy.js';
+import { acct, userPage } from '@/filters/user.js';
+import MkUserOnlineIndicator from '@/components/MkUserOnlineIndicator.vue';
+import { prefer } from '@/preferences.js';
+import { scrollToVisibility } from '@/utility/scroll-to-visibility.js';
+import { useAvatarDecorationClock } from '@/composables/use-avatar-decoration-clock.js';
+import { isDecorationWithinPeriod } from '@/utility/avatar-decoration-availability.js';
+
+const { showEl } = scrollToVisibility();
+
+const animation = ref(prefer.s.animation);
+
+const props = withDefaults(defineProps<{
+	user: Misskey.entities.User;
+	target?: string | null;
+	link?: boolean;
+	preview?: boolean;
+	indicator?: boolean;
+	decorations?: (Omit<Misskey.entities.UserDetailed['avatarDecorations'][number], 'id'> & { blink?: boolean; })[];
+	forceShowDecoration?: boolean;
+	noteClick?: boolean;
+	forceOpacity?: boolean;
+	isToastAvatar?: boolean;
+	isFloatingBtn?: boolean;
+}>(), {
+	target: null,
+	link: false,
+	preview: false,
+	indicator: false,
+	decorations: undefined,
+	forceShowDecoration: false,
+	noteClick: false,
+	forceOpacity: true,
+	isToastAvatar: false,
+	isFloatingBtn: false,
+});
+
+const emit = defineEmits<{
+	(ev: 'click', v: MouseEvent): void;
+}>();
+
+const squareAvatars = ref((!prefer.s.setFederationAvatarShape && prefer.s.squareAvatars) || (prefer.s.setFederationAvatarShape && !props.user.setFederationAvatarShape && prefer.s.squareAvatars) || (prefer.s.setFederationAvatarShape && props.user.setFederationAvatarShape && props.user.isSquareAvatars));
+const showDecoration = (props.forceShowDecoration || prefer.s.showAvatarDecorations) && !props.isFloatingBtn;
+const decorationTime = useAvatarDecorationClock(() => props.decorations ?? props.user.avatarDecorations);
+const visibleDecorations = computed(() => (props.decorations ?? props.user.avatarDecorations).filter(decoration => isDecorationWithinPeriod(decoration, decorationTime.value)));
+
+const bound = computed(() => props.link
+	? { to: userPage(props.user), target: props.target }
+	: {});
+
+const playAnimation = ref(true);
+if (prefer.s.showingAnimatedImages === 'interaction') playAnimation.value = false;
+let playAnimationTimer = window.setTimeout(() => playAnimation.value = false, 5000);
+const url = computed(() => {
+	if (prefer.s.disableShowingAnimatedImages || prefer.s.dataSaver.avatar || (['interaction', 'inactive'].includes(<string>prefer.s.showingAnimatedImages) && !playAnimation.value)) return getStaticImageUrl(props.user.avatarUrl);
+	return props.user.avatarUrl;
+});
+
+function onClick(ev: MouseEvent): void {
+	if (props.noteClick) ev.stopPropagation();
+	if (props.link) return;
+	emit('click', ev);
+}
+
+function getDecorationUrl(decoration: Omit<Misskey.entities.UserDetailed['avatarDecorations'][number], 'id'>) {
+	if (prefer.s.disableShowingAnimatedImages || prefer.s.dataSaver.avatar || (['interaction', 'inactive'].includes(<string>prefer.s.showingAnimatedImages) && !playAnimation.value)) return getStaticImageUrl(decoration.url);
+	return decoration.url;
+}
+
+function getDecorationAngle(decoration: Omit<Misskey.entities.UserDetailed['avatarDecorations'][number], 'id'>) {
+	const angle = decoration.angle ?? 0;
+	return angle === 0 ? undefined : `${angle * 360}deg`;
+}
+
+function getDecorationScale(decoration: Omit<Misskey.entities.UserDetailed['avatarDecorations'][number], 'id'>) {
+	const scaleX = decoration.flipH ? -1 : 1;
+	return scaleX === 1 ? undefined : `${scaleX} 1`;
+}
+
+function getDecorationOffset(decoration: Omit<Misskey.entities.UserDetailed['avatarDecorations'][number], 'id'>) {
+	const offsetX = decoration.offsetX ?? 0;
+	const offsetY = decoration.offsetY ?? 0;
+	return offsetX === 0 && offsetY === 0 ? undefined : `${offsetX * 100}% ${offsetY * 100}%`;
+}
+
+function getDecorationTransform(decoration: Omit<Misskey.entities.UserDetailed['avatarDecorations'][number], 'id'>) {
+	const scale = decoration.scale ?? 1;
+	return `${scale === 1 ? '' : `scale(${scale})`}`;
+}
+
+function getDecorationOpacity(decoration: Omit<Misskey.entities.UserDetailed['avatarDecorations'][number], 'id'>) {
+	const opacity = decoration.opacity ?? 1;
+	return opacity === 1 ? undefined : opacity;
+}
+
+function resetTimer() {
+	playAnimation.value = true;
+	window.clearTimeout(playAnimationTimer);
+	playAnimationTimer = window.setTimeout(() => playAnimation.value = false, 5000);
+}
+
+const color = ref<string | undefined>();
+
+watch(() => props.user.avatarBlurhash, () => {
+	if (props.user.avatarBlurhash == null) return;
+	color.value = extractAvgColorFromBlurhash(props.user.avatarBlurhash);
+}, {
+	immediate: true,
+});
+
+onMounted(() => {
+	if (prefer.s.showingAnimatedImages === 'inactive') {
+		window.addEventListener('mousemove', resetTimer);
+		window.addEventListener('touchstart', resetTimer, { passive: true });
+		window.addEventListener('touchend', resetTimer);
+	}
+});
+
+onUnmounted(() => {
+	if (prefer.s.showingAnimatedImages === 'inactive') {
+		window.removeEventListener('mousemove', resetTimer);
+		window.removeEventListener('touchstart', resetTimer);
+		window.removeEventListener('touchend', resetTimer);
+	}
+});
+</script>
+
+<style lang="scss" module>
+@keyframes earwiggleleft {
+	from { transform: rotate(37.6deg) skew(30deg); }
+	25% { transform: rotate(10deg) skew(30deg); }
+	50% { transform: rotate(20deg) skew(30deg); }
+	75% { transform: rotate(0deg) skew(30deg); }
+	to { transform: rotate(37.6deg) skew(30deg); }
+}
+
+@keyframes earwiggleright {
+	from { transform: rotate(-37.6deg) skew(-30deg); }
+	30% { transform: rotate(-10deg) skew(-30deg); }
+	55% { transform: rotate(-20deg) skew(-30deg); }
+	75% { transform: rotate(0deg) skew(-30deg); }
+	to { transform: rotate(-37.6deg) skew(-30deg); }
+}
+
+@keyframes eartightleft {
+	from { transform: rotate(37.6deg) skew(30deg); }
+	50% { transform: rotate(37.4deg) skew(30deg); }
+	to { transform: rotate(37.6deg) skew(30deg); }
+}
+
+@keyframes eartightright {
+	from { transform: rotate(-37.6deg) skew(-30deg); }
+	50% { transform: rotate(-37.4deg) skew(-30deg); }
+	to { transform: rotate(-37.6deg) skew(-30deg); }
+}
+
+.root {
+	position: relative;
+	display: inline-block;
+	vertical-align: bottom;
+	flex-shrink: 0;
+	border-radius: 100%;
+	line-height: 16px;
+
+	&.isFloatingBtn {
+		border-radius: initial;
+	}
+}
+
+.inner {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	top: 0;
+	border-radius: 100%;
+	z-index: 1;
+	overflow: clip;
+	object-fit: cover;
+	width: 100%;
+	height: 100%;
+
+	&.isFloatingBtn {
+		border-radius: 28px;
+		opacity: .7;
+		transition: opacity 0.5s;
+	}
+
+	&.reduceBlurEffect {
+		opacity: 1;
+	}
+
+	&.reduceAnimation {
+		transition: opacity 0s;
+	}
+
+	&.scrollToTransparent {
+		opacity: .7;
+	}
+}
+
+.indicator {
+	position: absolute;
+	z-index: 2;
+	bottom: 0;
+	left: 0;
+	width: 20%;
+	height: 20%;
+}
+
+.square {
+	border-radius: 20%;
+
+	> .inner {
+		border-radius: 20%;
+	}
+}
+
+.cat {
+	> .ears {
+		contain: strict;
+		position: absolute;
+		top: -50%;
+		left: -50%;
+		width: 100%;
+		height: 100%;
+		padding: 50%;
+		pointer-events: none;
+
+		> .earLeft,
+		> .earRight {
+			contain: strict;
+			display: inline-block;
+			height: 50%;
+			width: 50%;
+			background: currentColor;
+
+			&::after {
+				contain: strict;
+				content: '';
+				display: block;
+				width: 60%;
+				height: 60%;
+				margin: 20%;
+				background: #df548f;
+			}
+		}
+
+		> .earLeft {
+			transform: rotate(37.5deg) skew(30deg);
+
+			&, &::after {
+				border-radius: 25% 75% 75%;
+			}
+		}
+
+		> .earRight {
+			transform: rotate(-37.5deg) skew(-30deg);
+
+			&, &::after {
+				border-radius: 75% 25% 75% 75%;
+			}
+		}
+	}
+
+	&.animation:hover {
+		> .ears {
+			> .earLeft {
+				animation: earwiggleleft 1s infinite;
+			}
+
+			> .earRight {
+				animation: earwiggleright 1s infinite;
+			}
+		}
+	}
+}
+
+.decoration {
+	position: absolute;
+	z-index: 1;
+	top: -50%;
+	left: -50%;
+	width: 200%;
+	pointer-events: none;
+}
+
+.decorationBlink {
+	animation: blink 1s infinite;
+}
+
+@keyframes blink {
+	0%, 100% {
+		filter: brightness(2);
+	}
+	50% {
+		filter: brightness(1);
+	}
+}
+</style>

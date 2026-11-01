@@ -1,0 +1,186 @@
+<!--
+SPDX-FileCopyrightText: syuilo and misskey-project
+SPDX-License-Identifier: AGPL-3.0-only
+-->
+
+<template>
+<MkModalWindow
+	ref="dialog"
+	:width="400"
+	:height="700"
+	@close="cancel"
+	@closed="emit('closed')"
+>
+	<template #header>{{ i18n.ts.avatarDecorations }}</template>
+
+	<div>
+		<div class="_spacer" style="--MI_SPACER-min: 20px; --MI_SPACER-max: 28px;">
+			<div style="text-align: center;">
+				<div :class="$style.name">{{ decoration.name }}</div>
+				<p v-if="reason" role="status">{{ i18n.ts._hataskDecoration[reason] }}</p>
+				<p v-if="decoration.availableUntil">{{ i18n.ts._hataskDecoration.wearUntil }}: {{ new Date(decoration.availableUntil).toLocaleString() }}</p>
+				<MkAvatar style="width: 64px; height: 64px; margin-bottom: 20px;" :user="$i" :decorations="decorationsForPreview" forceShowDecoration/>
+			</div>
+			<div class="_gaps_s">
+				<MkRange v-model="angle" continuousUpdate :min="-0.5" :max="0.5" :step="0.001" :textConverter="(v) => `${Math.round(v * 360)}°`">
+					<template #label>{{ i18n.ts.angle }}</template>
+				</MkRange>
+				<MkRange v-model="offsetX" continuousUpdate :min="-0.25" :max="0.25" :step="0.001" :textConverter="(v) => `${Math.round(v * 100)}%`">
+					<template #label>X {{ i18n.ts.position }}</template>
+				</MkRange>
+				<MkRange v-model="offsetY" continuousUpdate :min="-0.25" :max="0.25" :step="0.001" :textConverter="(v) => `${Math.round(v * 100)}%`">
+					<template #label>Y {{ i18n.ts.position }}</template>
+				</MkRange>
+				<MkRange v-model="scale" continuousUpdate :min="0.5" :max="1.5" :step="0.05" :textConverter="(v) => `${v.toFixed(2)}x`">
+					<template #label>{{ i18n.ts.scale }}</template>
+				</MkRange>
+				<MkRange v-model="opacity" continuousUpdate :min="0" :max="1" :step="0.01" :textConverter="(v) => `${Math.round(v * 100)}%`">
+					<template #label>{{ i18n.ts.opacity }}</template>
+				</MkRange>
+				<MkSwitch v-model="flipH">
+					<template #label>{{ i18n.ts.flip }}</template>
+				</MkSwitch>
+			</div>
+		</div>
+
+		<div :class="$style.footer" class="_buttonsCenter">
+			<MkButton v-if="usingIndex != null" :disabled="locked" primary rounded @click="update"><i class="ti ti-check"></i> {{ i18n.ts.update }}</MkButton>
+			<MkButton v-if="usingIndex != null" rounded @click="detach"><i class="ti ti-x"></i> {{ i18n.ts.detach }}</MkButton>
+			<MkButton v-else :disabled="exceeded || locked" primary rounded @click="attach"><i class="ti ti-check"></i> {{ i18n.ts.attach }}</MkButton>
+		</div>
+	</div>
+</MkModalWindow>
+</template>
+
+<script lang="ts" setup>
+import { useTemplateRef, ref, computed } from 'vue';
+import type { DecorationAvailability } from '@/utility/avatar-decoration-availability.js';
+import MkButton from '@/components/MkButton.vue';
+import MkModalWindow from '@/components/MkModalWindow.vue';
+import MkSwitch from '@/components/MkSwitch.vue';
+import { i18n } from '@/i18n.js';
+import MkRange from '@/components/MkRange.vue';
+import { ensureSignin } from '@/i.js';
+import { decorationUnavailableReason, isDecorationWithinPeriod } from '@/utility/avatar-decoration-availability.js';
+import { useAvatarDecorationClock } from '@/composables/use-avatar-decoration-clock.js';
+
+const $i = ensureSignin();
+
+const props = defineProps<{
+	usingIndex: number | null;
+	decoration: DecorationAvailability & {
+		id: string;
+		url: string;
+		name: string;
+		roleIdsThatCanBeUsedThisDecoration: string[];
+	};
+}>();
+
+const emit = defineEmits<{
+	(ev: 'closed'): void;
+	(ev: 'attach', payload: {
+		angle: number;
+		flipH: boolean;
+		offsetX: number;
+		offsetY: number;
+		scale: number;
+		opacity: number;
+	}): void;
+	(ev: 'update', payload: {
+		angle: number;
+		flipH: boolean;
+		offsetX: number;
+		offsetY: number;
+		scale: number;
+		opacity: number;
+	}): void;
+	(ev: 'detach'): void;
+}>();
+
+const dialog = useTemplateRef('dialog');
+const now = useAvatarDecorationClock(() => [props.decoration, ...$i.avatarDecorations]);
+const exceeded = computed(() => $i.avatarDecorations.filter(decoration => isDecorationWithinPeriod(decoration, now.value)).length >= $i.policies.avatarDecorationLimit);
+const reason = computed(() => decorationUnavailableReason(props.decoration, $i.roles.map(role => role.id), now.value));
+const locked = computed(() => reason.value != null);
+const angle = ref((props.usingIndex != null ? $i.avatarDecorations[props.usingIndex].angle : null) ?? 0);
+const flipH = ref((props.usingIndex != null ? $i.avatarDecorations[props.usingIndex].flipH : null) ?? false);
+const offsetX = ref((props.usingIndex != null ? $i.avatarDecorations[props.usingIndex].offsetX : null) ?? 0);
+const offsetY = ref((props.usingIndex != null ? $i.avatarDecorations[props.usingIndex].offsetY : null) ?? 0);
+const scale = ref((props.usingIndex != null ? $i.avatarDecorations[props.usingIndex].scale : null) ?? 1);
+const opacity = ref((props.usingIndex != null ? $i.avatarDecorations[props.usingIndex].opacity : null) ?? 1);
+
+const decorationsForPreview = computed(() => {
+	const decoration = {
+		id: props.decoration.id,
+		url: props.decoration.url,
+		angle: angle.value,
+		flipH: flipH.value,
+		offsetX: offsetX.value,
+		offsetY: offsetY.value,
+		blink: true,
+		scale: scale.value,
+		opacity: opacity.value,
+	};
+	const decorations = [...$i.avatarDecorations];
+	if (props.usingIndex != null) {
+		decorations[props.usingIndex] = decoration;
+	} else {
+		decorations.push(decoration);
+	}
+	return decorations;
+});
+
+function cancel() {
+	dialog.value?.close();
+}
+
+async function update() {
+	if (locked.value) return;
+	emit('update', {
+		angle: angle.value,
+		flipH: flipH.value,
+		offsetX: offsetX.value,
+		offsetY: offsetY.value,
+		scale: scale.value,
+		opacity: opacity.value,
+	});
+	dialog.value?.close();
+}
+
+async function attach() {
+	if (exceeded.value || locked.value) return;
+	emit('attach', {
+		angle: angle.value,
+		flipH: flipH.value,
+		offsetX: offsetX.value,
+		offsetY: offsetY.value,
+		scale: scale.value,
+		opacity: opacity.value,
+	});
+	dialog.value?.close();
+}
+
+async function detach() {
+	emit('detach');
+	dialog.value?.close();
+}
+</script>
+
+<style lang="scss" module>
+.name {
+	position: relative;
+	z-index: 10;
+	font-weight: bold;
+	margin-bottom: 28px;
+}
+
+.footer {
+	position: sticky;
+	bottom: 0;
+	left: 0;
+	padding: 12px;
+	border-top: solid 0.5px var(--MI_THEME-divider);
+	-webkit-backdrop-filter: var(--MI-blur, blur(15px));
+	backdrop-filter: var(--MI-blur, blur(15px));
+}
+</style>

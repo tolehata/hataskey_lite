@@ -1,0 +1,123 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+.releasePanel {
+  margin: auto; height: 780px; max-width: 100%; max-height: 100%; min-height: 0; min-width: 0;
+  display: flex; flex-direction: column; overflow: hidden; container: release / inline-size;
+  border: 1px solid var(--MI_THEME-divider); border-radius: 22px; background: var(--MI_THEME-panel);
+  box-shadow: 0 24px 70px rgba(35, 20, 42, .24);
+}
+.releaseHeader { flex: none; display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; gap: 12px; padding: 13px 24px; border-bottom: 1px solid var(--MI_THEME-divider); }
+.releaseMascot { width: 40px; height: 40px; object-fit: contain; flex: none; }
+.releaseHeading { grid-column: 2; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 12px; text-align: center; }
+.releaseHeading h1 { font-size: 18px; line-height: 1.4; margin: 0; font-weight: 700; letter-spacing: -.025em; }
+.closeButton { display: grid; place-items: center; align-self: flex-start; width: 44px; height: 44px; flex: none; border: 0; border-radius: 50%; background: var(--preview-soft); color: var(--MI_THEME-fgMuted); font-size: 20px; }
+.closeButton:hover { background: var(--MI_THEME-divider); }
+.releaseBody { flex: 1 1 0; min-height: 0; min-width: 0; overflow: clip; container: release-body / size; }
+.eyebrow { margin: 0; color: var(--MI_THEME-accent); font: 700 10px/1.5 Archivo, sans-serif; letter-spacing: .12em; }
+.brandLabel { font-family: Righteous, sans-serif; font-weight: 400; font-synthesis: none; letter-spacing: .02em; }
+.eyebrow.brandLabel { font-size: 12px; }
+.updatesHeading h2 { margin: 9px 0 7px; font: 700 clamp(23px, 3.4cqw, 31px)/1.5 'Zen Maru Gothic', sans-serif; letter-spacing: -.025em; text-wrap: balance; }
+.updatesHeading > p:last-child { margin: 0; font-size: 13px; line-height: 1.8; color: var(--MI_THEME-fgMuted); }
+.releaseFooter { flex: none; display: flex; align-items: center; gap: 16px; min-height: 76px; padding: 13px 28px; border-top: 1px solid var(--MI_THEME-divider); background: var(--MI_THEME-panel); }
+.stepCaption { display: flex; align-items: center; flex-wrap: wrap; gap: 7px 12px; flex: 1; min-width: 0; font-size: 11px; color: var(--MI_THEME-fgMuted); }
+.stepCaption .brandLabel { font-size: 12px; }
+.stepCaption small { font: 500 11px/1 Archivo, sans-serif; }
+.stepTrack { display: flex; gap: 3px; width: 110px; max-width: 100%; }
+.stepTrack i { flex: 1; min-width: 0; height: 3px; border-radius: 4px; background: var(--MI_THEME-divider); }
+.stepTrack i[data-current='true'] { background: var(--MI_THEME-accent); }
+.primaryButton { display: inline-flex; align-items: center; justify-content: center; gap: 14px; flex: none; min-height: 44px; min-width: 128px; padding: 11px 20px; border: 1px solid transparent; border-radius: 999px; background: var(--MI_THEME-accent); color: var(--release-on-accent); font-weight: 700; font-size: 13px; line-height: 1.5; }
+.primaryButton:hover { filter: brightness(.94); }
+.backButton { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 9px 10px; border: 1px solid var(--MI_THEME-divider); border-radius: 999px; background: transparent; color: var(--MI_THEME-fg); font-size: 12px; }
+.releaseFooter .pageArrow { flex: none; width: 44px; min-width: 44px; height: 44px; padding: 0; font-size: 16px; }
+.updatesHeading { margin-bottom: 0; }
+@container release (max-width: 620px) {
+  .releaseHeader { padding: 16px 20px; gap: 12px; }
+  .releaseHeading h1 { font-size: 18px; }
+  .releaseMascot { width: 38px; height: 38px; }
+  .releaseFooter { padding: 12px 20px; gap: 10px; }
+  .stepCaption > span { width: 100%; }
+  .primaryButton { min-width: 114px; }
+}
+@container release (max-width: 460px) {
+  .releaseHeader { grid-template-columns: 44px minmax(0, 1fr) 44px; padding: 13px 16px; gap: 10px; }
+  .releaseMascot { width: 36px; height: 36px; }
+  .releaseHeading h1 { font-size: 16px; }
+  .closeButton { font-size: 18px; }
+  .updatesHeading h2 { font-size: 24px; }
+  .updatesHeading > p:last-child { font-size: 12px; }
+  .releaseFooter { padding: 12px 16px; gap: 8px; }
+  .primaryButton { min-width: 100px; padding-inline: 14px; gap: 10px; }
+  .releasePanel:not([data-page='1']) .stepCaption > span { display: none; }
+  .releasePanel:not([data-page='1']) .stepTrack { display: none; }
+  .releasePanel:not([data-page='1']) .stepCaption { justify-content: center; }
+}
+.storyPage { height: 100%; min-height: 0; display: grid; gap: 14px; }
+.primaryButton:disabled, .backButton:disabled { opacity: .6; cursor: default; }
+.releaseFooter { min-height: 70px; }
+.releasePanel[data-arrival='arriving'] .stepTrack i[data-current='true'] { opacity: .7; }
+@container release (max-width:460px) {
+  .stepCaption { font-size: 10px; }
+  .stepTrack i { width: auto; }
+}
+@container release-body (max-height: 560px) {
+  .storyPage { padding: 14px 18px; gap: 10px; }
+  .updatesHeading h2 { font-size: 22px; margin: 6px 0 0; }
+}
+@container release-body (max-height: 380px) {
+  .storyPage { padding: 10px 14px; gap: 8px; }
+  .updatesHeading h2 { font-size: 18px; line-height: 1.4; }
+}
+
+.releasePanel { width: 960px; box-sizing: border-box; color: var(--MI_THEME-fg); font: 14px/1.6 'Zen Kaku Gothic New', system-ui, sans-serif; line-break: strict; overflow-wrap: anywhere; --preview-soft: var(--MI_THEME-panelHeaderBg); --preview-warm: color-mix(in srgb, var(--MI_THEME-accent) 5%, var(--MI_THEME-panel)); --release-on-accent: var(--MI_THEME-fgOnAccent); }
+.releasePanel *, .releasePanel *::before, .releasePanel *::after { box-sizing: border-box; }
+.releasePanel button { cursor: pointer; }
+.releaseHeader .closeButton { align-self: center; justify-self: end; }
+.releaseHeading { gap: 8px; }
+.releasePanel button:focus-visible { outline: 2px solid var(--MI_THEME-accent); outline-offset: 2px; }
+.releasePanel h2[tabindex='-1']:focus { outline: none; }
+.pageArrow > :global(.ti), .closeButton > :global(.ti) { display: grid; place-items: center; width: 1em; height: 1em; line-height: 1; }
+.pageArrow > :global(.ti)::before, .closeButton > :global(.ti)::before { font-size: 100%; line-height: 1; }
+.releasePanel[data-motion='false'] *, .releasePanel[data-motion='false'] *::before, .releasePanel[data-motion='false'] *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+.releaseBody[data-feature] { overflow-y: auto; overscroll-behavior: contain; }
+.releasePanel {
+  width: min(1120px, 100%);
+  height: min(860px, calc(100dvh - 28px));
+  font-family: inherit;
+  border-radius: 24px;
+  background: var(--MI_THEME-panel);
+  box-shadow: 0 28px 80px color-mix(in srgb, var(--MI_THEME-fg) 17%, transparent);
+}
+.releaseHeader { padding: 15px clamp(18px, 4cqw, 42px); background: color-mix(in srgb, var(--MI_THEME-panel) 92%, transparent); }
+.releaseHeading h1 { font-size: 16px; letter-spacing: .01em; }
+.closeButton { background: var(--preview-soft); color: var(--MI_THEME-fg); }
+.releaseBody { overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-color: var(--MI_THEME-divider) transparent; }
+.storyPage { height: auto; min-height: 100%; grid-template-rows: none; align-content: start; }
+.storyPage { max-width: 1060px; margin-inline: auto; gap: 18px; padding: 34px clamp(20px, 4cqw, 48px) 40px; }
+.updatesHeading { text-align: center; }
+.updatesHeading .eyebrow { font: 400 11px/1.4 Righteous, sans-serif; letter-spacing: .18em; }
+.updatesHeading h2 { margin: 8px 0 10px; font-family: inherit; font-size: clamp(26px, 3.7cqw, 43px); font-weight: 700; line-height: 1.35; letter-spacing: -.045em; text-wrap: balance; }
+.updatesHeading h2 em { color: var(--MI_THEME-accent); font-style: normal; }
+.releaseFooter { padding: 12px clamp(18px, 4cqw, 42px); background: color-mix(in srgb, var(--MI_THEME-panel) 94%, transparent); backdrop-filter: blur(16px); }
+.stepTrack { width: min(170px, 35%); }
+.primaryButton { min-height: 46px; }
+@container release (max-width: 700px) {
+  .storyPage { padding: 24px 18px 32px; }
+}
+@container release (max-width: 460px) {
+  .stepCaption > span, .stepTrack { display: none; }
+  .stepCaption { justify-content: center; }
+}
+.simpleBody { overflow-y: auto; overscroll-behavior: contain; }
+.simplePage { box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; max-width: 1060px; height: auto; min-height: 100%; gap: 20px; padding: 22px 28px 24px; }
+.simplePage .updatesHeading h2 { margin-bottom: 0; }
+.mergeStage { flex-shrink: 0; width: min(100%, 900px); min-width: 0; border-radius: 20px; overflow: hidden; box-shadow: 0 12px 32px color-mix(in srgb, var(--MI_THEME-fg) 12%, transparent); }
+.releaseNotesLink { display: inline-flex; align-items: center; gap: 8px; min-height: 46px; padding: 10px 18px; border-radius: 999px; background: var(--MI_THEME-accentedBg); color: var(--MI_THEME-accent); font-weight: 700; }
+@container release (max-width: 620px) {
+  .simplePage { padding: 18px 18px 24px; }
+}
+@container release-body (max-height: 560px) {
+  .simplePage { justify-content: flex-start; padding: 14px 18px; gap: 10px; }
+  .mergeStage { width: min(100%, 700px); }
+}
+@container release-body (max-height: 380px) {
+  .simplePage { padding: 10px 14px; gap: 8px; }
+}

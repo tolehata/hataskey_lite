@@ -1,0 +1,269 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* Shared palettes from the approved Hatask theme mock. Saved theme IDs stay stable. */
+.htk-root[data-theme]:not([data-theme='akatsuki']),
+.htk-modal-ov[data-theme]:not([data-theme='akatsuki']),
+.htk-event-details-theme[data-theme]:not([data-theme='akatsuki']),
+.htk-theme-preview[data-theme]:not([data-theme='akatsuki']),
+.htk-theme-action[data-theme]:not([data-theme='akatsuki']),
+[data-hatask-support][data-theme]:not([data-theme='akatsuki']),
+[data-hatask-ranking][data-theme]:not([data-theme='akatsuki']),
+[data-hatask-theme][data-hatask-mode]:not([data-hatask-theme='akatsuki']),
+.htk-root[data-mode][data-theme]:not([data-theme='akatsuki']) .htk-akatsuki-layout {
+  --fg2: var(--fg-2); --fg3: var(--fg-3);
+  --bg-image: none;
+  --card: var(--surface); --paper: var(--surface); --masthead: var(--surface);
+  --fill: color-mix(in srgb, var(--accent) 5%, var(--surface));
+  --fill-2: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  --fill-3: color-mix(in srgb, var(--accent) 16%, var(--surface));
+  --hair: var(--rule); --rule2: var(--rule);
+  --border: 1px solid var(--rule); --card-border: var(--border);
+  --button-border: 2px solid var(--rule2); --card-shadow: var(--shadow);
+  --menu-left-bg: var(--rail-paper); --menu-right-bg: var(--aside-paper);
+  --htk-font-body: 'Zen Kaku Gothic New', system-ui, sans-serif;
+  --on-blue: var(--on-accent); --blue: var(--accent); --on-coral: var(--on-accent);
+  --on-pink: var(--fg); --on-teal: var(--fg); --on-grape: var(--on-accent);
+  --text-1: var(--fg); --text-2: var(--fg-2); --text-3: var(--fg-3);
+  --btn-bg: var(--fill); --btn-hover: var(--fill-2); --input-bg: var(--surface);
+  --hak-badge-bg: var(--accent-ink); --htk-on-ink: #ffffff;
+  --MI_THEME-accent: var(--accent-ink); --MI_THEME-fg: var(--fg); --MI_THEME-panel: var(--surface);
+}
+.htk-root[data-theme='koke'][data-mode],
+.htk-modal-ov[data-theme='koke'][data-mode],
+.htk-event-details-theme[data-theme='koke'][data-mode],
+.htk-theme-preview[data-theme='koke'][data-mode],
+.htk-theme-action[data-theme='koke'][data-mode],
+[data-hatask-support][data-theme='koke'][data-mode],
+[data-hatask-ranking][data-theme='koke'][data-mode],
+[data-hatask-theme][data-hatask-mode][data-hatask-theme='koke'],
+.htk-root[data-mode][data-theme='koke'] .htk-akatsuki-layout[data-enabled='true'] {
+  --bg: #e7eee2; --surface: #f8fbf4; --fg: #203326; --fg-2: #4c6149; --fg-3: #52664b;
+  --rule: #c6d3bd; --rule2: #7a8f70; --accent: #486642; --accent-ink: #486642; --on-accent: #ffffff;
+  --accent2: #d5dfba; --on-accent2: #2d3b22;
+  --rail-paper: #dde7d6; --aside-paper: #e4ecdc;
+  --shadow: 0 2px 8px #30432a08, 0 12px 32px -20px #30432a24;
+  --card-radius: 24px; --case-radius: 999px; --control-radius: 999px;
+  --htk-font-head: 'Zen Maru Gothic', 'Zen Kaku Gothic New', sans-serif;
+  --ink-line: #486642; --skin-edge: transparent;
+  --bg-image: radial-gradient(ellipse at 12% 0%, #dce8d1, transparent 65%), linear-gradient(145deg, #eef3e8, #e7eee2);
+}
+.htk-root[data-theme='koke'][data-mode][data-mode='dark'],
+.htk-modal-ov[data-theme='koke'][data-mode][data-mode='dark'],
+.htk-event-details-theme[data-theme='koke'][data-mode][data-mode='dark'],
+.htk-theme-preview[data-theme='koke'][data-mode][data-mode='dark'],
+.htk-theme-action[data-theme='koke'][data-mode][data-mode='dark'],
+[data-hatask-support][data-theme='koke'][data-mode][data-mode='dark'],
+[data-hatask-ranking][data-theme='koke'][data-mode][data-mode='dark'],
+[data-hatask-theme][data-hatask-mode][data-hatask-theme='koke'][data-hatask-mode='dark'],
+.htk-root[data-mode][data-theme='koke'][data-mode='dark'] .htk-akatsuki-layout[data-enabled='true'] {
+  --bg: #142018; --surface: #213025; --fg: #edf3e7; --fg-2: #c0ceba; --fg-3: #a9bca1;
+  --rule: #425640; --rule2: #819475; --accent: #accb99; --accent-ink: #b9d8a6; --on-accent: #172513;
+  --accent2: #c1cc96; --on-accent2: #202b17; --rail-paper: #19271c; --aside-paper: #1b2a1f;
+  --htk-on-ink: #172513; --shadow: 0 2px 8px #0002, 0 12px 32px -20px #0006;
+  --ink-line: #accb99; --hak-badge-bg: #486642;
+  --bg-image: radial-gradient(ellipse at 12% 0%, #2e402b, transparent 65%), linear-gradient(145deg, #1c2b20, #142018);
+}
+.htk-root[data-theme='kisetsu'][data-mode],
+.htk-modal-ov[data-theme='kisetsu'][data-mode],
+.htk-event-details-theme[data-theme='kisetsu'][data-mode],
+.htk-theme-preview[data-theme='kisetsu'][data-mode],
+.htk-theme-action[data-theme='kisetsu'][data-mode],
+[data-hatask-support][data-theme='kisetsu'][data-mode],
+[data-hatask-ranking][data-theme='kisetsu'][data-mode],
+[data-hatask-theme][data-hatask-mode][data-hatask-theme='kisetsu'],
+.htk-root[data-mode][data-theme='kisetsu'] .htk-akatsuki-layout[data-enabled='true'] {
+  --bg: #f4f1ea; --surface: #fffdf8; --fg: #211d18; --fg-2: #5f574c; --fg-3: #6d6252;
+  --rule: #d7cfbf; --rule2: #baae98; --accent: #8a3d1f; --accent-ink: #8a3d1f; --on-accent: #ffffff;
+  --accent2: #e8cd9e; --on-accent2: #382d1e;
+  --rail-paper: #eee9df; --aside-paper: #f0ece3;
+  --shadow: 0 2px 0 #d8cfbf55, 0 12px 32px -28px #4936214d;
+  --card-radius: 6px; --case-radius: 8px; --control-radius: 5px;
+  --htk-font-head: 'Shippori Mincho B1', 'Zen Kaku Gothic New', serif;
+  --ink-line: #8a3d1f; --skin-edge: transparent;
+  --bg-image: repeating-linear-gradient(0deg, #6a553003 0px, #6a553003 1px, transparent 1px, transparent 4px);
+}
+.htk-root[data-theme='kisetsu'][data-mode][data-mode='dark'],
+.htk-modal-ov[data-theme='kisetsu'][data-mode][data-mode='dark'],
+.htk-event-details-theme[data-theme='kisetsu'][data-mode][data-mode='dark'],
+.htk-theme-preview[data-theme='kisetsu'][data-mode][data-mode='dark'],
+.htk-theme-action[data-theme='kisetsu'][data-mode][data-mode='dark'],
+[data-hatask-support][data-theme='kisetsu'][data-mode][data-mode='dark'],
+[data-hatask-ranking][data-theme='kisetsu'][data-mode][data-mode='dark'],
+[data-hatask-theme][data-hatask-mode][data-hatask-theme='kisetsu'][data-hatask-mode='dark'],
+.htk-root[data-mode][data-theme='kisetsu'][data-mode='dark'] .htk-akatsuki-layout[data-enabled='true'] {
+  --bg: #17140f; --surface: #242018; --fg: #f1ece1; --fg-2: #c3b9a8; --fg-3: #b2a794;
+  --rule: #463e31; --rule2: #6c5d46; --accent: #e0966a; --accent-ink: #e8aa83; --on-accent: #21170f;
+  --accent2: #d4bc8b; --on-accent2: #21170f; --rail-paper: #1b1711; --aside-paper: #1e1912;
+  --htk-on-ink: #21170f; --shadow: 0 2px 0 #0004, 0 12px 30px -26px #0008; --ink-line: #e0966a; --hak-badge-bg: #8a3d1f;
+}
+.htk-root[data-theme='kashin'][data-mode],
+.htk-modal-ov[data-theme='kashin'][data-mode],
+.htk-event-details-theme[data-theme='kashin'][data-mode],
+.htk-theme-preview[data-theme='kashin'][data-mode],
+.htk-theme-action[data-theme='kashin'][data-mode],
+[data-hatask-support][data-theme='kashin'][data-mode],
+[data-hatask-ranking][data-theme='kashin'][data-mode],
+[data-hatask-theme][data-hatask-mode][data-hatask-theme='kashin'],
+.htk-root[data-mode][data-theme='kashin'] .htk-akatsuki-layout[data-enabled='true'] {
+  --bg: #fff5e6; --surface: #fffdf7; --fg: #25201c; --fg-2: #5f574c; --fg-3: #67584c;
+  --rule: #dacaba; --rule2: #655347; --accent: #ff6b4a; --accent-ink: #a3331d; --on-accent: #25201c;
+  --accent2: #ffc23c; --on-accent2: #25201c;
+  --rail-paper: #ffedda; --aside-paper: #ffefd9;
+  --shadow: inset 0 0 0 1px #25201c, 3px 4px 0 #25201c1f;
+  --card-radius: 22px; --case-radius: 24px; --control-radius: 999px;
+  --htk-font-head: 'Zen Maru Gothic', 'Zen Kaku Gothic New', sans-serif;
+  --ink-line: #25201c; --skin-edge: #25201c;
+  --bg-image: radial-gradient(#bb7e4e18 1px, transparent 1px);
+}
+.htk-root[data-theme='kashin'][data-mode][data-mode='dark'],
+.htk-modal-ov[data-theme='kashin'][data-mode][data-mode='dark'],
+.htk-event-details-theme[data-theme='kashin'][data-mode][data-mode='dark'],
+.htk-theme-preview[data-theme='kashin'][data-mode][data-mode='dark'],
+.htk-theme-action[data-theme='kashin'][data-mode][data-mode='dark'],
+[data-hatask-support][data-theme='kashin'][data-mode][data-mode='dark'],
+[data-hatask-ranking][data-theme='kashin'][data-mode][data-mode='dark'],
+[data-hatask-theme][data-hatask-mode][data-hatask-theme='kashin'][data-hatask-mode='dark'],
+.htk-root[data-mode][data-theme='kashin'][data-mode='dark'] .htk-akatsuki-layout[data-enabled='true'] {
+  --bg: #1b1726; --surface: #292231; --fg: #fbf3e6; --fg-2: #c7bcd2; --fg-3: #c3b4c8;
+  --rule: #534252; --rule2: #aa94a4; --accent: #ff9274; --accent-ink: #ffad94; --on-accent: #241621;
+  --accent2: #ffcf5c; --on-accent2: #241621; --rail-paper: #211a2c; --aside-paper: #231c2f;
+  --htk-on-ink: #241621; --shadow: inset 0 0 0 1px #bca3a0, 3px 4px 0 #0005;
+  --ink-line: #e2ccc0; --hak-badge-bg: #a3331d; --skin-edge: #bca3a0; --bg-image: radial-gradient(#ffad9410 1px, transparent 1px);
+}
+.htk-root[data-mode][data-theme='kashin'][data-mode] .htk-akatsuki-layout { background-size: 18px 18px; }
+.htk-root[data-theme='suri'][data-mode],
+.htk-modal-ov[data-theme='suri'][data-mode],
+.htk-event-details-theme[data-theme='suri'][data-mode],
+.htk-theme-preview[data-theme='suri'][data-mode],
+.htk-theme-action[data-theme='suri'][data-mode],
+[data-hatask-support][data-theme='suri'][data-mode],
+[data-hatask-ranking][data-theme='suri'][data-mode],
+[data-hatask-theme][data-hatask-mode][data-hatask-theme='suri'],
+.htk-root[data-mode][data-theme='suri'] .htk-akatsuki-layout[data-enabled='true'] {
+  --bg: #efe7d4; --surface: #fffdf6; --fg: #1a1a2e; --fg-2: #4a4a5a; --fg-3: #5f5a69;
+  --rule: #b8afa2; --rule2: #1a1a2e; --accent: #2a52c0; --accent-ink: #2a52c0; --on-accent: #ffffff;
+  --accent2: #ffd851; --on-accent2: #1a1a2e;
+  --rail-paper: #e9dfca; --aside-paper: #eee3cd;
+  --shadow: inset 0 0 0 1px #1a1a2e, 3px 3px 0 #f17eac;
+  --card-radius: 0px; --case-radius: 0px; --control-radius: 0px;
+  --htk-font-head: 'Zen Kaku Gothic Antique', 'Zen Kaku Gothic New', sans-serif;
+  --ink-line: #1a1a2e; --skin-edge: #1a1a2e; --pink: #f17eac;
+  --bg-image: repeating-linear-gradient(0deg, #40305907 0px, #40305907 1px, transparent 1px, transparent 4px);
+}
+.htk-root[data-theme='suri'][data-mode][data-mode='dark'],
+.htk-modal-ov[data-theme='suri'][data-mode][data-mode='dark'],
+.htk-event-details-theme[data-theme='suri'][data-mode][data-mode='dark'],
+.htk-theme-preview[data-theme='suri'][data-mode][data-mode='dark'],
+.htk-theme-action[data-theme='suri'][data-mode][data-mode='dark'],
+[data-hatask-support][data-theme='suri'][data-mode][data-mode='dark'],
+[data-hatask-ranking][data-theme='suri'][data-mode][data-mode='dark'],
+[data-hatask-theme][data-hatask-mode][data-hatask-theme='suri'][data-hatask-mode='dark'],
+.htk-root[data-mode][data-theme='suri'][data-mode='dark'] .htk-akatsuki-layout[data-enabled='true'] {
+  --bg: #14141f; --surface: #20202f; --fg: #ece7dc; --fg-2: #bfb9cc; --fg-3: #b8adca;
+  --rule: #5d566a; --rule2: #c3b8d0; --accent: #96acff; --accent-ink: #a7b9ff; --on-accent: #14141f;
+  --accent2: #ffe14f; --on-accent2: #14141f; --rail-paper: #191924; --aside-paper: #1b1b27;
+  --htk-on-ink: #14141f; --shadow: inset 0 0 0 1px #c3b8d0, 3px 3px 0 #c85a92;
+  --ink-line: #c3b8d0; --hak-badge-bg: #2a52c0; --skin-edge: #c3b8d0; --pink: #ff84b9;
+}
+.htk-root[data-theme='hatakyu'][data-mode],
+.htk-modal-ov[data-theme='hatakyu'][data-mode],
+.htk-event-details-theme[data-theme='hatakyu'][data-mode],
+.htk-theme-preview[data-theme='hatakyu'][data-mode],
+.htk-theme-action[data-theme='hatakyu'][data-mode],
+[data-hatask-support][data-theme='hatakyu'][data-mode],
+[data-hatask-ranking][data-theme='hatakyu'][data-mode],
+[data-hatask-theme][data-hatask-mode][data-hatask-theme='hatakyu'],
+.htk-root[data-mode][data-theme='hatakyu'] .htk-akatsuki-layout[data-enabled='true'] {
+  --bg: #c9975f; --surface: #fdf6e6; --fg: #3b2a1c; --fg-2: #685538; --fg-3: #725535;
+  --rule: #d5bd90; --rule2: #b4996d; --accent: #1466c9; --accent-ink: #145fb8; --on-accent: #ffffff;
+  --accent2: #f4d68f; --on-accent2: #3b2a1c;
+  --rail-paper: #eddbb8; --aside-paper: #e8d3ac;
+  --shadow: 0 2px 2px #65441c17, 0 12px 20px -14px #4c2a11b3, inset 0 1px 0 #fff9;
+  --card-radius: 3px; --case-radius: 5px; --control-radius: 6px;
+  --htk-font-head: 'Zen Maru Gothic', 'Zen Kaku Gothic New', sans-serif;
+  --ink-line: #80603b; --skin-edge: transparent; --paper2: #fff9ef;
+  --bg-image: radial-gradient(#73502926 .8px, transparent 1.5px), radial-gradient(#f5dfb12e 1px, transparent 1.6px), linear-gradient(120deg, #ffffff0a, #4a2c0910);
+}
+.htk-root[data-theme='hatakyu'][data-mode][data-mode='dark'],
+.htk-modal-ov[data-theme='hatakyu'][data-mode][data-mode='dark'],
+.htk-event-details-theme[data-theme='hatakyu'][data-mode][data-mode='dark'],
+.htk-theme-preview[data-theme='hatakyu'][data-mode][data-mode='dark'],
+.htk-theme-action[data-theme='hatakyu'][data-mode][data-mode='dark'],
+[data-hatask-support][data-theme='hatakyu'][data-mode][data-mode='dark'],
+[data-hatask-ranking][data-theme='hatakyu'][data-mode][data-mode='dark'],
+[data-hatask-theme][data-hatask-mode][data-hatask-theme='hatakyu'][data-hatask-mode='dark'],
+.htk-root[data-mode][data-theme='hatakyu'][data-mode='dark'] .htk-akatsuki-layout[data-enabled='true'] {
+  --bg: #4a3a2b; --surface: #332b22; --fg: #f4ece0; --fg-2: #d3c5ab; --fg-3: #d0b896;
+  --rule: #665039; --rule2: #9a7953; --accent: #80b3ff; --accent-ink: #94bfff; --on-accent: #152233;
+  --accent2: #e8b96b; --on-accent2: #241c15; --rail-paper: #30281f; --aside-paper: #30261b;
+  --htk-on-ink: #152233; --shadow: 0 2px 2px #0003, 0 14px 24px -15px #000b, inset 0 1px 0 #f4ece015;
+  --ink-line: #b59465; --hak-badge-bg: #145fb8; --paper2: #3a3128;
+}
+.htk-root[data-mode][data-theme='hatakyu'][data-mode] .htk-akatsuki-layout { background-size: 7px 9px, 11px 13px, auto; background-position: 0 0, 4px 6px, 0 0; }
+.htk-root[data-theme='halloween'][data-mode],
+.htk-modal-ov[data-theme='halloween'][data-mode],
+.htk-event-details-theme[data-theme='halloween'][data-mode],
+.htk-theme-preview[data-theme='halloween'][data-mode],
+.htk-theme-action[data-theme='halloween'][data-mode],
+[data-hatask-support][data-theme='halloween'][data-mode],
+[data-hatask-ranking][data-theme='halloween'][data-mode],
+[data-hatask-theme][data-hatask-mode][data-hatask-theme='halloween'],
+.htk-root[data-mode][data-theme='halloween'] .htk-akatsuki-layout[data-enabled='true'] {
+  --bg: #f7ecdc; --surface: #fffaf2; --fg: #2a1a2e; --fg-2: #5e4a5a; --fg-3: #6e5866;
+  --rule: #e6d2b8; --rule2: #8a6a8a; --accent: #e8661c; --accent-ink: #b3470b; --on-accent: #2a1a2e;
+  --accent2: #6b3fa0; --on-accent2: #ffffff;
+  --rail-paper: #f0e1d4; --aside-paper: #f3e5db;
+  --candy-1: #f5b20c; --candy-2: #ff8a2a; --candy-3: #fff3dc;
+  --fill: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  --shadow: 0 2px 0 #2a1a2e0f, 0 18px 36px -24px #6b3fa073;
+  --card-radius: 24px; --case-radius: 999px; --control-radius: 999px;
+  --htk-font-head: 'Zen Maru Gothic', 'Zen Kaku Gothic New', sans-serif;
+  --htk-on-ink: #ffffff; --ink-line: #b3470b; --skin-edge: transparent; --hak-badge-bg: #b3470b;
+  --MI_THEME-fgOnAccent: var(--htk-on-ink);
+  --bg-image: radial-gradient(circle at 57% 24px, #fff4c7 0 12px, #96632c 12px 13px, #e7b45a55 14px, transparent 70px), radial-gradient(circle at 88% 0%, #ffd58a80, transparent 32%), radial-gradient(#6b3fa014 1.2px, transparent 1.5px);
+  --bg-size: auto, auto, 16px 16px;
+}
+.htk-root[data-theme='halloween'][data-mode][data-mode='dark'],
+.htk-modal-ov[data-theme='halloween'][data-mode][data-mode='dark'],
+.htk-event-details-theme[data-theme='halloween'][data-mode][data-mode='dark'],
+.htk-theme-preview[data-theme='halloween'][data-mode][data-mode='dark'],
+.htk-theme-action[data-theme='halloween'][data-mode][data-mode='dark'],
+[data-hatask-support][data-theme='halloween'][data-mode][data-mode='dark'],
+[data-hatask-ranking][data-theme='halloween'][data-mode][data-mode='dark'],
+[data-hatask-theme][data-hatask-mode][data-hatask-theme='halloween'][data-hatask-mode='dark'],
+.htk-root[data-mode][data-theme='halloween'][data-mode='dark'] .htk-akatsuki-layout[data-enabled='true'] {
+  --bg: #150f1f; --surface: #231a31; --fg: #f8ecdf; --fg-2: #cbb8d6; --fg-3: #bba8c8;
+  --rule: #45345a; --rule2: #927da5; --accent: #ff8a2a; --accent-ink: #ffa457; --on-accent: #1c1206;
+  --accent2: #b48cff; --on-accent2: #150f1f; --rail-paper: #1c1428; --aside-paper: #20172c;
+  --candy-1: #ffd23f; --candy-3: #fff4e0;
+  --fill: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  --htk-on-ink: #1c1206; --shadow: 0 0 0 1px #ff8a2a12, 0 18px 40px -22px #000d;
+  --ink-line: #ffa457;
+  --bg-image: radial-gradient(circle at 57% 24px, #ffe9b8 0 13px, #ffcf7a44 14px, transparent 70px), radial-gradient(ellipse at 0% 100%, #6b3fa066, transparent 60%), linear-gradient(180deg, #1e1530, #120c1a);
+  --bg-size: auto;
+}
+.htk-root[data-theme]:not([data-theme='akatsuki']) :is(.hak-desktop-case, .hak-mobile-case, .hak-bottom-case, .hak-focus-options, .hak-search-results, .hak-fab-sheet) { border-radius: var(--case-radius); border-color: var(--rule); background: var(--surface); box-shadow: var(--shadow); }
+.htk-root[data-theme]:not([data-theme='akatsuki']) :is(.hak-rail-tab, .hak-focus-option, .hak-mobile-tab, .hak-action-button, .hak-small-button, .hak-suggestion, .hak-rich-status) { border-radius: var(--control-radius); }
+.htk-root[data-theme]:not([data-theme='akatsuki']) :is(.hak-stats, .hak-side-case, .hak-focus-panel, .hak-favorites-editor) { border-radius: var(--card-radius); border-color: var(--rule); box-shadow: var(--shadow); }
+.htk-root[data-theme]:not([data-theme='akatsuki']) .hak-scroll { box-shadow: none; }
+.htk-root[data-theme]:not([data-theme='akatsuki']) .hak-stat { background: var(--surface); }
+.htk-root[data-theme]:not([data-theme='akatsuki']) .hak-home-summary { color: var(--fg); }
+.htk-root[data-theme='hatakyu'] .hak-home-summary :is(.hak-dow, .hak-day-count) { color: var(--fg); }
+.htk-root[data-theme]:not([data-theme='akatsuki']) :is(.hak-next h1, .hak-section-heading, .hak-focus-head h2, .hak-side-heading, .hak-todo-title) { color: var(--fg); }
+.htk-root[data-theme]:not([data-theme='akatsuki']) .hak-action-button[data-primary='true'] { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+.htk-root[data-theme]:not([data-theme='akatsuki']) .hak-focus-option[aria-pressed='true'] { color: var(--accent-ink); background: var(--fill-2); box-shadow: inset 0 -2px 0 var(--accent-ink); }
+.htk-root[data-theme]:not([data-theme='akatsuki']) .hak-rail-tab[aria-current='page'] { box-shadow: inset 0 0 0 1px var(--skin-edge); }
+.htk-root[data-theme='suri'] :is(.hak-focus-head, .hak-section-heading, .hak-side-heading) { border-bottom-color: var(--ink-line); }
+.htk-root[data-theme='suri'] :is(.hak-desktop-search, .hak-mobile-search, .hak-fab) { border-radius: 0; }
+.htk-root[data-theme='hatakyu'] :is(.hak-side-case, .hak-focus-panel, .hak-favorites-editor) { background-image: repeating-linear-gradient(0deg, transparent 0px, transparent 3px, #ad854109 3px, #ad854109 4px); }
+.htk-root[data-theme='kashin'] .hak-side-case { box-shadow: inset 0 0 0 1px var(--skin-edge), 2px 3px 0 #25201c1a; }
+.htk-root[data-theme]:not([data-theme='akatsuki']) .htk-flower-info { background: var(--surface); color: var(--fg); }
+.htk-root[data-mode='dark'] { color-scheme: dark; }
+.htk-root:not([data-theme='akatsuki']) { color: var(--fg); background: var(--bg-image), var(--bg); }
+.htk-root:not([data-theme='akatsuki']) .htk-akatsuki-layout { background: var(--bg-image), var(--bg); }
+.htk-root[data-mode][data-theme='kashin'] .htk-akatsuki-layout { background-size: 18px 18px; }
+.htk-root[data-mode][data-theme='hatakyu'] .htk-akatsuki-layout { background-size: 7px 9px, 11px 13px, auto; background-position: 0 0, 4px 6px, 0 0; }
+.htk-root[data-theme='halloween'], .htk-root[data-mode][data-theme='halloween'] .htk-akatsuki-layout { background-size: var(--bg-size); }
+.htk-root[data-theme='hatakyu'] .hak-home-summary :is(.hak-dow, .hak-day-count) { color: var(--fg); }
+
+.htk-root[data-theme], .htk-theme-preview[data-theme], [data-hatask-theme][data-hatask-mode] { color-scheme: light; }
+.htk-root[data-mode='dark'], .htk-theme-preview[data-mode='dark'], [data-hatask-theme][data-hatask-mode='dark'] { color-scheme: dark; }

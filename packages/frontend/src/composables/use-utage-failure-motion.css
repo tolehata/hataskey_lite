@@ -1,0 +1,62 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+[data-utage-failure-motion] {
+	position: absolute;
+	display: block;
+	z-index: 4;
+	overflow: hidden;
+	pointer-events: none;
+	user-select: none;
+	contain: layout paint;
+}
+
+[data-utage-failure-half] {
+	position: absolute;
+	display: block;
+	inset: 0;
+	transform-origin: center;
+	will-change: transform, opacity;
+}
+
+[data-utage-failure-motion='horizontal'] [data-utage-failure-half='0'] { clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%); }
+[data-utage-failure-motion='horizontal'] [data-utage-failure-half='1'] { clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%); }
+[data-utage-failure-motion='vertical'] [data-utage-failure-half='0'] { clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%); }
+[data-utage-failure-motion='vertical'] [data-utage-failure-half='1'] { clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%); }
+[data-utage-failure-motion='diagonal'] [data-utage-failure-half='0'] { clip-path: polygon(0 0, 72% 0, 28% 100%, 0 100%); }
+[data-utage-failure-motion='diagonal'] [data-utage-failure-half='1'] { clip-path: polygon(72% 0, 100% 0, 100% 100%, 28% 100%); }
+
+[data-utage-failure-snapshot]::before,
+[data-utage-failure-snapshot]::after,
+[data-utage-failure-snapshot] *::before,
+[data-utage-failure-snapshot] *::after {
+	animation: none !important;
+	transition: none !important;
+}
+
+[data-utage-failure-seam] {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	color: var(--MI_THEME-error);
+}
+
+[data-utage-failure-seam] path {
+	stroke: currentColor;
+	stroke-width: 2px;
+	stroke-dasharray: 100;
+	fill: none;
+}
+
+[data-utage-failure-label] {
+	position: absolute;
+	display: block;
+	top: 50%;
+	left: 50%;
+	color: var(--MI_THEME-error);
+	font-weight: 900;
+	line-height: 1.2;
+	white-space: nowrap;
+	text-shadow: 0 2px 0 var(--MI_THEME-panel), 0 0 18px var(--MI_THEME-panel);
+	transform-origin: center;
+	will-change: transform, opacity;
+}

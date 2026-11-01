@@ -1,0 +1,27 @@
+/* Hataskey settings brand typography. Keep this class on English wordmarks only. */
+@font-face {
+	font-family: 'HataSettingsRighteous';
+	src: url('/client-assets/Righteous-Regular.woff2') format('woff2');
+	font-display: swap;
+	font-style: normal;
+	font-weight: 400;
+}
+
+/* 旗鯖fork: ⚠️落ち先を本文と同じ並びにすること。
+   Righteous は英字しか持たないので、「Hataskey独自ツール」のような
+   英字＋日本語のひとつづきでは、日本語だけが system-ui へ落ちて
+   ⚠️そこだけ本文と違う書体で出ていた。同じ並びへ落とせば見た目が揃う。 */
+.settingsBrand {
+	font-family: 'HataSettingsRighteous', 'Righteous', "Pretendard JP", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Hiragino Sans", "Apple SD Gothic Neo", Meiryo, "Noto Sans JP", "Noto Sans KR", "Malgun Gothic", Osaka, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+	font-weight: 400;
+	letter-spacing: .02em;
+	line-height: 1.1;
+	white-space: nowrap;
+}
+
+.settingsBrandText {
+	font-family: 'HataSettingsRighteous', 'Righteous', "Pretendard JP", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Hiragino Sans", "Apple SD Gothic Neo", Meiryo, "Noto Sans JP", "Noto Sans KR", "Malgun Gothic", Osaka, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+	font-weight: inherit;
+	letter-spacing: .01em;
+	line-height: inherit;
+}

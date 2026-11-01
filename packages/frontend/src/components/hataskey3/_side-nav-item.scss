@@ -1,0 +1,70 @@
+// Shared UI S navigation geometry for the live sidebar and Studio preview.
+@mixin frame {
+	--hk3-side-icon-size: 22px;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	width: 100%;
+	min-width: 0;
+	height: 72px;
+	min-height: 72px;
+	box-sizing: border-box;
+	padding: 0 4px;
+	border: 0;
+	border-right: 1px solid var(--hk3-divider);
+	border-bottom: 1px solid var(--hk3-divider);
+	border-radius: 0;
+	background: transparent;
+	color: var(--hk3-text);
+	text-align: center;
+	container-type: inline-size;
+	overflow: hidden;
+
+	&[data-size="small"] { --hk3-side-icon-size: 20px; height: 52px; min-height: 52px; }
+	&[data-size="large"] { height: 84px; min-height: 84px; }
+}
+
+@mixin icon {
+	flex: 0 0 auto;
+	font-size: var(--hk3-side-icon-size);
+	line-height: var(--hk3-side-icon-size);
+}
+
+@mixin heading {
+	padding: 10px 14px 4px;
+	color: var(--hk3-neutral-700);
+	font-size: 11px;
+	font-weight: 800;
+	line-height: 1.2;
+	letter-spacing: .08em;
+	text-align: center;
+}
+
+@mixin label {
+	min-width: 0;
+	max-width: 100%;
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 1.2;
+	white-space: normal;
+	overflow-wrap: anywhere;
+	text-overflow: clip;
+}
+
+@mixin cache-clear-label {
+	max-width: 100%;
+	font-size: min(12px, var(--hk3-cache-label-size, 10.5cqi));
+	white-space: nowrap;
+	overflow-wrap: normal;
+	text-overflow: clip;
+	overflow: visible;
+	@container (min-width: 140px) { font-size: 12px; }
+}
+
+@mixin earthquake-label {
+	font-size: clamp(9px, 14cqi, 12px);
+	letter-spacing: -.04em;
+}

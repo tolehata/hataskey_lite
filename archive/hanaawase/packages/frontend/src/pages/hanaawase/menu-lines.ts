@@ -1,0 +1,173 @@
+// 花常 メニューセリフ（独自i18n・本体localeを使わずゲーム内に閉じ込める / CONSTRAINTS）。
+// ⚠️自動生成: 原稿は design 側の下書きから統合。文面はBIBLEの声で執筆・機械検品済み(感嘆符/混入/重複検査)。
+// face=表情番号(1〜6, bustup_N と対応)。time/month/prog は出し分け条件。
+// ⚠️レン(ren)の声は 2026-07-27 に改訂し、**「〜っす」を全廃**した（一人称「俺」／男子大学生の陽気なノリ／
+//   若菜・年上には砕けた敬語、同年代にはため口）。⚠️過去稿の語尾を真似ると戻る。正本は HANATSUNE-BIBLE.md §5。
+
+export type MenuCharId = "wakana" | "ren" | "yae" | "inukai" | "gen" | "tatsumi" | "naito";
+export type MenuTime = "morning" | "day" | "evening" | "night";
+export type MenuProg = "early" | "mid" | "late";
+
+export interface MenuLine {
+	char: MenuCharId;
+	t: string;
+	time: MenuTime | "any";
+	month: number[] | "any";
+	face: number;
+	prog?: MenuProg;
+	rare?: boolean;
+}
+
+export interface MenuCharMeta { name: string; castHint?: string; }
+
+export const MENU_CHARS: Record<MenuCharId, MenuCharMeta> = {
+	wakana: { name: "若菜" },
+	ren: { name: "レン" },
+	yae: { name: "八重", castHint: "day-shop" },
+	inukai: { name: "犬飼", castHint: "morning-market" },
+	gen: { name: "玄", castHint: "quiet-any" },
+	tatsumi: { name: "辰巳", castHint: "morning-market" },
+	naito: { name: "内藤", castHint: "autumn-kiku" },
+};
+
+export const MENU_LINES: MenuLine[] = [
+	{ char:"wakana", t:"水を替えたら、店が少し明るくなった。", time:"any", month:"any", face:1 },
+	{ char:"wakana", t:"売れない日は、店を磨く日。……ばあちゃんの受け売りだけど。", time:"any", month:"any", face:2 },
+	{ char:"wakana", t:"値札より先に、名前を覚えな、か。まだ半分もあやしい。", time:"any", month:"any", face:3 },
+	{ char:"wakana", t:"今日のうちに飾る花。この籠の名前、我ながら気に入ってる。", time:"any", month:"any", face:2 },
+	{ char:"wakana", t:"棚は縛れ、花は諦めるな。……はい。", time:"any", month:"any", face:4 },
+	{ char:"wakana", t:"勘定台の丸椅子だけ、まだ動かせずにいる。", time:"any", month:"any", face:5, prog:"early" },
+	{ char:"wakana", t:"軽トラの鍵、今日も助手席に置きっぱなし。", time:"any", month:"any", face:1 },
+	{ char:"wakana", t:"この店を継ぐなんて、去年の今ごろは思ってもみなかった。", time:"any", month:"any", face:5, prog:"early" },
+	{ char:"wakana", t:"だいぶ、手が店に慣れてきた気がする。", time:"any", month:"any", face:2, prog:"late" },
+	{ char:"wakana", t:"朝いちの水は冷たい。指がしゃんとする。", time:"morning", month:"any", face:1 },
+	{ char:"wakana", t:"戸を開けると、青い匂いがいちばん濃い。", time:"morning", month:"any", face:1 },
+	{ char:"wakana", t:"市場は五時半。……まだ体が慣れない。", time:"morning", month:"any", face:3 },
+	{ char:"wakana", t:"昼過ぎは、花より人がよく来る。", time:"day", month:"any", face:1 },
+	{ char:"wakana", t:"日が回って、店先まで光が届いた。", time:"day", month:"any", face:2 },
+	{ char:"wakana", t:"日が傾くと、店の匂いが濃くなる気がする。", time:"evening", month:"any", face:1 },
+	{ char:"wakana", t:"見切り籠、今日はよく捌けた。", time:"evening", month:"any", face:2 },
+	{ char:"wakana", t:"もう遅い。……無理はしなさんな、って声がする。", time:"night", month:"any", face:5 },
+	{ char:"wakana", t:"帳面を閉じる前に、もう一度だけ棚を見る。", time:"night", month:"any", face:4 },
+	{ char:"wakana", t:"松がよう出る時季。年の始めは、これに限る。", time:"any", month:[1], face:1 },
+	{ char:"wakana", t:"初売りの荷は、松と梅と、あとは南天。", time:"morning", month:[1], face:4 },
+	{ char:"wakana", t:"梅の枝は、蕾のかたさで選ぶ。……らしい。", time:"any", month:[2], face:3 },
+	{ char:"wakana", t:"寒いと花のもちがいい。得な季節だよ。", time:"any", month:[2], face:2 },
+	{ char:"wakana", t:"三月は花束ばかり結んでる。卒業の分。", time:"any", month:[3], face:4 },
+	{ char:"wakana", t:"桜は、急かさずに開かせるほうがいい。", time:"any", month:[3], face:2 },
+	{ char:"wakana", t:"雨の日に来る人は、たいてい、何かある。", time:"any", month:[6], face:5 },
+	{ char:"wakana", t:"紫陽花は水が下がりやすい。切り口に、明礬。", time:"day", month:[6], face:4 },
+	{ char:"wakana", t:"向日葵は水を汚す。毎日替える、それだけ。", time:"any", month:[7], face:4 },
+	{ char:"wakana", t:"暑いと、店が狭いくらいがちょうどいい。", time:"any", month:[7], face:2 },
+	{ char:"wakana", t:"菊は、光の花。……まだ、その音は聞こえない。", time:"any", month:[9], face:5 },
+	{ char:"wakana", t:"敬老の日は、りんどうがよく動く。", time:"any", month:[9], face:1 },
+	{ char:"ren", t:"じゃ、ひとっ走り行ってきます。軽トラ、お借りしますね。", time:"any", month:"any", face:1 },
+	{ char:"ren", t:"ここ、居ると妙に落ち着くんですよね。……なんでだろうな。", time:"any", month:"any", face:3 },
+	{ char:"ren", t:"若菜さん、それ俺が持ちますって。重いでしょ、それ。", time:"any", month:"any", face:1 },
+	{ char:"ren", t:"花の名前、けっこう覚えました。試験より頭に残るんですよ、これが。", time:"any", month:"any", face:2 },
+	{ char:"ren", t:"サーバーのログ見てるより、水替えてる方が性に合うかも。", time:"any", month:"any", face:6 },
+	{ char:"ren", t:"ヘッドホン、配達中は片耳だけにしてます。安全第一なんで。", time:"any", month:"any", face:1 },
+	{ char:"ren", t:"若菜さんが結んだ花束、揺すってもほどけないんですよ。すごいな、ほんと。", time:"any", month:"any", face:2 },
+	{ char:"ren", t:"また犬扱いされました。狼なんですけどね、俺。何度言っても駄目だな。", time:"any", month:"any", face:6 },
+	{ char:"ren", t:"センセイに花を一本もらった日のこと、いまだに覚えてるんですよ。", time:"any", month:"any", face:3, prog:"mid" },
+	{ char:"ren", t:"朝の市場、勢いがすごいですね。声の大きい人しかいない!", time:"morning", month:"any", face:4 },
+	{ char:"ren", t:"始発に乗ってきたんで、正直まだ眠いです……。", time:"morning", month:"any", face:6 },
+	{ char:"ren", t:"講義の合間に寄りました。このあと坂の上まで戻るの、けっこうこたえる。", time:"day", month:"any", face:6 },
+	{ char:"ren", t:"今日の配達先、坂の上のアパートですよ。俺の部屋のすぐ近く。", time:"day", month:"any", face:1 },
+	{ char:"ren", t:"夕方の分、届けてきますね。暗くなる前に回りきります。", time:"evening", month:"any", face:1 },
+	{ char:"ren", t:"店じまい、手伝いますって。任せてください。", time:"evening", month:"any", face:2 },
+	{ char:"ren", t:"こんな時間まで。……根を詰めすぎです、若菜さん。", time:"night", month:"any", face:5 },
+	{ char:"ren", t:"レポート、まだ手つかずです。……帰ったらやります。たぶん。", time:"night", month:"any", face:6 },
+	{ char:"ren", t:"正月の配達、松ばっかり運びました。腕がもう上がらない。", time:"any", month:[1], face:6 },
+	{ char:"ren", t:"卒業の花束、注文がすごい数ですね。運ぶほうが追いつかない!", time:"any", month:[3], face:4 },
+	{ char:"ren", t:"雨の日は合羽を着て回ってます。……あと、俺の誕生日、今月なんですよ。", time:"any", month:[6], face:3 },
+	{ char:"ren", t:"向日葵、背が高いですね。助手席に立てると前が見えなくなる。", time:"any", month:[7], face:6 },
+	{ char:"ren", t:"台風、来るらしいですね。看板、しまっておきましょう。", time:"any", month:[9], face:5 },
+	{ char:"yae", t:"若菜ちゃん、ちゃんと食べてる? 顔が少し痩せたわね。", time:"any", month:"any", face:1 },
+	{ char:"yae", t:"常ちゃんの孫が、まあ、こんなに立派に店をやって。", time:"any", month:"any", face:2 },
+	{ char:"yae", t:"うちのトマト、そこ置いとくわね。花のついでに持ってって。", time:"any", month:"any", face:1 },
+	{ char:"yae", t:"隣で見てるからね。困ったら声をかけなさい。", time:"any", month:"any", face:2 },
+	{ char:"yae", t:"あんた、また根を詰めて。少し休みなさいよ。", time:"any", month:"any", face:1 },
+	{ char:"yae", t:"昨日ね、坂の上の奥さんが、あんたの花を褒めてたよ。", time:"any", month:"any", face:2 },
+	{ char:"yae", t:"常ちゃんとはねえ、この歳まで喧嘩ばっかり。懐かしいわ。", time:"any", month:"any", face:1 },
+	{ char:"yae", t:"若菜ちゃん、市場? 気をつけてね!", time:"morning", month:"any", face:2 },
+	{ char:"yae", t:"お客さんが来たみたいよ、ほら!", time:"day", month:"any", face:2 },
+	{ char:"yae", t:"そろそろ店じまい? 無理したら駄目よ。", time:"evening", month:"any", face:1 },
+	{ char:"yae", t:"卒業の時季ね。あんた、花束で寝る間もないでしょう。", time:"any", month:[3], face:1 },
+	{ char:"yae", t:"暑いねえ。うちの西瓜、冷えてるから後でお食べ。", time:"any", month:[7], face:2 },
+	{ char:"inukai", t:"若菜さん、いい枝入ってるよ! 見てって!", time:"morning", month:"any", face:2 },
+	{ char:"inukai", t:"レンのやつ、また遅刻。……お、来た。おーい狼!", time:"morning", month:"any", face:1 },
+	{ char:"inukai", t:"柴犬だっつの。犬っころ扱いすんなよな。", time:"any", month:"any", face:2 },
+	{ char:"inukai", t:"うちの生花、目利きは任しときな。", time:"any", month:"any", face:1 },
+	{ char:"inukai", t:"若菜さんとこの花束、市場でも評判いいんだぜ。", time:"any", month:"any", face:2 },
+	{ char:"inukai", t:"セリ、始まるよ! ぼやっとしてると持ってかれる!", time:"morning", month:"any", face:2 },
+	{ char:"inukai", t:"菊、いいの入ってる。内藤さんとこのやつ。", time:"any", month:[9], face:1 },
+	{ char:"inukai", t:"雨だと配達大変だろ。レンによろしくな。", time:"any", month:[6], face:1 },
+	{ char:"gen", t:"……豆。", time:"any", month:"any", face:1 },
+	{ char:"gen", t:"……いい花だ。", time:"any", month:"any", face:1 },
+	{ char:"gen", t:"常なら、そう言うだろう。", time:"any", month:"any", face:1 },
+	{ char:"gen", t:"珈琲、冷める前に。", time:"any", month:"any", face:1 },
+	{ char:"gen", t:"……隣、空いてる。", time:"evening", month:"any", face:1 },
+	{ char:"gen", t:"……今日は、冷える。", time:"any", month:[1], face:1 },
+	{ char:"tatsumi", t:"常サンとこの孫! 今日もいい枝あるぞ!", time:"morning", month:"any", face:1 },
+	{ char:"tatsumi", t:"目ぇ肥やしてけ! 若えうちにな!", time:"morning", month:"any", face:1 },
+	{ char:"tatsumi", t:"その枝、音で選べ。……常サンの口癖だったろ。", time:"any", month:"any", face:3 },
+	{ char:"tatsumi", t:"セリは待たねえぞ! しゃきっとしろ!", time:"morning", month:"any", face:1 },
+	{ char:"tatsumi", t:"迷ったら聞きな。黙って見ててやるから。", time:"any", month:"any", face:1 },
+	{ char:"tatsumi", t:"松がいいのが出てきた。年の瀬に向けてな。", time:"any", month:[1], face:1 },
+	{ char:"naito", t:"菊はな、夜も起きとるんだ。", time:"any", month:[9], face:1 },
+	{ char:"naito", t:"光を当ててやると、時季を忘れて咲く。", time:"any", month:[9], face:1 },
+	{ char:"naito", t:"常さんは、うちの菊を『光の花』と呼んだ。", time:"any", month:[9], face:2 },
+	{ char:"naito", t:"敬老の日はな、りんどうもいいが、菊も忘れんでな。", time:"any", month:[9], face:1 },
+	{ char:"naito", t:"いい菊は、花びらの先まで張りがある。", time:"any", month:[9], face:1 },
+	{ char:"naito", t:"今年の菊は、よう締まった。", time:"any", month:[9], face:2 },
+
+	// --- 若菜 追加20本（2026-07-25）: 月の穴(4/5/8/10/11/12月)・prog:mid・rare を埋める ---
+	// ⚠️face は生成済み bustup の実体に合わせる（④=きりっと集中）。既存素材との対応を変えない。
+	{ char:"wakana", t:"散り際まで含めて、花。……そう言われても、掃くのは私だ。", time:"any", month:[4], face:3 },
+	{ char:"wakana", t:"桜の始末は、閉めてから。昼にやると、また散る。", time:"evening", month:[4], face:4 },
+	{ char:"wakana", t:"蕾の蜜を拭くのは、水やりじゃなくて点呼。", time:"morning", month:[5], face:4 },
+	{ char:"wakana", t:"芍薬は、固い蕾を選ぶ。開くのは、渡した先でいい。", time:"any", month:[5], face:1 },
+	{ char:"wakana", t:"同じ長さに、同じ順で。三十束目から、手だけが起きてる。", time:"any", month:[8], face:4 },
+	{ char:"wakana", t:"盆は、人の帰る場所の裏方。……うちの帰る場所は、二階だけど。", time:"night", month:[8], face:5 },
+	{ char:"wakana", t:"菊は光の花。半分は受け売りで、半分は、その場で私が言った。", time:"any", month:[10], face:2 },
+	{ char:"wakana", t:"枝物のときだけ、持ち替えてた。ずっと。", time:"any", month:[10], face:5 },
+	{ char:"wakana", t:"まだ咲かない枝を、咲く前提で売っている。", time:"any", month:[11], face:3 },
+	{ char:"wakana", t:"桶に膜が張ってた。指で割ると、いい音がする。", time:"morning", month:[11], face:1 },
+	{ char:"wakana", t:"松市は夜明け前。起きるんじゃなくて、寝ないほうが早い。", time:"morning", month:[12], face:4 },
+	{ char:"wakana", t:"気づいたら、飴色のほうしか握っていない。", time:"any", month:[12], face:4 },
+	{ char:"wakana", t:"気づいたら、値札を見ずに値を言っていた。", time:"any", month:"any", face:2, prog:"mid" },
+	{ char:"wakana", t:"四月から数えて、そろそろ折り返しになる。", time:"any", month:"any", face:1, prog:"mid" },
+	{ char:"wakana", t:"見切り籠に入れる基準を、まだ言葉にできない。手が決めてる。", time:"evening", month:"any", face:3 },
+	{ char:"wakana", t:"帳面の余白が、だんだん狭くなってきた。", time:"night", month:"any", face:1, prog:"late" },
+	{ char:"wakana", t:"留守札の字は、まだ祖母の。自分のを、作れずにいる。", time:"any", month:"any", face:5, rare:true },
+	{ char:"wakana", t:"爪で弾いて、音のいい蕾を。……何度やっても、同じ音にしか聞こえない。", time:"any", month:"any", face:5, rare:true },
+	{ char:"wakana", t:"甘酒のことは、来年また考える。", time:"any", month:"any", face:3, rare:true },
+	{ char:"wakana", t:"丸椅子の座面を、たまに拭く。座りはしない。", time:"any", month:"any", face:5, rare:true },
+
+	// --- レン 追加20本（2026-07-25）: 身体(耳/数える癖)・生活の実在感・他キャラとの関係・月の穴を埋める ---
+	// ⚠️prog で秘密の漏れ方を制御（early=匂いだけ / mid・late で核心へ）。⑤真顔の行は必ず短文（BIBLE §5）
+	{ char:"ren", t:"この耳、乾くまで一時間かかるんですよ。内側がどうにもならなくて。", time:"any", month:"any", face:6 },
+	{ char:"ren", t:"この店、電気が止まっても仕事が回るんですよ。俺の部屋は何も残らないのに。", time:"any", month:"any", face:1 },
+	{ char:"ren", t:"つい数えちゃうんですよ。桶、お客さん、戸の開け閉め。", time:"any", month:"any", face:3 },
+	{ char:"ren", t:"新聞紙を斜めにくるっと一回し。あれ、俺いまだにできません。", time:"any", month:"any", face:6 },
+	{ char:"ren", t:"若菜さん、自分の言葉になると声が低くなるんですよ。そっちのほうがよく届きます。", time:"any", month:"any", face:2 },
+	{ char:"ren", t:"マスター、二年通ってもまだ一言ももらえてません。豆はくださるのに。", time:"any", month:"any", face:6 },
+	{ char:"ren", t:"生まれは長野の山のほうなんで。こっちは三月でもう春ですよね。", time:"any", month:"any", face:1 },
+	{ char:"ren", t:"実家から米が届きました。足りてると毎年伝えてるのに、まったく。", time:"any", month:"any", face:6 },
+	{ char:"ren", t:"壊れる前に直しておくと、誰にも気づかれないんですよね。まあ、それが正解なんで。", time:"any", month:"any", face:1 },
+	{ char:"ren", t:"花の水って、動かすとかえって傷むんですね。配管は逆なのに。", time:"any", month:"any", face:3 },
+	{ char:"ren", t:"辰巳さんの符丁、まだ半分も聞き取れません。規則性はあるはずなんですけどね。", time:"morning", month:"any", face:6 },
+	{ char:"ren", t:"この店、去年の暮れは閉まってましたよね。……いや、前を通っただけです。", time:"any", month:"any", face:6, prog:"early", rare:true },
+	{ char:"ren", t:"部屋の窓辺、一輪ぶんだけ空けてあるんです。そこには物を置かないことにしてて。", time:"evening", month:"any", face:1, prog:"mid" },
+	{ char:"ren", t:"坂の上から、ここの灯りが見えるんです。", time:"night", month:"any", face:5, prog:"mid" },
+	{ char:"ren", t:"センセイ、何でも筋道で説明する人でした。花にも筋道があるなんて、思ってもみなくて。", time:"evening", month:"any", face:1, prog:"late" },
+	{ char:"ren", t:"来年も——……いや。また来ます。", time:"night", month:"any", face:5, prog:"late", rare:true },
+	{ char:"ren", t:"義理の返し、花でどうですかね。去年、先輩が扇風機を返して大惨事だったんで。", time:"any", month:[2], face:6 },
+	{ char:"ren", t:"新歓の荷運び、今年も駆り出されました。階段だけは誰にも負けないんで!", time:"day", month:[4], face:2 },
+	{ char:"ren", t:"母の日、坂の上は俺の担当ですよ。下りはやたら速いんで。", time:"any", month:[5], face:2 },
+	{ char:"ren", t:"仏花、八十束ですよ。新聞を折るだけで手が限界でした。", time:"any", month:[8], face:6 },
+	{ char:"ren", t:"菊の畑、夜になると一面が明るいんですよ。あれ、もうサーバー室そのものでした!", time:"night", month:[10], face:4 },
+	{ char:"ren", t:"梅、まだ固いままですね。毎朝のぞいてるんですけど。", time:"any", month:[11,12], face:6 },
+	{ char:"ren", t:"松、担ぐと自分の背より長いんですよ。庇にいつも引っかけます。", time:"any", month:[12], face:6 },
+];

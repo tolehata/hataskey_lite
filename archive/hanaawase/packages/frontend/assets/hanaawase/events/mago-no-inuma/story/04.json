@@ -1,0 +1,395 @@
+{
+	"v": 1,
+	"id": "ev-mago-04",
+	"kind": "scene",
+	"title": "特徴が変わる",
+	"trigger": {
+		"at": "stage-clear",
+		"stageId": "ev-mago-4"
+	},
+	"synopsis": "坂の下で、聞いた特徴が朝と食い違う。犬飼さんと大神くんが通りかかる",
+	"lines": [
+		{
+			"kind": "narration",
+			"text": "日が上がって、通りの影が短くなっていた。",
+			"bg": "evt:shotengai"
+		},
+		{
+			"kind": "narration",
+			"text": "幟が一枚、風を受けて鳴る。米屋の前で水が撒かれ、撒かれたそばから縁が乾いていく。坂の下の交差点まで来て、老女は初めて足を止めた。上を見ている。坂は途中で曲がっていて、上のほうは見えない。"
+		},
+		{
+			"kind": "narration",
+			"text": "若菜は帳面を開いた。朝の三行がある。"
+		},
+		{
+			"kind": "narration",
+			"text": "〈背丈 胸のあたり／髪 短い／服 不明〉"
+		},
+		{
+			"kind": "say",
+			"speaker": "wakana",
+			"emo": 1,
+			"text": "もう一度、お尋ねしてもいいですか"
+		},
+		{
+			"kind": "say",
+			"speaker": "evt",
+			"name": "きよ",
+			"emo": 1,
+			"text": "どうぞ"
+		},
+		{
+			"kind": "say",
+			"speaker": "wakana",
+			"emo": 1,
+			"text": "お孫さんの背丈は"
+		},
+		{
+			"kind": "say",
+			"speaker": "evt",
+			"name": "きよ",
+			"emo": 1,
+			"text": "そうね。私より高いですよ。頭ひとつぶんくらい"
+		},
+		{
+			"kind": "narration",
+			"text": "鉛筆が紙の上で止まった。若菜は朝の行に目を落とし、それから老女を見た。老女は坂の上を見たままだった。"
+		},
+		{
+			"kind": "say",
+			"speaker": "wakana",
+			"emo": 3,
+			"text": "髪は"
+		},
+		{
+			"kind": "say",
+			"speaker": "evt",
+			"name": "きよ",
+			"emo": 1,
+			"text": "結んでます。後ろで、ひとつに"
+		},
+		{
+			"kind": "say",
+			"speaker": "wakana",
+			"emo": 3,
+			"text": "朝は、短いと"
+		},
+		{
+			"kind": "say",
+			"speaker": "evt",
+			"name": "きよ",
+			"emo": 2,
+			"text": "そうでしたっけ"
+		},
+		{
+			"kind": "say",
+			"speaker": "wakana",
+			"emo": 3,
+			"text": "そう伺いました"
+		},
+		{
+			"kind": "say",
+			"speaker": "evt",
+			"name": "きよ",
+			"emo": 2,
+			"text": "近ごろのは、伸びるのが早いですから"
+		},
+		{
+			"kind": "say",
+			"speaker": "wakana",
+			"emo": 3,
+			"text": "おいくつですか"
+		},
+		{
+			"kind": "say",
+			"speaker": "evt",
+			"name": "きよ",
+			"emo": 1,
+			"text": "もう、いい歳です"
+		},
+		{
+			"kind": "say",
+			"speaker": "wakana",
+			"emo": 3,
+			"text": "二十歳は、過ぎておられますか"
+		},
+		{
+			"kind": "say",
+			"speaker": "evt",
+			"name": "きよ",
+			"emo": 3,
+			"text": "過ぎてますよ。過ぎてますとも"
+		},
+		{
+			"kind": "say",
+			"speaker": "wakana",
+			"emo": 3,
+			"text": "では、お一人で出歩かれても"
+		},
+		{
+			"kind": "say",
+			"speaker": "evt",
+			"name": "きよ",
+			"emo": 6,
+			"text": "出歩きますよ。あの歳なら、出歩きます"
+		},
+		{
+			"kind": "narration",
+			"text": "老女は坂の上を見上げたまま、そう言った。丸眼鏡の縁に、日が一本入っていた。"
+		},
+		{
+			"kind": "narration",
+			"text": "若菜は鉛筆を挟んで、帳面を閉じた。閉じてから、腰に戻さずに手に持ったままにした。"
+		},
+		{
+			"kind": "narration",
+			"text": "そこへ、坂の下の道から軽トラが一台入ってきて、まるはちの手前で停まった。荷台から台車が下ろされる。柴犬の獣人が、首の手ぬぐいを外しながら、こちらを見た。"
+		},
+		{
+			"kind": "say",
+			"speaker": "sub",
+			"name": "犬飼",
+			"text": "あれ、花常さん。こんなとこで何やって——あ、ばあちゃん、また来てんの"
+		},
+		{
+			"kind": "say",
+			"speaker": "evt",
+			"name": "きよ",
+			"emo": 1,
+			"text": "犬飼さんとこの。おはようございます"
+		},
+		{
+			"kind": "say",
+			"speaker": "sub",
+			"name": "犬飼",
+			"text": "おはようございますって、もう十時だよ。……花常さん、この人、市場でも見るぞ"
+		},
+		{
+			"kind": "say",
+			"speaker": "wakana",
+			"emo": 4,
+			"text": "市場、ですか"
+		},
+		{
+			"kind": "say",
+			"speaker": "sub",
+			"name": "犬飼",
+			"text": "朝の五時。うちの区画の通路、ふつうに歩いてる。うちの親父と喋ってんの、何回も見た"
+		},
+		{
+			"kind": "say",
+			"speaker": "wakana",
+			"emo": 3,
+			"text": "五時に"
+		},
+		{
+			"kind": "say",
+			"speaker": "sub",
+			"name": "犬飼",
+			"text": "セリの前。あそこ、フォークが走るから危ないんだけどな。よけるのが誰よりうまいんだよ、この人"
+		},
+		{
+			"kind": "say",
+			"speaker": "evt",
+			"name": "きよ",
+			"emo": 3,
+			"text": "よけるのは得意です"
+		},
+		{
+			"kind": "narration",
+			"text": "老女はそう言って、大根の袋を持ち替えた。犬飼は台車に段ボールを積み直しながら、笑って首を振った。"
+		},
+		{
+			"kind": "say",
+			"speaker": "sub",
+			"name": "犬飼",
+			"text": "うちの親父、この人と喋ってる時だけ手を止めるんだよ。荷が残ってても止める。俺が止めると怒鳴られんのに"
+		},
+		{
+			"kind": "say",
+			"speaker": "wakana",
+			"emo": 3,
+			"text": "何を話しておられるんですか"
+		},
+		{
+			"kind": "say",
+			"speaker": "sub",
+			"name": "犬飼",
+			"text": "知らねえ。遠いから聞こえねえもん。二人とも笑ってるから、たいした話じゃねえと思うけど"
+		},
+		{
+			"kind": "say",
+			"speaker": "evt",
+			"name": "きよ",
+			"emo": 1,
+			"text": "たいした話じゃありません。花の値段の話は、まだ一度も出ていません"
+		},
+		{
+			"kind": "say",
+			"speaker": "sub",
+			"name": "犬飼",
+			"text": "あ、そうだ。ばあちゃん、帰り乗ってくか。荷下ろしたら、そっち通るぞ"
+		},
+		{
+			"kind": "say",
+			"speaker": "evt",
+			"name": "きよ",
+			"emo": 2,
+			"text": "いいえ、歩きます"
+		},
+		{
+			"kind": "say",
+			"speaker": "sub",
+			"name": "犬飼",
+			"text": "乗れって。この暑さで"
+		},
+		{
+			"kind": "say",
+			"speaker": "evt",
+			"name": "きよ",
+			"emo": 1,
+			"text": "乗ると、着いてしまうでしょう"
+		},
+		{
+			"kind": "narration",
+			"text": "犬飼は段ボールを抱えたまま、二秒ほど動きを止めた。それから、聞き返さずに荷台の扉を閉めた。若菜は帳面を持つ手の位置を、少しだけ変えた。"
+		},
+		{
+			"kind": "say",
+			"speaker": "sub",
+			"name": "犬飼",
+			"text": "まあ、いいや。花常さん、この人、坂も速いから気をつけろよ"
+		},
+		{
+			"kind": "narration",
+			"text": "坂のほうで自転車が軋んで止まり、狼の獣人が片足を地面に着けた。汗を拭いながら、若菜と老女を交互に見る。"
+		},
+		{
+			"kind": "say",
+			"speaker": "ren",
+			"emo": 4,
+			"text": "あれ、店閉まってると思ったら、こんなとこにいた"
+		},
+		{
+			"kind": "say",
+			"speaker": "wakana",
+			"emo": 1,
+			"text": "大神くん。今日は坂の上ですか"
+		},
+		{
+			"kind": "say",
+			"speaker": "ren",
+			"emo": 1,
+			"text": "一限だけ出て、帰りっす。——で、何してるんです、二人で"
+		},
+		{
+			"kind": "say",
+			"speaker": "wakana",
+			"emo": 1,
+			"text": "こちらの方の、お孫さんを探しています"
+		},
+		{
+			"kind": "say",
+			"speaker": "ren",
+			"emo": 2,
+			"text": "あー、それ、ネットのほう早いですよ。町の掲示板と、あと商店街の公式のとこにも投げられます。特徴と、最後に見た時間だけ教えてもらえたら、俺、十分で出せます"
+		},
+		{
+			"kind": "narration",
+			"text": "老女は、丸眼鏡の位置を直した。"
+		},
+		{
+			"kind": "say",
+			"speaker": "evt",
+			"name": "きよ",
+			"emo": 2,
+			"text": "そういうのは、いいんです"
+		},
+		{
+			"kind": "say",
+			"speaker": "ren",
+			"emo": 4,
+			"text": "え。いや、写真なくても文字だけで結構回るんで"
+		},
+		{
+			"kind": "say",
+			"speaker": "evt",
+			"name": "きよ",
+			"emo": 1,
+			"text": "回らなくていいんですよ。足で足ります"
+		},
+		{
+			"kind": "say",
+			"speaker": "ren",
+			"emo": 6,
+			"text": "……はあ"
+		},
+		{
+			"kind": "narration",
+			"text": "レンは若菜のほうを見た。若菜は黙ったまま、帳面を腰に戻した。"
+		},
+		{
+			"kind": "say",
+			"speaker": "ren",
+			"emo": 1,
+			"text": "じゃ、俺、下宿戻ってますんで。何かあったら電話ください"
+		},
+		{
+			"kind": "say",
+			"speaker": "wakana",
+			"emo": 1,
+			"text": "助かります"
+		},
+		{
+			"kind": "say",
+			"speaker": "ren",
+			"emo": 6,
+			"text": "あの、一個だけ。俺の言い方、まずかったっすかね"
+		},
+		{
+			"kind": "say",
+			"speaker": "wakana",
+			"emo": 1,
+			"text": "いいえ"
+		},
+		{
+			"kind": "say",
+			"speaker": "ren",
+			"emo": 1,
+			"text": "探してんのに、探す道具はいらないって言われたんで。……そういうこともあるか"
+		},
+		{
+			"kind": "say",
+			"speaker": "wakana",
+			"emo": 1,
+			"text": "あるようです"
+		},
+		{
+			"kind": "say",
+			"speaker": "ren",
+			"emo": 2,
+			"text": "まあ、足のほうが早い日もありますしね。坂とか"
+		},
+		{
+			"kind": "say",
+			"speaker": "wakana",
+			"emo": 1,
+			"text": "坂は、あの方のほうが早いです"
+		},
+		{
+			"kind": "say",
+			"speaker": "ren",
+			"emo": 4,
+			"text": "まじすか"
+		},
+		{
+			"kind": "narration",
+			"text": "自転車は坂を下って、通りの先の光の中へ消えた。犬飼の台車が段差を越える音が二つ鳴って、そのあと、通りは静かになった。"
+		},
+		{
+			"kind": "narration",
+			"text": "老女は、坂を上らなかった。上らずに、公園のほうへ曲がった。"
+		}
+	]
+}

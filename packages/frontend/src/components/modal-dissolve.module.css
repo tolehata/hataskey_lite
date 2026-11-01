@@ -1,0 +1,30 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+
+.leaveActive > [data-modal-backdrop] {
+	transition: opacity 650ms ease !important;
+}
+
+.leaveActive > [data-modal-content] {
+	transform-origin: var(--transformOrigin);
+	transition: opacity 650ms ease, filter 650ms ease, transform 650ms cubic-bezier(.22, 1, .36, 1) !important;
+	will-change: opacity, filter, transform;
+}
+
+.leaveTo > [data-modal-backdrop] {
+	opacity: 0;
+}
+
+.leaveTo > [data-modal-content] {
+	opacity: 0;
+	filter: blur(12px);
+	transform: translateY(-8px) scale(1.025);
+	pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.leaveActive > [data-modal-backdrop],
+	.leaveActive > [data-modal-content] {
+		transition: none !important;
+		animation: none !important;
+	}
+}

@@ -1,0 +1,52 @@
+.autogen
+.github
+.travis
+.vscode
+.config
+Dockerfile
+build/
+built/
+db/
+.devcontainer/compose.yml
+node_modules/
+packages/*/node_modules
+# 旗鯖fork: node_modules は全階層で除外する。packages/*/node_modules(1階層)だけだと
+# packages/cherrypick-js/generator/node_modules 等の深い node_modules が残り、その中の
+# 壊れた/無効なシンボリックリンク(@readme/openapi-parser 等)で
+# 「invalid file request」となりビルドコンテキスト転送が失敗する
+# (= ビルドが完了せず古いイメージが使われ続け、ソース変更が一切反映されない事象)。
+**/node_modules
+# 旗鯖fork: packages/*/built を除外しないとホスト側の古い built/ が
+# COPY . ./ で runner ステージにコピーされ、native-builder 製の新しい built/ を
+# 上書きしてしまう (例: base.pug の var LANGS が消える事象が発生)。
+packages/*/built
+redis/
+files/
+fluent-emojis/
+.pnp.*
+
+# .yarn関連
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+.pnpm-store
+
+.idea/
+packages/*/.vscode/
+packages/backend/test/compose.yml
+
+# 花常の保管ソース・素材とローカル開発書類は実行イメージへ含めない
+archive/hanaawase/
+packages/frontend/hanaawase/
+# ローカルモックとソースコピーは本番の実行に不要
+temp/
+mockups/
+
+.pnpm-store/
+
+# HataIgo の要件・参照デザイン・非公開の作業記録を出荷しない
+packages/frontend/hataigo/

@@ -1,0 +1,28 @@
+{
+	"name": "sw",
+	"private": true,
+	"scripts": {
+		"watch": "nodemon -w ../../package.json -e json --exec \"node build.js watch\"",
+		"build": "node build.js",
+		"typecheck": "tsc --noEmit",
+		"eslint": "eslint --quiet src/**/*.ts",
+		"lint": "pnpm typecheck && pnpm eslint",
+		"biome-lint": "pnpm typecheck && pnpm biome lint",
+		"format": "pnpm biome format",
+		"format:write": "pnpm biome format --write"
+	},
+	"dependencies": {
+		"esbuild": "0.28.2",
+		"idb-keyval": "6.3.0",
+		"cherrypick-js": "workspace:*"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.3.1",
+		"@typescript-eslint/parser": "8.71.2",
+		"@typescript/lib-webworker": "npm:@types/serviceworker@0.0.74",
+		"eslint-plugin-import": "2.32.0",
+		"nodemon": "3.1.10",
+		"typescript": "6.0.2"
+	},
+	"type": "module"
+}

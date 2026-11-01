@@ -1,0 +1,473 @@
+{
+	"v": 1,
+	"id": "mago-no-inuma",
+	"title": "孫の居ぬ間になんとやら",
+	"subtitle": "探しものは、みつからないほうがいい",
+	"season": "初夏",
+	"logo": null,
+	"home": "home.json",
+	"story": [
+		"story/01.json",
+		"story/02.json",
+		"story/03.json",
+		"story/04.json",
+		"story/05.json",
+		"story/06.json"
+	],
+	"stages": [
+		{
+			"id": "ev-mago-1",
+			"title": "聞き込み",
+			"goal": {
+				"flower": "matsu",
+				"goalNeed": 20
+			},
+			"moves": 22,
+			"colors": [
+				"matsu",
+				"ume",
+				"sakura",
+				"ajisai",
+				"himawari"
+			],
+			"starScores": [
+				0,
+				320,
+				540
+			],
+			"outOfSeasonRate": 0,
+			"ambience": "shop",
+			"points": 6,
+			"gimmick": null
+		},
+		{
+			"id": "ev-mago-2",
+			"title": "商店街",
+			"goal": {
+				"flower": "ume",
+				"goalNeed": 24
+			},
+			"moves": 22,
+			"colors": [
+				"matsu",
+				"ume",
+				"sakura",
+				"ajisai",
+				"himawari"
+			],
+			"starScores": [
+				0,
+				384,
+				648
+			],
+			"outOfSeasonRate": 0,
+			"ambience": "shop",
+			"points": 8,
+			"gimmick": null
+		},
+		{
+			"id": "ev-mago-3",
+			"title": "喫茶くろまつ",
+			"goal": {
+				"flower": "kiku",
+				"goalNeed": 26
+			},
+			"moves": 21,
+			"colors": [
+				"matsu",
+				"ume",
+				"sakura",
+				"ajisai",
+				"himawari",
+				"kiku"
+			],
+			"starScores": [
+				0,
+				416,
+				702
+			],
+			"outOfSeasonRate": 0,
+			"ambience": "shop",
+			"points": 8,
+			"gimmick": null
+		},
+		{
+			"id": "ev-mago-4",
+			"title": "坂の上まで",
+			"goal": {
+				"flower": "ajisai",
+				"goalNeed": 28
+			},
+			"moves": 23,
+			"colors": [
+				"matsu",
+				"ume",
+				"sakura",
+				"ajisai",
+				"himawari"
+			],
+			"starScores": [
+				0,
+				448,
+				756
+			],
+			"outOfSeasonRate": 0,
+			"ambience": "shop",
+			"points": 10,
+			"gimmick": null
+		},
+		{
+			"id": "ev-mago-5",
+			"title": "公園",
+			"goal": {
+				"flower": "sakura",
+				"goalNeed": 30
+			},
+			"moves": 24,
+			"colors": [
+				"matsu",
+				"ume",
+				"sakura",
+				"ajisai",
+				"himawari"
+			],
+			"starScores": [
+				0,
+				480,
+				810
+			],
+			"outOfSeasonRate": 0,
+			"ambience": "shop",
+			"points": 10,
+			"gimmick": null
+		},
+		{
+			"id": "ev-mago-6",
+			"title": "夕方の通り",
+			"goal": {
+				"flower": "himawari",
+				"goalNeed": 32
+			},
+			"moves": 26,
+			"colors": [
+				"matsu",
+				"ume",
+				"sakura",
+				"ajisai",
+				"himawari"
+			],
+			"starScores": [
+				0,
+				512,
+				864
+			],
+			"outOfSeasonRate": 0,
+			"ambience": "shop",
+			"points": 12,
+			"gimmick": null
+		}
+	],
+	"backgrounds": {
+		"kiyoba_front": {
+			"file": "img/bg_kiyoba_front.webp",
+			"fallback": "front_summer"
+		},
+		"shotengai": {
+			"file": "img/bg_shotengai.webp",
+			"fallback": "street"
+		},
+		"koen": {
+			"file": "img/bg_koen.webp",
+			"fallback": "outskirt"
+		}
+	},
+	"points": {
+		"id": "oboegaki",
+		"name": "町の憶え書き",
+		"icon": null
+	},
+	"exchange": [
+		{
+			"itemId": "hasami",
+			"name": "鋏",
+			"cost": 6,
+			"limit": 3
+		},
+		{
+			"itemId": "tenaoshi",
+			"name": "手直し",
+			"cost": 6,
+			"limit": 3
+		},
+		{
+			"itemId": "uchimizu",
+			"name": "打ち水",
+			"cost": 6,
+			"limit": 3
+		},
+		{
+			"itemId": "kazari-kikyo-shiori",
+			"name": "桔梗の栞",
+			"cost": 5,
+			"limit": 1
+		},
+		{
+			"itemId": "kazari-megane-netsuke",
+			"name": "丸眼鏡の根付",
+			"cost": 7,
+			"limit": 1
+		},
+		{
+			"itemId": "kazari-fuji-cover",
+			"name": "藤色の帳面カバー",
+			"cost": 9,
+			"limit": 1
+		},
+		{
+			"itemId": "kazari-machi-chizu",
+			"name": "町の地図（写し）",
+			"cost": 10,
+			"limit": 1
+		},
+		{
+			"itemId": "kazari-kiyo-yunomi",
+			"name": "きよばあの湯呑",
+			"cost": 11,
+			"limit": 1
+		},
+		{
+			"itemId": "kazari-oboegaki-taba",
+			"name": "憶え書きの束",
+			"cost": 12,
+			"limit": 1
+		}
+	],
+	"chara": {
+		"name": "きよ",
+		"nameColor": "evt",
+		"tachie": "chara/kiyoba/pose_a.webp",
+		"faces": "chara/kiyoba/face_{n}.webp",
+		"lines": [
+			{
+				"text": "あの、うちの孫を見ませんでしたか",
+				"tags": [
+					"初回"
+				]
+			},
+			{
+				"text": "今日はいい天気で。探し物日和ですよ",
+				"tags": [
+					"序盤"
+				]
+			},
+			{
+				"text": "背はね、これくらい。……いや、もう少しあるかしら",
+				"tags": [
+					"序盤"
+				]
+			},
+			{
+				"text": "花屋さんは朝が早いんでしょう。えらいわ",
+				"tags": [
+					"序盤"
+				]
+			},
+			{
+				"text": "この通り、昔はもっと店がありましてね",
+				"tags": [
+					"序盤"
+				]
+			},
+			{
+				"text": "八重さんとこの大根、今日は安いですよ",
+				"tags": [
+					"序盤"
+				]
+			},
+			{
+				"text": "歩くのは苦じゃないんです。足だけは丈夫で",
+				"tags": [
+					"序盤"
+				]
+			},
+			{
+				"text": "そういえば、髪は短かったかしら。長かったかしら",
+				"tags": [
+					"中盤"
+				]
+			},
+			{
+				"text": "くろまつのマスターは、いつ行っても喋らない",
+				"tags": [
+					"中盤"
+				]
+			},
+			{
+				"text": "お茶をいただいてきました。二杯も",
+				"tags": [
+					"中盤"
+				]
+			},
+			{
+				"text": "あなた、若いのにしっかりしてますね",
+				"tags": [
+					"中盤"
+				]
+			},
+			{
+				"text": "孫はね、まあ、そのうち出てきますよ",
+				"tags": [
+					"中盤"
+				]
+			},
+			{
+				"text": "急ぐ用でもないんです。急ぐ用でもね",
+				"tags": [
+					"中盤"
+				]
+			},
+			{
+				"text": "そろそろ帰らないと、怒られるかしらね",
+				"tags": [
+					"終盤"
+				]
+			},
+			{
+				"text": "日が傾いてきましたね",
+				"tags": [
+					"終盤"
+				]
+			},
+			{
+				"text": "ずいぶん歩きました。楽しかった",
+				"tags": [
+					"終盤"
+				]
+			},
+			{
+				"text": "明日も探しに来ようかしら",
+				"tags": [
+					"終盤"
+				]
+			},
+			{
+				"text": "見つからないほうが、長く歩けますでしょう",
+				"tags": [
+					"終盤"
+				]
+			},
+			{
+				"text": "ここのお店、また寄らせてもらいます",
+				"tags": [
+					"終盤"
+				]
+			},
+			{
+				"text": "憶え書き、そんなに集めてどうするんです",
+				"tags": [
+					"点あり"
+				]
+			},
+			{
+				"text": "私も昔は、なんでも書き留めておく人でしてね",
+				"tags": [
+					"点あり"
+				]
+			},
+			{
+				"text": "紙は取っておくものですよ。あとで役に立つ",
+				"tags": [
+					"点あり"
+				]
+			},
+			{
+				"text": "あなた、几帳面ね。おばあさんに似たのかしら",
+				"tags": [
+					"点あり"
+				]
+			},
+			{
+				"text": "もう、めぼしいものは持っていかれましたね",
+				"tags": [
+					"交換済"
+				]
+			},
+			{
+				"text": "欲がないのね。うちの孫に見習わせたい",
+				"tags": [
+					"交換済"
+				]
+			},
+			{
+				"text": "持っていくものが無くなったら、話しに来なさい",
+				"tags": [
+					"交換済"
+				]
+			},
+			{
+				"text": "町じゅう歩きましたね、あなたも",
+				"tags": [
+					"全踏破"
+				]
+			},
+			{
+				"text": "もう案内はいりませんね",
+				"tags": [
+					"全踏破"
+				]
+			},
+			{
+				"text": "次はどこを探しましょうか",
+				"tags": [
+					"全踏破"
+				]
+			},
+			{
+				"text": "うちの人も、よく黙って出かける人でした",
+				"tags": [
+					"rare"
+				]
+			},
+			{
+				"text": "孫にはね、好きにさせておくのがいちばん",
+				"tags": [
+					"rare"
+				]
+			},
+			{
+				"text": "あなたのおばあさま、覚えてますよ。よく笑う人でね",
+				"tags": [
+					"rare"
+				]
+			},
+			{
+				"text": "たまには、一人で歩きたい日もあるでしょう",
+				"tags": [
+					"rare"
+				]
+			}
+		]
+	},
+	"rally": {
+		"enabled": false
+	},
+	"notice": [
+		"孫の居ぬ間になんとやら",
+		"探しものは、みつからないほうがいい",
+		"",
+		"開催時間",
+		"2026年8月1日(土) 0:00 から",
+		"2026年8月18日(火) 0:00 まで（日本標準時）",
+		"",
+		"遊ぶのに必要なもの: ありません。花常を遊べる方はどなたでも参加できます。",
+		"受け取れるもの: 鋏／手直し／打ち水（道具）、桔梗の栞／丸眼鏡の根付／",
+		"藤色の帳面カバー／町の地図（写し）／きよばあの湯呑／憶え書きの束（飾り）",
+		"飾りは見た目が変わるだけで、遊びやすさには影響しません。",
+		"交換所の必要数は開催時間の途中で変えません。",
+		"",
+		"イベント限定の報酬は、将来復刻する可能性があります。",
+		"",
+		"開催時間を過ぎると、物語はアーカイブから読めるようになります。",
+		"「町の憶え書き」は開催時間の終了とともに使えなくなります。"
+	]
+}
