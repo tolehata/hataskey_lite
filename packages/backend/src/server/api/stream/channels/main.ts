@@ -8,7 +8,6 @@ import { EntityNotFoundError } from 'typeorm';
 import { isInstanceMuted, isUserFromMutedInstance } from '@/misc/is-instance-muted.js';
 import { NoteEntityService } from '@/core/entities/NoteEntityService.js';
 import { bindThis } from '@/decorators.js';
-import { PrivateChannelNoteVisibilityError } from '@/misc/private-channel-note-visibility-error.js';
 import type { Packed } from '@/misc/json-schema.js';
 import type { JsonObject } from '@/misc/json-value.js';
 import type { EventTypesToEventPayload, MainEventTypes } from '@/core/GlobalEventService.js';
@@ -70,25 +69,20 @@ class MainChannel extends Channel {
 		try {
 			return await this.noteEntityService.pack(noteId, this.user, { detail: true });
 		} catch (error) {
-			if (error instanceof PrivateChannelNoteVisibilityError || error instanceof EntityNotFoundError) return null;
+			if (error instanceof EntityNotFoundError) return null;
 			throw error;
 		}
 	}
 
 	private async filterNotification(notification: Packed<'Notification'>, viewerId: string): Promise<Packed<'Notification'> | null> {
 		if ('note' in notification && notification.note != null) {
-			if (!await this.noteEntityService.isChannelVisibleForMe(notification.note, viewerId)) return null;
 			if (notification.note.isHidden) {
 				const note = await this.packVisibleNote(notification.note.id);
 				if (note == null) return null;
 				return { ...notification, note };
 			}
 		} else if (notification.type === 'reaction:groupedByUser') {
-			const notes = await this.noteEntityService.filterChannelVisibleNotes(notification.reactions.map((reaction: { note: Packed<'Note'> }) => reaction.note), viewerId);
-			const visibleIds = new Set(notes.map(note => note.id));
-			const reactions = notification.reactions.filter((reaction: { note: Packed<'Note'> }) => visibleIds.has(reaction.note.id));
-			if (reactions.length === 0) return null;
-			return { ...notification, reactions };
+			return notification;
 		} else if (notification.type === 'note:grouped') {
 			const notes = (await Promise.all(notification.noteIds.map((id: string) => this.packVisibleNote(id)))).filter(note => note != null);
 			if (notes.length === 0) return null;
@@ -124,7 +118,6 @@ class MainChannel extends Channel {
 				if (isInstanceMuted(data.body, new Set<string>(this.userProfile?.mutedInstances ?? []))) return;
 
 				if (this.userIdsWhoMeMuting.has(data.body.userId)) return;
-				if (!await this.noteEntityService.isChannelVisibleForMe(data.body, viewer.id)) return;
 				const note = data.type === 'mention' && data.body.isHidden ? await this.packVisibleNote(data.body.id) : data.body;
 				if (note != null) this.send(data.type, note);
 				return;

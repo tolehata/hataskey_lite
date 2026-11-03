@@ -15,7 +15,6 @@ import type { Plugin } from '@/plugin.js';
 import type { DeviceKind } from '@/utility/device-kind.js';
 import type { DeckProfile } from '@/deck.js';
 import type { WatermarkPreset } from '@/utility/watermark.js';
-import type { NotificationFilterDetails } from '@/utility/notification-filter.js';
 import { genId } from '@/utility/id.js';
 import { DEFAULT_DEVICE_KIND } from '@/utility/device-kind.js';
 import { deepEqual } from '@/utility/deep-equal.js';
@@ -191,8 +190,6 @@ export const PREF_DEF = definePreferences({
 			'notifications',
 			'chat',
 			'favorites',
-			'hatagoes',
-			'mascot',
 			'explore',
 			'followRequests',
 			'-',
@@ -876,7 +873,6 @@ export const PREF_DEF = definePreferences({
 			{ id: 'search', icon: 'ti ti-search', label: '検索', visible: true },
 			{ id: 'home', icon: 'ti ti-home', label: 'ホーム', visible: true },
 			{ id: 'notifications', icon: 'ti ti-bell', label: '通知', visible: true },
-			{ id: 'hatagoes', icon: 'ti ti-sparkles', label: 'HataGoes', visible: true },
 			{ id: 'widgets', icon: 'ti ti-apps', label: 'ウィジェット', visible: false },
 		] as { id: string; icon: string; label: string; visible: boolean }[],
 	},
@@ -895,9 +891,6 @@ export const PREF_DEF = definePreferences({
 			{ id: 'announcements', icon: 'ti ti-speakerphone', label: 'お知らせ', group: 'basic' },
 			{ id: 'drive', icon: 'ti ti-cloud', label: 'ドライブ', group: 'basic' },
 			{ id: 'favorites', icon: 'ti ti-star', label: 'お気に入り', group: 'basic' },
-			// グループ2: 旗鯖独自
-			{ id: 'hatagoes', icon: 'ti ti-sparkles', label: 'HataGoes', group: 'hata' },
-			{ id: 'earthquake', icon: 'ti ti-activity', label: '地震・津波情報', group: 'hata' },
 			// グループ3: 発見・交流
 			{ id: 'uiSetup', icon: 'ti ti-wand', label: 'UI切り替え', group: 'discover' },
 			{ id: 'explore', icon: 'ti ti-hash', label: 'みつける', group: 'discover' },
@@ -1013,7 +1006,7 @@ export const PREF_DEF = definePreferences({
 			{ id: 'col-local', type: 'local', width: 380 },
 			{ id: 'col-home', type: 'home', width: 380 },
 			{ id: 'col-notifications', type: 'notifications', width: 340 },
-		] as { id: string; type: string; width: number; height?: number; name?: string; sourceId?: string; withRenotes?: boolean; excludeBots?: boolean; excludeTypes?: string[]; notificationFilterKnownTypes?: string[]; notificationFilterDetails?: NotificationFilterDetails; borderColor?: string | null; fullWidth?: boolean; fullHeight?: boolean }[],
+		] as { id: string; type: string; width: number; height?: number; name?: string; sourceId?: string; withRenotes?: boolean; excludeBots?: boolean; excludeTypes?: string[]; notificationFilterKnownTypes?: string[]; borderColor?: string | null; fullWidth?: boolean; fullHeight?: boolean }[],
 	},
 	// 旗鯖fork: デッキのシート構成プロファイル(複数保存・切替)。
 	// 旧 deckColumns/deckLayout は後方互換のため残し、hatasaba-deck.vue 側で
@@ -1024,7 +1017,7 @@ export const PREF_DEF = definePreferences({
 			id: string;
 			name: string;
 			layout: 'row' | 'grid2' | 'grid3' | 'stack';
-			columns: { id: string; type: string; width: number; height?: number; name?: string; sourceId?: string; withRenotes?: boolean; excludeBots?: boolean; excludeTypes?: string[]; notificationFilterKnownTypes?: string[]; notificationFilterDetails?: NotificationFilterDetails; borderColor?: string | null; fullWidth?: boolean; fullHeight?: boolean }[];
+			columns: { id: string; type: string; width: number; height?: number; name?: string; sourceId?: string; withRenotes?: boolean; excludeBots?: boolean; excludeTypes?: string[]; notificationFilterKnownTypes?: string[]; borderColor?: string | null; fullWidth?: boolean; fullHeight?: boolean }[];
 		}[],
 	},
 	'simpleUi.deckActiveProfile': {
@@ -1063,7 +1056,6 @@ export const PREF_DEF = definePreferences({
 						excludeBots?: boolean;
 						excludeTypes?: string[];
 						notificationFilterKnownTypes?: string[];
-						notificationFilterDetails?: NotificationFilterDetails;
 						tabName?: string;
 					}[];
 				}[];

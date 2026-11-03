@@ -96,7 +96,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			//#endregion
 
 			query.innerJoin('note', 'note', 'note.id = poll.noteId');
-			await this.queryService.generateChannelVisibilityQuery(query, me);
 
 			const polls = await query
 				.orderBy('poll.noteId', 'DESC')

@@ -53,11 +53,6 @@ export const FILE_TYPE_BROWSERSAFE = [
 	'image/tiff',
 	'image/x-icon',
 
-	// Hataskey fork: カスタムUIフォントとして読み込むローカルドライブのフォント。
-	// 実行可能な文書形式ではなく、DriveServiceで検出済みのフォントだけを正しいMIMEで配信する。
-	'font/ttf',
-	'font/otf',
-
 	// OggS
 	'audio/opus',
 	'video/ogg',

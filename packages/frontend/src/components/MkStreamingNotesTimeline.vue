@@ -14,25 +14,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 	</div>
 
 	<div v-else ref="rootEl">
-		<Teleport v-if="props.emojiVoteNavbarTarget && emojiVoteRound && emojiVoteAnchor" :to="props.emojiVoteNavbarTarget">
-			<MkLtlEmojiVote
-				:key="`emoji-vote-navbar:${emojiVoteRound.id}`"
-				:round="emojiVoteRound"
-				:choice="emojiVoteChoice"
-				:now="emojiVoteNow"
-				:phase="emojiVotePhase"
-				:declined="emojiVoteDeclined"
-				:active="emojiVoteActive"
-				:effectTarget="props.emojiVoteEffectTarget"
-				:submitting="emojiVoteSubmitting"
-				:voteError="emojiVoteError"
-				:canVote="!!$i"
-				:claimEffect="claimEmojiVoteEffect"
-				navbar
-				@vote="voteEmoji"
-				@dismiss="dismissEmojiVote"
-			/>
-		</Teleport>
 		<!-- 旗鯖fork(#7): Hataskey UIデッキUIでは、タイムライン最上部に「最新のノート」インジケータを表示し、
 		     先頭ノートがタブバーに密着しないよう余白も兼ねる。既定はテーマカラーの横線 (シンプル)、
 		     アクセシビリティ設定 `simpleUi.deckLatestNoteText` を ON にすると従来の
@@ -119,24 +100,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 					</div>
 				</div>
 				<MkNote v-else :class="$style.note" :note="note" :withHardMute="true" :data-scroll-anchor="note.id" :data-note-removal-id="note.id"/>
-				<MkLtlEmojiVote
-					v-if="!props.emojiVoteNavbar && !props.emojiVoteNavbarTarget && emojiVoteRound && emojiVoteAnchor === note.id"
-					:key="`emoji-vote:${emojiVoteRound.id}`"
-					:class="$style.emojiVoteRow"
-					:round="emojiVoteRound"
-					:choice="emojiVoteChoice"
-					:now="emojiVoteNow"
-					:phase="emojiVotePhase"
-					:declined="emojiVoteDeclined"
-					:active="emojiVoteActive"
-					:effectTarget="props.emojiVoteEffectTarget"
-					:submitting="emojiVoteSubmitting"
-					:voteError="emojiVoteError"
-					:canVote="!!$i"
-					:claimEffect="claimEmojiVoteEffect"
-					@vote="voteEmoji"
-					@dismiss="dismissEmojiVote"
-				/>
 			</template>
 		</component>
 		<button v-show="paginator.canFetchOlder.value" key="_more_" v-appear="prefer.s.enableInfiniteScroll ? paginator.fetchOlder : null" :disabled="paginator.fetchingOlder.value" class="_button" :class="$style.more" @click="paginator.fetchOlder">
@@ -169,9 +132,6 @@ import { misskeyApi } from '@/utility/misskey-api.js';
 import * as os from '@/os.js';
 import { store } from '@/store.js';
 import MkNote from '@/components/MkNote.vue';
-import MkLtlEmojiVote from '@/components/MkLtlEmojiVote.vue';
-import { useLtlEmojiVote } from '@/utility/ltl-emoji-vote.js';
-import { getLtlEmojiVoteAnchor } from '@/utility/ltl-emoji-vote-anchor.js';
 import MkButton from '@/components/MkButton.vue';
 import { i18n } from '@/i18n.js';
 import { globalEvents, useGlobalEvent } from '@/events.js';
@@ -180,11 +140,6 @@ import { Paginator } from '@/utility/paginator.js';
 import { deviceKind } from '@/utility/device-kind.js';
 import { scrollToVisibility } from '@/utility/scroll-to-visibility.js';
 import MkNoteMediaGrid from '@/components/MkNoteMediaGrid.vue';
-// 旗鯖fork: 天気エフェクト(weatherEffect)。DOMには触らず、検出した天気をマネージャに通知するのみ。
-import { getWeatherEffectManager } from '@/utility/weather-effect-manager.js';
-import { detectWeather, buildWeatherDetectText, isGreetingText } from '@/utility/weather-effect-detector.js';
-import { hasSeenWeather, markSeenWeather } from '@/utility/weather-effect-seen.js';
-import type { WeatherKind } from '@/utility/weather-effect-detector.js';
 import { haptic, hapticConfirm } from '@/utility/haptic.js';
 // 旗鯖fork(Hataskey UI 2): bot 非表示のフィルタで appearNote を参照するため。
 import { getAppearNote } from '@/utility/get-appear-note.js';
@@ -259,11 +214,7 @@ const props = withDefaults(defineProps<{
 	newNotesNavbarKey?: string;
 	updatesPaused?: boolean;
 	/** Only explicit Hataskey LTL hosts enable the shared joke event. */
-	emojiVoteActive?: boolean;
-	emojiVoteEffectTarget?: HTMLElement | null;
 	/** Reserve the navbar placement before its template ref mounts. */
-	emojiVoteNavbar?: boolean;
-	emojiVoteNavbarTarget?: HTMLElement | null;
 }>(), {
 	withRenotes: true,
 	withReplies: false,
@@ -274,14 +225,9 @@ const props = withDefaults(defineProps<{
 	customSound: null,
 	glassBg: false,
 	visitorMode: false,
-	emojiVoteActive: false,
-	emojiVoteEffectTarget: null,
-	emojiVoteNavbar: false,
-	emojiVoteNavbarTarget: null,
 });
 
 const emit = defineEmits<{
-	emojiVoteNavbarState: [state: { visible: boolean; celebrating: boolean; leaving: boolean }];
 }>();
 
 const navbarPull = inject(navbarPullRefreshKey, null);
@@ -291,7 +237,6 @@ provide('inTimeline', true);
 provide('tl_withSensitive', computed(() => props.withSensitive));
 provide('inChannel', computed(() => props.src === 'channel'));
 // 旗鯖fork: C7 宴明滅機能。LTL(ローカルタイムライン)表示中かどうかをMkNoteへ伝える。
-provide('inLocalTimeline', computed(() => props.src === 'local'));
 
 // 旗鯖独自: ノート間隔（リアクティブ、デッキUIでは自動的にwideに）
 const noteSpacingValue = computed(() => {
@@ -334,7 +279,6 @@ const bubbleEnabled = computed(() => {
 
 // 旗鯖fork(#1): 宴枠(outline)の描き方を MkNote 側で吹き出し有無に合わせて切り替えるため、
 // 吹き出し有効状態を子(MkNote)へ伝える。吹き出しON=枠を外側に、OFF=枠を内側に描く。
-provide('noteBubbleEnabled', bubbleEnabled);
 // 旗鯖fork: 背景ぼかし(glass)が有効な時、MkNote 側で skipRender(content-visibility:auto)を
 // 付けないようにするため、glass 状態を伝える。content-visibility は contain:paint を含み、
 // カードを透明にしても背景が透けない上、CSS の visible 上書きでは Firefox の再描画が追いつかず
@@ -547,107 +491,12 @@ const visibleItems = computed<Misskey.entities.Note[]>(() =>
 	paginator.items.value.filter(n => !isHiddenBot(n)),
 );
 
-const emojiVoteActive = computed(() => isHatasaba && props.src === 'local' && props.emojiVoteActive && prefer.r.ltlEmojiVoteEnabled.value);
-const {
-	round: emojiVoteRound, choice: emojiVoteChoice, now: emojiVoteNow, phase: emojiVotePhase,
-	submitting: emojiVoteSubmitting, voteError: emojiVoteError, declined: emojiVoteDeclined,
-	refresh: refreshEmojiVote, vote: voteEmoji, dismiss: dismissEmojiVote, claimEffect: claimEmojiVoteEffect,
-} = useLtlEmojiVote(emojiVoteActive);
-const emojiVoteAnchor = computed(() => emojiVoteActive.value && emojiVotePhase.value !== 'idle' &&
-	!paginator.fetching.value && (!paginator.error.value || props.visitorMode)
-	? getLtlEmojiVoteAnchor(visibleItems.value, emojiVoteRound.value?.noteId, $i, {
-		mutedWords: [...($i?.mutedWords ?? []), ...($i?.hardMutedWords ?? [])],
-		withSensitive: props.withSensitive,
-	}) : null);
-
-// Keep the native navbar visible only for a round anchored to a visible LTL note.
-// The navbar and inline card use the same store, including one-vote/effect claims.
-watch(() => ({
-	visible: !!props.emojiVoteNavbarTarget && !!emojiVoteAnchor.value,
-	celebrating: !!props.emojiVoteNavbarTarget && !!emojiVoteAnchor.value && !emojiVoteDeclined.value && (emojiVotePhase.value === 'result' || (emojiVotePhase.value === 'leaving' && emojiVoteRound.value?.phase === 'result')) && (emojiVoteRound.value?.total ?? 0) > 0,
-	leaving: emojiVotePhase.value === 'leaving',
-}), state => emit('emojiVoteNavbarState', state), { immediate: true });
-onBeforeUnmount(() => emit('emojiVoteNavbarState', { visible: false, celebrating: false, leaving: false }));
-
-// Also catches notes received by REST polling. The active round determines its anchor;
-// posting the trigger again during a round must not clear or replace that round.
-watch(() => emojiVoteActive.value
-	? visibleItems.value.filter(note => note.text?.trim() === '絵文字を選ぶぞ').map(note => note.id).join(',')
-	: '', (ids) => {
-	if (ids) void refreshEmojiVote(ids.split(',')[0]);
-});
-
 function shouldInsertAd(note: Misskey.entities.Note): boolean {
 	return '_shouldInsertAd_' in note && note._shouldInsertAd_ === true;
 }
 
-// ===== 旗鯖fork: 天気エフェクト(weatherEffect) =====
-// paginator 初期化後に定義する(currentWeather が paginator.items を参照するため)。
-// TLのDOMには一切触らず、検出した天気を WeatherEffectManager に通知するだけ。
-// 実際の描画は本家由来の body直下fixed canvas が行う(TLレイアウトに影響しない)。
-const weatherEffectEnabled = computed(() => prefer.r['weatherEffect.enabled']?.value ?? false);
-const weatherEffectScope = computed(() => prefer.r['weatherEffect.scope']?.value ?? 'note');
-const weatherEffectDuration = computed(() => prefer.r['weatherEffect.duration']?.value ?? 'long');
-
-// 読み込まれているノート群から現在の天気を集計する。
-// scope='global' は先頭30件、'note' は先頭8件(直近の話題)を見る。
-// 戻り値は { kind, ephemeral, noteId }。
-//  - 挨拶(おはよう/おやすみ等)由来は常に短命。
-//  - それ以外でも、演出の長さ設定が 'short' なら短命。
-//  - 一度エフェクトを出したノート(発火済み)はスキップして次の天気ノートを探す。
-const currentWeatherInfo = computed<{ kind: WeatherKind | null; ephemeral: boolean; noteId: string | null }>(() => {
-	if (!weatherEffectEnabled.value) return { kind: null, ephemeral: false, noteId: null };
-	if (props.src === 'media') return { kind: null, ephemeral: false, noteId: null }; // メディア一覧では出さない
-	const items = paginator.items.value;
-	if (items.length === 0) return { kind: null, ephemeral: false, noteId: null };
-	const lookahead = weatherEffectScope.value === 'global' ? 30 : 8;
-	const slice = items.slice(0, lookahead);
-	for (const note of slice) {
-		const text = buildWeatherDetectText(note);
-		const w = detectWeather(text);
-		if (w != null) {
-			// 既にこのノートでエフェクトを出していたらスキップ(リロードしても再発火しない)
-			if (hasSeenWeather(note.id)) continue;
-			// 挨拶由来 or 演出の長さ=short のとき短命にする
-			const ephemeral = isGreetingText(text) || weatherEffectDuration.value === 'short';
-			return { kind: w, ephemeral, noteId: note.id };
-		}
-	}
-	return { kind: null, ephemeral: false, noteId: null };
-});
-
-// 天気種別だけを取り出した computed(watchの比較を単純にするため)。
-const currentWeather = computed<WeatherKind | null>(() => currentWeatherInfo.value.kind);
-
-// マネージャに天気を反映する。実際にエフェクトを出すノートは発火済みとして記録し、
-// 同じノートでは二度と発火しない(リロードをまたいでも)ようにする。
-function applyWeather() {
-	const info = currentWeatherInfo.value;
-	getWeatherEffectManager().setWeather(info.kind, info.ephemeral);
-	if (info.kind != null && info.noteId != null) {
-		markSeenWeather(info.noteId);
-	}
-}
-
-// enabledの変化をマネージャに反映
-watch(weatherEffectEnabled, (en) => {
-	getWeatherEffectManager().setEnabled(en);
-	// 有効化直後は現在の天気をすぐ反映
-	if (en) applyWeather();
-}, { immediate: true });
-
-// 天気の変化をマネージャに通知
-watch(currentWeather, () => {
-	applyWeather();
-});
-
-// このTLが破棄される時はエフェクトを片付ける。ただし即座には消さず遅延させる。
-// タブ切替(TL再マウント)で同じ天気が続く場合、新しいTLが即座に同じ天気を要求して
-// 遅延消去がキャンセルされるため、エフェクトが途切れず継続する。
-// 本当にTLが無くなった場合(別画面へ遷移等)は猶予後に片付けられる。
 onUnmounted(() => {
 	if (visitorRetryTimer != null) window.clearTimeout(visitorRetryTimer);
-	getWeatherEffectManager().requestClear();
 });
 
 onMounted(() => {
@@ -768,9 +617,6 @@ const newNotesInNavbar = useHataskeyTimelineNewNotes(() => props.newNotesNavbarK
 });
 
 function prepend(note: Misskey.entities.Note & MisskeyEntity) {
-	// キューに入る投稿や、投稿応答で先に表示済みの同じノートも開始の合図として扱う。
-	if (emojiVoteActive.value && note.text?.trim() === '絵文字を選ぶぞ') void refreshEmojiVote(note.id);
-
 	// ランダムモードの場合、ノート追加時にアニメーション方向を更新
 	updateAnimationDirection();
 	updateRandomDir(); // 旗鯖: ランダム方向更新
@@ -1094,19 +940,6 @@ defineExpose({
 			border-radius: var(--MI-radius);
 		}
 	}
-}
-
-:global(html[data-hk3-ui]) .notes.noGap .note {
-	background: var(--MI-notes-surface, transparent);
-}
-
-:global(html[data-hk3-ui]) .notes .note {
-	-webkit-backdrop-filter: var(--MI-notes-backdrop-filter, none);
-	backdrop-filter: var(--MI-notes-backdrop-filter, none);
-}
-
-.emojiVoteRow {
-	margin-inline: 12px;
 }
 
 /*

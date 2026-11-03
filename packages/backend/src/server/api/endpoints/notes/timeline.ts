@@ -203,7 +203,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		}));
 
 		this.queryService.generateVisibilityQuery(query, me);
-		await this.queryService.generateChannelVisibilityQuery(query, me);
 		this.queryService.generateBaseNoteFilteringQuery(query, me);
 		this.queryService.generateMutedUserRenotesQueryForNotes(query, me);
 

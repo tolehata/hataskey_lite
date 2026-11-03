@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createApp, h, nextTick } from 'vue';
 import type { Ref } from 'vue';
 
-const fixture = vi.hoisted(() => ({ ui: 'hataskey3', menu: ['drive', 'ui', 'hidden'], sidebar: [{ id: 'drive' }, { id: 'ui' }] }));
+const fixture = vi.hoisted(() => ({ ui: 'universal', menu: ['drive', 'ui', 'hidden'], sidebar: [{ id: 'drive' }, { id: 'ui' }] }));
 
 vi.mock('@/local-storage.js', () => ({ miLocalStorage: { getItem: () => fixture.ui } }));
 vi.mock('@/preferences.js', () => ({ prefer: { s: {
@@ -27,7 +27,6 @@ vi.mock('@/components/MkModal.vue', () => ({ default: { template: '<section><slo
 
 import MkLaunchPad from './MkLaunchPad.vue';
 import { hataSideStudioStore } from '@/utility/hata-side-studio.js';
-import { navbarItemDef } from '@/navbar.js';
 import { store } from '@/store.js';
 
 const cleanups: Array<() => void> = [];
@@ -49,7 +48,7 @@ function labels(target: HTMLElement) {
 }
 
 beforeEach(() => {
-	fixture.ui = 'hataskey3';
+	fixture.ui = 'universal';
 	fixture.menu = ['drive', 'ui', 'hidden'];
 	fixture.sidebar = [{ id: 'drive' }, { id: 'ui' }];
 	studioStore.value = { menuIds: ['drive', 'uiSetup'] };
@@ -58,19 +57,6 @@ beforeEach(() => {
 afterEach(() => { cleanups.splice(0).forEach(cleanup => cleanup()); });
 
 describe('MkLaunchPad menu placement', () => {
-	test('UI S hides Studio items, then restores removed items without showing restricted items', async () => {
-		const target = await mount();
-		expect(labels(target)).toEqual([]);
-		studioStore.value = { menuIds: [] };
-		await nextTick();
-		expect(labels(target)).toEqual(['Drive', 'UI settings']);
-	});
-
-	test('UI S ignores menu and simple sidebar preferences', async () => {
-		studioStore.value = { menuIds: ['drive'] };
-		const target = await mount();
-		expect(labels(target)).toEqual(['UI settings']);
-	});
 
 	test('simple and other UIs retain their existing menu rules', async () => {
 		fixture.ui = 'simple';
@@ -83,20 +69,5 @@ describe('MkLaunchPad menu placement', () => {
 		fixture.ui = 'deck';
 		const deck = await mount();
 		expect(labels(deck)).toEqual([]);
-	});
-
-	test('brand logo follows dark mode while the menu is open', async () => {
-		const definitions = navbarItemDef as unknown as Record<string, unknown>;
-		definitions.hatask = { title: 'Hatask', to: '/hatask', icon: 'ti ti-layout-dashboard', show: true };
-		try {
-			const target = await mount();
-			const logo = target.querySelector<HTMLElement>('[data-hata-app-logo]');
-			expect(logo?.dataset.monochrome).toBe('false');
-			store.r.darkMode.value = true;
-			await nextTick();
-			expect(logo?.dataset.monochrome).toBe('true');
-		} finally {
-			delete definitions.hatask;
-		}
 	});
 });

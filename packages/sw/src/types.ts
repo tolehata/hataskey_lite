@@ -26,12 +26,6 @@ type PushNotificationDataSourceMap = {
 	readNotification: { id: string };
 	notificationChanged: { ids: string[] };
 	newChatMessage: Misskey.entities.ChatMessage;
-	hatadyNotification: {
-		id: string;
-		notificationType: string;
-		reaction?: string | null;
-		value?: number | null;
-	};
 };
 
 export type PushNotificationData<K extends keyof PushNotificationDataSourceMap> = {

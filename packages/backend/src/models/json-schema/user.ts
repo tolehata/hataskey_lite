@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { NOTE_CHARM_MAX_SIZE, NOTE_CHARM_MIN_SIZE } from '@/misc/note-charm.js';
 
 export const notificationRecieveConfig = {
 	type: 'object',
@@ -39,12 +38,6 @@ export const notificationRecieveConfig = {
 	],
 } as const;
 
-const noteCharmAppearanceProperties = {
-	size: { type: 'number', nullable: false, optional: false, minimum: NOTE_CHARM_MIN_SIZE, maximum: NOTE_CHARM_MAX_SIZE },
-	pattern: { type: 'string', nullable: false, optional: false, enum: ['cutout', 'clear', 'dots', 'stripes', 'check'] },
-	color: { type: 'string', nullable: false, optional: false },
-} as const;
-
 export const packedUserLiteSchema = {
 	type: 'object',
 	properties: {
@@ -69,13 +62,6 @@ export const packedUserLiteSchema = {
 			nullable: true, optional: false,
 			example: 'cherrypick.example.com',
 			description: 'The local host is represented with `null`.',
-		},
-		noteCharm: {
-			type: 'object', nullable: true, optional: true,
-			properties: {
-				url: { type: 'string', format: 'url', nullable: false, optional: false },
-				...noteCharmAppearanceProperties,
-			},
 		},
 		avatarUrl: {
 			type: 'string',
@@ -357,20 +343,6 @@ export const packedUserDetailedNotMeOnlySchema = {
 			type: 'number',
 			nullable: false, optional: false,
 		},
-		// 旗鯖fork: 自鯖利用者だけに返すプロフィール実績。
-		// 本人には非表示中も同期用に返し、他人には表示設定が有効な値だけを返す。
-		utageSuccessCount: {
-			type: 'number',
-			nullable: false, optional: true,
-		},
-		utageInterruptionCount: {
-			type: 'number',
-			nullable: false, optional: true,
-		},
-		hataskFlowerCount: {
-			type: 'number',
-			nullable: false, optional: true,
-		},
 		pinnedNoteIds: {
 			type: 'array',
 			nullable: false, optional: false,
@@ -503,14 +475,6 @@ export const packedUserDetailedNotMeOnlySchema = {
 export const packedMeDetailedOnlySchema = {
 	type: 'object',
 	properties: {
-		noteCharmSettings: {
-			type: 'object', nullable: true, optional: false,
-			properties: {
-				fileId: { type: 'string', format: 'id', nullable: false, optional: false },
-				enabled: { type: 'boolean', nullable: false, optional: false },
-				...noteCharmAppearanceProperties,
-			},
-		},
 		avatarId: {
 			type: 'string',
 			nullable: true, optional: false,
@@ -524,18 +488,6 @@ export const packedMeDetailedOnlySchema = {
 		followedMessage: {
 			type: 'string',
 			nullable: true, optional: false,
-		},
-		showUtageSuccessCount: {
-			type: 'boolean',
-			nullable: false, optional: false,
-		},
-		showUtageInterruptionCount: {
-			type: 'boolean',
-			nullable: false, optional: false,
-		},
-		showHataskFlowerCount: {
-			type: 'boolean',
-			nullable: false, optional: false,
 		},
 		isModerator: {
 			type: 'boolean',
@@ -700,12 +652,6 @@ export const packedMeDetailedOnlySchema = {
 				chatRoomInvitationReceived: { optional: true, ...notificationRecieveConfig },
 				achievementEarned: { optional: true, ...notificationRecieveConfig },
 				app: { optional: true, ...notificationRecieveConfig },
-				hataFeed: { optional: true, ...notificationRecieveConfig },
-				hatady: { optional: true, ...notificationRecieveConfig },
-				hataskFlowerReady: { optional: true, ...notificationRecieveConfig },
-				hataskFlowerBloomed: { optional: true, ...notificationRecieveConfig },
-				hataskZukanUpdated: { optional: true, ...notificationRecieveConfig },
-				hataskFestivalBloomed: { optional: true, ...notificationRecieveConfig },
 				test: { optional: true, ...notificationRecieveConfig },
 			},
 		},

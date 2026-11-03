@@ -23,7 +23,6 @@ import { AppLockService } from '@/core/AppLockService.js';
 import type Logger from '@/logger.js';
 import { IdService } from '@/core/IdService.js';
 import { StatusError } from '@/misc/status-error.js';
-import { PrivateChannelNoteVisibilityError } from '@/misc/private-channel-note-visibility-error.js';
 import { UtilityService } from '@/core/UtilityService.js';
 import { NoteEntityService } from '@/core/entities/NoteEntityService.js';
 import { UserEntityService } from '@/core/entities/UserEntityService.js';
@@ -416,11 +415,7 @@ export class ApInboxService {
 			}
 
 			if (fromRelay) {
-				const noteObj = await this.noteEntityService.pack(renote).catch(err => {
-					if (err instanceof PrivateChannelNoteVisibilityError) return null;
-					throw err;
-				});
-				if (noteObj == null) return 'skip: private channel note';
+				const noteObj = await this.noteEntityService.pack(renote);
 				this.globalEventService.publishNotesStream(noteObj);
 				return;
 			}

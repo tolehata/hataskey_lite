@@ -15,10 +15,10 @@ vi.mock('node:timers/promises', () => ({
 
 const data = {
 	appAccessTokenId: null,
-	customHeader: 'Hatask', customBody: 'きょうの気持ちを記録しませんか？',
-	customIcon: null, customLink: '/hatask?tab=mood',
+	customHeader: 'Hataskey', customBody: 'お知らせがあります',
+	customIcon: null, customLink: '/announcements',
 };
-const key = 'hatask-mood:2026-09-17T21:00';
+const key = 'reminder:2026-09-17T21:00';
 
 function fixture() {
 	const profile = { notificationRecieveConfig: {} as Record<string, { type: string }> };
@@ -51,7 +51,7 @@ function fixture() {
 	const push = { pushNotification: vi.fn() };
 	const createService = () => {
 		const service = new NotificationService(
-			{ perUserNotificationsMaxCount: 50 } as never, redis as never, {} as never, {} as never, {} as never, entity as never,
+			{ perUserNotificationsMaxCount: 50 } as never, redis as never, {} as never, entity as never,
 			id as never, stream as never, push as never,
 			{ userProfileCache: { fetch: vi.fn().mockResolvedValue(profile) } } as never, {} as never,
 		);

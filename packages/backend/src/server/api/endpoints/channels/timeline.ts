@@ -123,7 +123,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			.leftJoinAndSelect('note.channel', 'channel');
 
 		this.queryService.generateBaseNoteFilteringQuery(query, me);
-		await this.queryService.generateChannelVisibilityQuery(query, me);
 		if (me == null) this.queryService.generateUgcVisibilityQueryForVisitor(query);
 		//#endregion
 

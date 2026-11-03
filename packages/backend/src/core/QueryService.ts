@@ -11,7 +11,6 @@ import type { UserProfilesRepository, FollowingsRepository, ChannelFollowingsRep
 import { bindThis } from '@/decorators.js';
 import { IdService } from '@/core/IdService.js';
 import { RoleService } from '@/core/RoleService.js';
-import { applyPrivateChannelNoteVisibility } from '@/misc/private-channel-note-visibility.js';
 import type { SelectQueryBuilder } from 'typeorm';
 
 @Injectable()
@@ -270,25 +269,6 @@ export class QueryService {
 		q.andWhere(`user.id NOT IN (${ mutingQuery.getQuery() })`);
 
 		q.setParameters(mutingQuery.getParameters());
-	}
-
-	@bindThis
-	public async generateChannelVisibilityQuery<T extends ObjectLiteral>(q: SelectQueryBuilder<T>, me?: { id: MiUser['id'] } | null): Promise<void> {
-		if (me != null && await this.roleService.isModerator(me)) return;
-		applyPrivateChannelNoteVisibility(q, me?.id ?? null, await this.getDeniedPrivateChannelIds(me?.id ?? null));
-	}
-
-	/** Private channels the viewer can neither own, moderate nor read as a member. Always read from the DB. */
-	@bindThis
-	public async getDeniedPrivateChannelIds(meId: MiUser['id'] | null): Promise<MiChannel['id'][]> {
-		const rows: { id: MiChannel['id'] }[] = meId == null
-			? await this.channelsRepository.query('SELECT "id" FROM "channel" WHERE "isPrivate" = TRUE')
-			: await this.channelsRepository.query(`SELECT c."id" FROM "channel" c
-				WHERE c."isPrivate" = TRUE
-				AND c."userId" IS DISTINCT FROM $1
-				AND NOT ($1 = ANY(c."moderatorUserIds"))
-				AND NOT EXISTS (SELECT 1 FROM "channel_member" m WHERE m."channelId" = c."id" AND m."userId" = $1)`, [meId]);
-		return rows.map(row => row.id);
 	}
 
 	@bindThis

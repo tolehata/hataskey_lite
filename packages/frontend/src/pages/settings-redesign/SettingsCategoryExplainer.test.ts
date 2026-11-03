@@ -5,7 +5,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import SettingsCategoryExplainer from './SettingsCategoryExplainer.vue';
 import type { App } from 'vue';
 
-const categoryIds = vi.hoisted(() => ['profile', 'privacy', 'security', 'appearance', 'timeline', 'post', 'notify', 'access', 'mute', 'drive', 'apps', 'data', 'advanced']);
+const categoryIds = vi.hoisted(() => ['profile', 'privacy', 'security', 'appearance', 'timeline', 'post', 'notify', 'access', 'mute', 'drive', 'data', 'advanced']);
 
 vi.mock('@/i18n.js', () => ({
 	i18n: { ts: { _hata: { _settingsBento: {
@@ -50,15 +50,6 @@ describe('settings category explanations', () => {
 		}
 	});
 
-	test('アプリ説明は既存の4アプリロゴを使い、モーション設定変更も追従する', async () => {
-		const { container, state } = mountExplainer('apps');
-		expect([...container.querySelectorAll<HTMLElement>('[data-app]')].map(logo => logo.dataset.app)).toEqual(['hatagoes', 'hatask', 'hatady', 'hatafeed']);
-		state.motionEnabled = false;
-		await nextTick();
-		expect(container.querySelector('[data-motion-enabled]')?.getAttribute('data-motion-enabled')).toBe('false');
-		expect([...container.querySelectorAll<HTMLElement>('[data-app]')].every(logo => logo.dataset.active === 'false')).toBe(true);
-	});
-
 	test('画面外ではアニメーションを停止し、復帰時だけ再開する', async () => {
 		let update: IntersectionObserverCallback | undefined;
 		const observe = vi.fn();
@@ -68,7 +59,7 @@ describe('settings category explanations', () => {
 			observe = observe;
 			disconnect = disconnect;
 		});
-		const { container, app } = mountExplainer('apps');
+		const { container, app } = mountExplainer('drive');
 		expect(observe).toHaveBeenCalledWith(container.firstElementChild);
 		update?.([{ isIntersecting: false } as IntersectionObserverEntry], {} as IntersectionObserver);
 		await nextTick();

@@ -121,7 +121,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			// https://github.com/misskey-dev/misskey/pull/15346#discussion_r1929950255
 
 			this.queryService.generateVisibilityQuery(query, me);
-			await this.queryService.generateChannelVisibilityQuery(query, me);
 			this.queryService.generateBaseNoteFilteringQuery(query, me);
 
 			const notes = await query.orderBy('note.id', sinceId != null && untilId == null ? 'ASC' : 'DESC').limit(ps.limit).getMany();

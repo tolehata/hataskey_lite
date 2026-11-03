@@ -5,7 +5,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <template>
 <div class="_spacer" style="--MI_SPACER-w: 800px;">
-	<div :class="$style.root">
+	<div>
 		<MkStickyContainer>
 			<template #header>
 				<MkTab
@@ -105,11 +105,5 @@ const filesPaginator = markRaw(new Paginator('users/notes', {
 	background: var(--MI-notes-canvas, var(--MI_THEME-bg));
 	border-radius: var(--MI-radius);
 	overflow: clip;
-}
-
-:global(html[data-hk3-ui]) .root {
-	--MI-notes-canvas: transparent;
-	--MI-notes-surface: var(--hk3-glass-note, color-mix(in srgb, var(--MI_THEME-panel) 70%, transparent));
-	--MI-notes-backdrop-filter: var(--MI-blur, blur(20px)) saturate(1.3);
 }
 </style>

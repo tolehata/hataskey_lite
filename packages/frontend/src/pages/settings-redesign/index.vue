@@ -164,8 +164,6 @@ const settingsCatalogPresentation: SettingsCatalogPresentationV2 = {
 		'/settings/webhook/new': copy.catalog.fallback.webhookNew,
 		'/settings/custom-css': copy.catalog.fallback.customCss,
 		'/settings/account-stats': copy.catalog.fallback.accountStats,
-		'/settings/external-account': copy.catalog.fallback.externalAccount,
-		'/settings/concrnt': { label: 'コンカレント連携(BETA)' },
 		'/settings/hata-custom': copy.catalog.fallback.hataCustom,
 		'/settings/hidden-reactions': copy.catalog.fallback.hiddenReactions,
 	},
@@ -452,7 +450,7 @@ let navigationWaitCleanup: (() => void) | null = null;
 let navigationTargetClearTimer: number | null = null;
 let lastNavigationOpener: HTMLElement | null = null;
 
-type SettingsPopupBridgeKind = 'hatasaba-ui2' | 'earthquake' | 'ui-setup' | 'settings-transfer' | 'hatask' | 'hatady' | 'mascot';
+type SettingsPopupBridgeKind = 'hatasaba-ui2' | 'ui-setup' | 'settings-transfer';
 type ActiveSettingsPopup = {
 	popup: SettingsPopupBridgeKind;
 	opener: HTMLElement | null;
@@ -463,12 +461,8 @@ let activeSettingsPopup: ActiveSettingsPopup | null = null;
 
 function isSettingsPopupBridgeKind(value: string | undefined): value is SettingsPopupBridgeKind {
 	return value === 'hatasaba-ui2'
-		|| value === 'earthquake'
 		|| value === 'ui-setup'
-		|| value === 'settings-transfer'
-		|| value === 'hatask'
-		|| value === 'hatady'
-		|| value === 'mascot';
+		|| value === 'settings-transfer';
 }
 
 function findFocusableElements() {
@@ -1049,7 +1043,7 @@ function relatedSourcesForCurrentNavigation() {
 }
 
 const pageOwnedRelatedRoutes: Readonly<Record<string, readonly string[]>> = {
-	'/settings/profile': ['/settings/avatar-decoration', '/settings/note-charm'],
+	'/settings/profile': ['/settings/avatar-decoration'],
 };
 
 const routeRelatedItems = computed<SettingsRelatedLink[]>(() => {
@@ -1384,9 +1378,7 @@ const { items: sectionNavigationItems, activeId: activeSectionId, select: jumpTo
 const activeBentoCategoryId = computed<SettingsBentoCategoryId | null>(() => {
 	if (embeddedPopup.value === 'ui-setup' || embeddedPopup.value === 'hatasaba-ui2') return 'appearance';
 	if (embeddedPopup.value === 'settings-transfer') return 'data';
-	if (embeddedPopup.value != null) return 'apps';
 	if (requestedBentoCategoryId.value != null) return requestedBentoCategoryId.value;
-	if (currentPath.value === '/settings/note-charm') return 'profile';
 	for (const id of activeNavigationItemIds.value) {
 		const category = bentoCategoryForDestination(id);
 		if (category != null) return category;

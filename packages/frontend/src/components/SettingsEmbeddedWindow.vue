@@ -14,7 +14,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-<section :class="[$style.root, panelClass]" :data-hatask-theme="panelTheme" :data-hatask-mode="panelMode">
+<section :class="[$style.root, panelClass]">
 	<header v-if="$slots.header || withOkButton" :class="$style.head">
 		<h2 v-if="$slots.header" :class="$style.title"><slot name="header"></slot></h2>
 		<MkButton v-if="withOkButton" type="button" primary gradate rounded :class="$style.action" data-testid="settings-embedded-ok" :disabled="okButtonDisabled" @click="emit('ok')">{{ i18n.ts.done }} <i class="ti ti-check" aria-hidden="true"></i></MkButton>
@@ -50,8 +50,6 @@ const props = withDefaults(defineProps<{
 	withCloseButton?: boolean;
 	okButtonDisabled?: boolean;
 	panelClass?: string;
-	panelTheme?: string;
-	panelMode?: string;
 	width?: number;
 	height?: number;
 	// MkModal 由来

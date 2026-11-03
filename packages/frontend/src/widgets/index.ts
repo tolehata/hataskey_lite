@@ -11,7 +11,6 @@ export default function(app: App) {
 	app.component('WidgetInstanceInfo', defineAsyncComponent(() => import('./WidgetInstanceInfo.vue')));
 	app.component('WidgetMemo', defineAsyncComponent(() => import('./WidgetMemo.vue')));
 	app.component('WidgetNotifications', defineAsyncComponent(() => import('./WidgetNotifications.vue')));
-	app.component('WidgetExternalNotifications', defineAsyncComponent(() => import('./WidgetExternalNotifications.vue')));
 	app.component('WidgetTimeline', defineAsyncComponent(() => import('./WidgetTimeline.vue')));
 	app.component('WidgetCalendar', defineAsyncComponent(() => import('./WidgetCalendar.vue')));
 	app.component('WidgetRss', defineAsyncComponent(() => import('./WidgetRss.vue')));
@@ -40,12 +39,6 @@ export default function(app: App) {
 	app.component('WidgetSearch', defineAsyncComponent(() => import('./WidgetSearch.vue')));
 	app.component('WidgetDice', defineAsyncComponent(() => import('./WidgetDice.vue')));
 	app.component('WidgetWeather', defineAsyncComponent(() => import('./WidgetWeather.vue')));
-	// 旗鯖fork(#11): マスコットウィジェット
-	app.component('WidgetMascot', defineAsyncComponent(() => import('./WidgetMascot.vue')));
-	// 旗鯖fork(#34): 地震・津波ウィジェット
-	app.component('WidgetEarthquake', defineAsyncComponent(() => import('./WidgetEarthquake.vue')));
-	// 旗鯖fork: Hataskのお花育成・一覧ウィジェット
-	app.component('WidgetHataskFlowers', defineAsyncComponent(() => import('./WidgetHataskFlowers.vue')));
 	app.component('WidgetSeasonalTree', defineAsyncComponent(() => import('./WidgetSeasonalTree.vue')));
 }
 
@@ -60,7 +53,6 @@ export const widgets = [
 	'instanceInfo',
 	'memo',
 	'notifications',
-	'externalNotifications',
 	'timeline',
 	'calendar',
 	'rss',
@@ -87,9 +79,6 @@ export const widgets = [
 	'search',
 	'dice',
 	'weather',
-	'mascot', // 旗鯖fork(#11): マスコットウィジェット
-	'earthquake', // 旗鯖fork(#34): 地震・津波ウィジェット
-	'hataskFlowers', // 旗鯖fork: Hataskお花ウィジェット
 	'seasonalTree',
 
 	...federationWidgets,

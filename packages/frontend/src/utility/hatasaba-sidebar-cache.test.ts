@@ -52,14 +52,15 @@ describe('Hataskey UI sidebar persisted items', () => {
 		expect(requiredLine).not.toContain('cacheClear');
 	});
 
-	test('外部通知はHataskey UIの両編集経路で必須だが並び替え可能にする', () => {
+	test('サイドバー編集は並び替え可能で、撤去した外部通知を必須項目に残さない', () => {
 		const editor = source('src/components/MkSidebarEditDialog.vue');
 		const simple = source('src/ui/simple.vue');
-		const editorRequired = editor.match(/const REQUIRED_IDS = new Set\(([^\n]+)\);/)?.[1] ?? '';
-		const simpleRequired = simple.match(/const REQUIRED_SIDEBAR_IDS = ([^\n]+);/)?.[1] ?? '';
-		expect(editorRequired).toContain('externalNotifications');
-		expect(simpleRequired).toContain('externalNotifications');
-		expect(editor).toContain('externalNotifications: copy.itemExternalNotifications');
+		const editorRequired = editor.match(/const REQUIRED_IDS = new Set\(([^\n]+)\);/)?.[1];
+		const simpleRequired = simple.match(/const REQUIRED_SIDEBAR_IDS = ([^\n]+);/)?.[1];
+		expect(editorRequired).toBeDefined();
+		expect(simpleRequired).toBeDefined();
+		expect(editorRequired).not.toContain('externalNotifications');
+		expect(simpleRequired).not.toContain('externalNotifications');
 		expect(editor).toContain('v-model="editedItems"');
 		expect(editor).toContain('handle=".sidebarDragHandle"');
 		expect(editor).toMatch(/sidebarDragHandle[^>]+tabindex="-1"/);
@@ -67,15 +68,4 @@ describe('Hataskey UI sidebar persisted items', () => {
 		expect(editor).not.toContain('aria-keyshortcuts="ArrowUp ArrowDown"');
 	});
 
-	test('portal清掃後に外部通知移行を直列実行し、sidebarの並行commitを避ける', () => {
-		const boot = source('src/boot/common.ts');
-		const portalIndex = boot.indexOf('await migrateRetiredPortalMenu(');
-		const externalIndex = boot.indexOf('await repairExternalNotificationsSidebar();');
-		const watcherIndex = boot.indexOf("watch(prefer.r['simpleUi.sidebar']");
-		expect(portalIndex).toBeGreaterThan(-1);
-		expect(externalIndex).toBeGreaterThan(portalIndex);
-		expect(watcherIndex).toBeGreaterThan(externalIndex);
-		expect(boot.slice(watcherIndex, watcherIndex + 260)).toContain('pendingRepair.then(repairExternalNotificationsSidebar)');
-		expect(boot.slice(portalIndex, watcherIndex + 360)).toContain('})();');
-	});
 });

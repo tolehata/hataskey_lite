@@ -61,8 +61,6 @@ export class NoteStreamingHidingService {
 			if (this.meta.ugcVisibilityForVisitor === 'none') return null;
 			if (this.meta.ugcVisibilityForVisitor === 'local' && note.user.host != null) return null;
 		}
-		if (!await this.noteEntityService.isChannelVisibleForMe(note, meId)) return null;
-
 		// The fork packs detailed replies recursively as well as renotes. Inspect every
 		// attached note, not only the root renote chain and its immediate replies.
 		const notes: Packed<'Note'>[] = [];
@@ -73,7 +71,7 @@ export class NoteStreamingHidingService {
 			if (current.reply) pending.push(current.reply);
 			if (current.renote) pending.push(current.renote);
 		}
-		const decisions = await Promise.all(notes.map(n => this.noteEntityService.shouldHideNote(n, meId, { channelVisibilityChecked: true })));
+		const decisions = await Promise.all(notes.map(n => this.noteEntityService.shouldHideNote(n, meId)));
 		if (!decisions.some(Boolean)) return note;
 		const shouldHide = new Map(notes.map((n, i) => [n, decisions[i]]));
 

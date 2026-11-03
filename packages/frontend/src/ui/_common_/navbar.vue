@@ -33,7 +33,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					:to="navbarItemDef[item].to"
 					v-on="navbarItemDef[item].action ? { click: navbarItemDef[item].action } : {}"
 				>
-					<HataAppNavIcon v-if="hataAppForMenuIcon(item)" :app="hataAppForMenuIcon(item)!" :size="24" :monochrome="store.r.darkMode.value && item !== 'hatagoes'" :class="$style.itemIcon" :style="{ viewTransitionName: 'navbar-item-' + item }"/><i v-else class="ti-fw" :class="[$style.itemIcon, navbarItemDef[item].icon]" :style="{ viewTransitionName: 'navbar-item-' + item }"></i><HataAppWordmark v-if="hataAppForMenuLabel(item, navbarItemDef[item].title)" :app="hataAppForMenuLabel(item, navbarItemDef[item].title)!" :class="$style.itemText" inheritColor/><span v-else :class="$style.itemText">{{ navbarItemDef[item].title }}</span>
+					<i class="ti-fw" :class="[$style.itemIcon, navbarItemDef[item].icon]" :style="{ viewTransitionName: 'navbar-item-' + item }"></i><span :class="$style.itemText">{{ navbarItemDef[item].title }}</span>
 					<span v-if="navbarItemDef[item].indicated" :class="$style.itemIndicator" class="_blink">
 						<span v-if="navbarItemDef[item].indicateValue && prefer.s.showUnreadNotificationsCount" class="_indicateCounter" :class="$style.itemIndicateValueIcon">{{ navbarItemDef[item].indicateValue }}</span>
 						<i v-else class="_indicatorCircle"></i>
@@ -79,8 +79,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 	</svg>
 	-->
 
-	<div v-if="props.collapsed != null || (!forceIconOnly && prefer.r.showNavbarSubButtons.value)" :class="$style.subButtons">
-		<div v-if="prefer.r.showNavbarSubButtons.value" :class="[$style.subButton, $style.menuEditButton]">
+	<div v-if="!forceIconOnly && prefer.r.showNavbarSubButtons.value" :class="$style.subButtons">
+		<div :class="[$style.subButton, $style.menuEditButton]">
 			<svg viewBox="0 0 16 64" :class="$style.subButtonShape">
 				<g transform="matrix(0.333333,0,0,0.222222,0.000895785,21.3333)">
 					<path d="M47.488,7.995C47.79,10.11 47.943,12.266 47.943,14.429C47.997,26.989 47.997,84 47.997,84C47.997,84 44.018,118.246 23.997,133.5C-0.374,152.07 -0.003,192 -0.003,192L-0.003,-96C-0.003,-96 0.151,-56.216 23.997,-37.5C40.861,-24.265 46.043,-1.243 47.488,7.995Z" style="fill:var(--MI_THEME-navBg);"/>
@@ -109,7 +109,6 @@ import { computed, defineAsyncComponent, ref, watch, onUnmounted } from 'vue';
 import { openInstanceMenu } from './common.js';
 import * as os from '@/os.js';
 import { navbarItemDef } from '@/navbar.js';
-import { normalizeHatagoesMenu } from '@/utility/hatagoes-sidebar.js';
 import { store } from '@/store.js';
 import { i18n } from '@/i18n.js';
 import { instance } from '@/instance.js';
@@ -120,26 +119,21 @@ import { getAccountMenu } from '@/accounts.js';
 import { $i } from '@/i.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { haptic } from '@/utility/haptic.js';
-import HataAppNavIcon from '@/components/HataAppNavIcon.vue';
-import HataAppWordmark from '@/components/HataAppWordmark.vue';
-import { hataAppForMenuIcon, hataAppForMenuLabel } from '@/utility/hata-app-brand.js';
 
 const router = useRouter();
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
 	showWidgetButton?: boolean;
 	asDrawer?: boolean;
-	collapsed?: boolean;
-}>(), { collapsed: undefined });
+}>();
 
 const emit = defineEmits<{
 	(ev: 'widgetButtonClick'): void;
-	(ev: 'toggleCollapse'): void;
 }>();
 
 const forceIconOnly = ref(!props.asDrawer && window.innerWidth <= 1279);
 const iconOnly = computed(() => {
-	return !props.asDrawer && (props.collapsed ?? (forceIconOnly.value || (store.r.menuDisplay.value === 'sideIcon')));
+	return !props.asDrawer && (forceIconOnly.value || (store.r.menuDisplay.value === 'sideIcon'));
 });
 
 const otherMenuItemIndicated = computed(() => {
@@ -154,7 +148,7 @@ const controlPanelIndicated = ref(false);
 // 旗鯖fork: 外部アカウント連携時に、menu に externalNotifications が無ければ
 // 通知の直後に動的注入する (既存ユーザーの保存済み menu 設定を壊さず反映)。
 const displayMenu = computed(() => {
-	const menu = normalizeHatagoesMenu(prefer.r.menu.value);
+	const menu = [...prefer.r.menu.value];
 	const token = prefer.r['external.token']?.value;
 	const host = prefer.r['external.host']?.value;
 	const linked = token != null && host != null && host !== '';
@@ -199,10 +193,6 @@ onUnmounted(() => {
 });
 
 function toggleIconOnly() {
-	if (props.collapsed != null) {
-		emit('toggleCollapse');
-		return;
-	}
 	if (window.document.startViewTransition && prefer.s.animation) {
 		const transition = window.document.startViewTransition(() => {
 			store.set('menuDisplay', iconOnly.value ? 'sideFull' : 'sideIcon');

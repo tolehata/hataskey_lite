@@ -34,7 +34,6 @@ export function uploadFile(file: File | Blob, options: {
 	folderId?: string | null;
 	isSensitive?: boolean;
 	caption?: string | null;
-	source?: 'hatadint';
 	onProgress?: (ctx: { total: number; loaded: number; }) => void;
 } = {}): UploadReturnType {
 	const xhr = new XMLHttpRequest();
@@ -141,7 +140,6 @@ export function uploadFile(file: File | Blob, options: {
 		const formData = new FormData();
 		formData.append('i', $i.token);
 		formData.append('force', 'true');
-		if (options.source) formData.append('source', options.source);
 		formData.append('file', file);
 		formData.append('name', options.name ?? (file instanceof File ? file.name : 'untitled'));
 		formData.append('isSensitive', options.isSensitive ? 'true' : 'false');

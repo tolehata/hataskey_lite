@@ -12,7 +12,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<div ref="containerEl" class="container" :class="{ playing: easterEggEngine != null }">
 						<!-- 旗鯖fork: 旧アイコン(画像/ランダムカラー)を廃止し、ログインページと同じ Hataskey ブランドロゴ表示に統一 -->
 						<div class="brandLogo" @click="gravity">
-							<div class="brandLogoText">Hataskey</div>
+							<div class="brandLogoText">Hataskey Lite</div>
 						</div>
 						<div class="version" @click="whatIsNewHataskey">v{{ version }} <span class="commit-hash" @click.stop="openHataskeyCommit(gitHash)">({{ gitHash.substring(0, 8) }})</span></div>
 						<div class="version" style="font-size: 11px;" @click="whatIsNewMisskey">v{{ basedMisskeyVersion }} ({{ copy.basedOnMisskey }})</div>
@@ -30,9 +30,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<MkButton primary rounded inline @click="iLoveCherryPick">I <Mfm text="$[jelly ❤]"/> #Hataskey</MkButton>
 				</div>
 				<FormSection>
-					<template #label>Hataskey</template>
+					<template #label>Hataskey Lite</template>
 					<div class="_gaps_s">
-						<FormLink to="https://github.com/tolehata" external>
+						<FormLink to="https://github.com/tolehata/hataskey_lite" external>
 							<template #icon><i class="ti ti-code"></i></template>
 							{{ i18n.ts._aboutMisskey.source }}
 							<template #suffix>GitHub</template>
@@ -93,7 +93,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 						</FormLink>
 					</div>
 				</FormSection>
-				<FormSection v-if="instance.repositoryUrl !== 'https://github.com/tolehata/hataskey'">
+				<FormSection v-if="instance.repositoryUrl !== 'https://github.com/tolehata/hataskey_lite'">
 					<div class="_gaps_s">
 						<MkInfo>
 							{{ i18n.tsx._aboutMisskey.thisIsModifiedVersion({ name: instance.name ?? host }) }}
@@ -581,12 +581,12 @@ const easterEggEngine = ref<{ stop: () => void } | null>(null);
 const containerEl = useTemplateRef('containerEl');
 
 const whatIsNewHataskey = () => {
-	window.open('https://github.com/tolehata/hataskey/blob/master/HATA-CHANGELOG.md', '_blank');
+	window.open('https://github.com/tolehata/hataskey_lite/blob/master/HATA-CHANGELOG.md', '_blank');
 };
 
 const openHataskeyCommit = (hash: string) => {
 	if (hash && hash !== 'unknown') {
-		window.open(`https://github.com/tolehata/hataskey/commit/${hash}`, '_blank');
+		window.open(`https://github.com/tolehata/hataskey_lite/commit/${hash}`, '_blank');
 	}
 };
 

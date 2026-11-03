@@ -30,7 +30,6 @@ import { provideMetadataReceiver, provideReactiveMetadata } from '@/page.js';
 import { i18n } from '@/i18n.js';
 import { mainRouter } from '@/router.js';
 import { DI } from '@/di.js';
-import { concrntPagePostContextKey } from '@/utility/concrnt/post-interceptor.js';
 import { haptic } from '@/utility/haptic.js';
 
 const isRoot = computed(() => mainRouter.currentRoute.value.name === 'index');
@@ -40,7 +39,6 @@ const pageMetadata = ref<null | PageMetadata>(null);
 const showDeckNav = !(new URLSearchParams(window.location.search)).has('zen') && ui === 'deck';
 
 provide(DI.router, mainRouter);
-provide(concrntPagePostContextKey, () => true);
 provideMetadataReceiver((metadataGetter) => {
 	const info = metadataGetter();
 	pageMetadata.value = info;

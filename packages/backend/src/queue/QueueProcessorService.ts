@@ -18,7 +18,6 @@ import { runQueueJob } from './queue-job-runner.js';
 import { UserWebhookDeliverProcessorService } from './processors/UserWebhookDeliverProcessorService.js';
 import { SystemWebhookDeliverProcessorService } from './processors/SystemWebhookDeliverProcessorService.js';
 import { EndedPollNotificationProcessorService } from './processors/EndedPollNotificationProcessorService.js';
-import { UtageResolveProcessorService } from './processors/UtageResolveProcessorService.js';
 import { PostScheduledNoteProcessorService } from './processors/PostScheduledNoteProcessorService.js';
 import { DeliverProcessorService } from './processors/DeliverProcessorService.js';
 import { InboxProcessorService } from './processors/InboxProcessorService.js';
@@ -47,8 +46,6 @@ import { ReportAbuseProcessorService } from './processors/ReportAbuseProcessorSe
 import { TickChartsProcessorService } from './processors/TickChartsProcessorService.js';
 import { ResyncChartsProcessorService } from './processors/ResyncChartsProcessorService.js';
 import { CleanChartsProcessorService } from './processors/CleanChartsProcessorService.js';
-import { CheckHataskFlowersProcessorService } from './processors/CheckHataskFlowersProcessorService.js';
-import { CheckHataskMoodRemindersProcessorService } from './processors/CheckHataskMoodRemindersProcessorService.js';
 import { CheckExpiredMutingsProcessorService } from './processors/CheckExpiredMutingsProcessorService.js';
 import { ArchiveAnnouncementProcessorService } from './processors/ArchiveAnnouncementProcessorService.js';
 import type { ArchiveAnnouncementJobData } from './types.js';
@@ -101,7 +98,6 @@ export class QueueProcessorService implements OnApplicationShutdown {
 	private relationshipQueueWorker: Bull.Worker;
 	private objectStorageQueueWorker: Bull.Worker;
 	private endedPollNotificationQueueWorker: Bull.Worker;
-	private utageResolveQueueWorker: Bull.Worker;
 	private postScheduledNoteQueueWorker: Bull.Worker;
 	private scheduledNoteDeleteQueueWorker: Bull.Worker;
 
@@ -117,7 +113,6 @@ export class QueueProcessorService implements OnApplicationShutdown {
 		private userWebhookDeliverProcessorService: UserWebhookDeliverProcessorService,
 		private systemWebhookDeliverProcessorService: SystemWebhookDeliverProcessorService,
 		private endedPollNotificationProcessorService: EndedPollNotificationProcessorService,
-		private utageResolveProcessorService: UtageResolveProcessorService,
 		private postScheduledNoteProcessorService: PostScheduledNoteProcessorService,
 		private deliverProcessorService: DeliverProcessorService,
 		private inboxProcessorService: InboxProcessorService,
@@ -147,8 +142,6 @@ export class QueueProcessorService implements OnApplicationShutdown {
 		private resyncChartsProcessorService: ResyncChartsProcessorService,
 		private cleanChartsProcessorService: CleanChartsProcessorService,
 		private aggregateRetentionProcessorService: AggregateRetentionProcessorService,
-		private checkHataskFlowersProcessorService: CheckHataskFlowersProcessorService,
-		private checkHataskMoodRemindersProcessorService: CheckHataskMoodRemindersProcessorService,
 		private checkExpiredMutingsProcessorService: CheckExpiredMutingsProcessorService,
 		private archiveAnnouncementProcessorService: ArchiveAnnouncementProcessorService,
 		private bakeBufferedReactionsProcessorService: BakeBufferedReactionsProcessorService,
@@ -196,8 +189,6 @@ export class QueueProcessorService implements OnApplicationShutdown {
 					case 'resyncCharts': return this.resyncChartsProcessorService.process();
 					case 'cleanCharts': return this.cleanChartsProcessorService.process();
 					case 'aggregateRetention': return this.aggregateRetentionProcessorService.process();
-					case 'checkHataskFlowers': return this.checkHataskFlowersProcessorService.process();
-					case 'checkHataskMoodReminders': return this.checkHataskMoodRemindersProcessorService.process();
 					case 'checkExpiredMutings': return this.checkExpiredMutingsProcessorService.process();
 					case 'archiveAnnouncement': return this.archiveAnnouncementProcessorService.process(job as Bull.Job<ArchiveAnnouncementJobData>);
 					case 'bakeBufferedReactions': return this.bakeBufferedReactionsProcessorService.process();
@@ -558,30 +549,6 @@ export class QueueProcessorService implements OnApplicationShutdown {
 		}
 		//#endregion
 
-		//#region utage resolve (旗鯖fork)
-		{
-			const logger = this.logger.createSubLogger('utage-resolve');
-
-			this.utageResolveQueueWorker = new Bull.Worker(QUEUE.UTAGE_RESOLVE, (job) => {
-				return runQueueJob(
-					this.telemetryService,
-					'Queue: UtageResolve',
-					() => this.utageResolveProcessorService.process(job),
-					err => {
-						logger.error(`failed(${err.name}: ${err.message}) id=${job.id}`, { job: renderJob(job), e: renderError(err) });
-						this.telemetryService.captureMessage(`Queue: UtageResolve: ${err.name}: ${err.message}`, {
-							level: 'error',
-							extra: { job, err },
-						});
-					},
-				);
-			}, {
-				...baseWorkerOptions(this.config, QUEUE.UTAGE_RESOLVE, this.redisForJobQueue),
-				autorun: false,
-			});
-		}
-		//#endregion
-
 		//#region post scheduled note
 		{
 			const logger = this.logger.createSubLogger('post-scheduled-note');
@@ -643,7 +610,6 @@ export class QueueProcessorService implements OnApplicationShutdown {
 			this.relationshipQueueWorker.run(),
 			this.objectStorageQueueWorker.run(),
 			this.endedPollNotificationQueueWorker.run(),
-			this.utageResolveQueueWorker.run(),
 			this.postScheduledNoteQueueWorker.run(),
 			this.scheduledNoteDeleteQueueWorker.run(),
 		]);
@@ -661,7 +627,6 @@ export class QueueProcessorService implements OnApplicationShutdown {
 			this.relationshipQueueWorker.close(),
 			this.objectStorageQueueWorker.close(),
 			this.endedPollNotificationQueueWorker.close(),
-			this.utageResolveQueueWorker.close(),
 			this.postScheduledNoteQueueWorker.close(),
 			this.scheduledNoteDeleteQueueWorker.close(),
 		]);

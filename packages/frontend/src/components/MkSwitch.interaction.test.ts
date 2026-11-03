@@ -124,7 +124,7 @@ describe('MkSwitch native-label interaction', () => {
 	});
 
 	test('the permanent Hataskey UI basic group opts into flat rows without changing ordinary switch cards', () => {
-		expect(hatasabaUi2BodySource.match(/:flat="mode === 'permanent'"/gu)).toHaveLength(5);
+		expect(hatasabaUi2BodySource.match(/:flat="mode === 'permanent'"/gu)).toHaveLength(4);
 		expect(hatasabaUi2BodySource).toContain('data-settings-flat-row');
 		expect(mkSwitchSource).toContain('[$style.flat]: flat');
 		expect(mkSwitchSource).toContain('.redesigned.flat');

@@ -45,12 +45,12 @@ describe('settings redesign destination contract', () => {
 		const paths = settingsDestinations.map(navigationPathKey);
 		expect(new Set(paths).size).toBe(paths.length);
 	});
-	test('places Hataskey UI S directly under Hataskey UI', () => {
+	test('places the post form border settings directly under Hataskey UI', () => {
 		const section = settingsDestinationSections.find(item => item.id === 'hataskey-ui');
-		expect(section?.label).toBe('hataskeyUI / S');
+		expect(section?.label).toBe('Hataskey UI');
 		expect(section?.items.map(item => item.id)).toEqual(['hataskey-ui', 'hataskey-ui-s']);
-		expect(section?.items[1]).toMatchObject({ label: 'Hataskey UI S', route: '/settings/preferences', categoryId: 'hataskey-ui' });
-		expect(preferenceGroups['hataskey-ui-s']).toEqual({ title: 'Hataskey UI S', description: i18n.ts._hata._uiSetup.ui3SettingsDescription });
+		expect(section?.items[1]).toMatchObject({ label: i18n.ts._hata._settingsRedesign.postFormBorderTitle, route: '/settings/preferences', categoryId: 'hataskey-ui' });
+		expect(preferenceGroups['hataskey-ui-s']).toEqual({ title: i18n.ts._hata._settingsRedesign.postFormBorderTitle, description: i18n.ts._hata._settingsRedesign.postFormBorderDescription });
 	});
 	test('active, brand, search, and route contracts are wired', () => {
 		expect(bentoSource).toContain('aria-current');
@@ -62,7 +62,6 @@ describe('settings redesign destination contract', () => {
 		expect(shellSource).toContain(':activeCategoryId="activeBentoCategoryId"');
 		expect(searchSource).toContain('[aria-selected=\'true\']:hover');
 		expect(searchSource).toContain('hasSettingsBrand(item.label)');
-		expect(routerSource).toContain('name: \'hatafeed-settings\'');
 		expect(routerSource).not.toContain('hatasnscord-ui');
 		expect(routerSource).toContain('import(\'@/pages/settings/preferences.vue\')');
 	});

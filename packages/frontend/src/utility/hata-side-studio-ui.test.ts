@@ -14,7 +14,7 @@ describe('HataSideStudio UI integration', () => {
 		const simple = read('ui/simple.vue');
 		expect(studio).toContain("activeProfile.postButton.icon = 'paw'");
 		expect(studio).toContain('class="ti ti-paw"');
-		expect(studio).toContain('<GradientEditor v-if="!isUiS" :modelValue="activeProfile.postButton"/>');
+		expect(studio).toContain('<GradientEditor :modelValue="activeProfile.postButton"/>');
 		expect(studio).toContain(':style="postButtonStyle(activeProfile.postButton)"');
 		expect(simple.match(/:style="studioPostButtonStyle"/g)).toHaveLength(2);
 		expect(simple.match(/:style="studioPostButtonStyle"[^>]*>\s*<i :class="composeIcon"/g)).toHaveLength(2);
@@ -27,12 +27,6 @@ describe('HataSideStudio UI integration', () => {
 		expect(simple).toContain('@click="openMore($event, true)"');
 		expect(simple).toContain("if (id === 'more' && ev && simpleDrawerShowing.value)");
 		expect(simple).toContain('if (closeMobileDrawerAfter) simpleDrawerShowing.value = false;');
-	});
-
-	test('Hataskプレビューはローカル日付を使い、アーカイブ済みTodoを保留数から除外する', () => {
-		const simple = read('ui/simple.vue');
-		expect(simple).toContain("return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;");
-		expect(simple).toContain('todos.filter(todo => todo.done !== true && todo.archivedAt == null)');
 	});
 
 	test('縮小サイドバーは専用ボタン配列だけを描画し、縦一列を固定する', () => {
@@ -50,22 +44,6 @@ describe('HataSideStudio UI integration', () => {
 		expect(studio).toContain('copy.collapsedBorderHiddenDescription');
 	});
 
-	test('外部通知はStudioプロファイルの保存位置で描画し、未連携時だけ隠して未読を表示する', () => {
-		const simple = read('ui/simple.vue');
-		expect(simple).toContain("const isExternalLinked = computed(() => prefer.r['external.enabled'].value && prefer.r['external.token'].value != null);");
-		expect(simple).toContain("if (menuId === 'externalNotifications') return isExternalLinked.value;");
-		expect(simple).toContain("if (item.id === 'externalNotifications' && !isExternalLinked.value) continue;");
-		expect(simple).toContain('externalNotifications: () => goToExternalNotifications()');
-		expect(simple.match(/item\.menuId==='externalNotifications' && extNotifHasUnread/g)).toHaveLength(1);
-		expect(simple.match(/child\.menuId==='externalNotifications' && extNotifHasUnread/g)).toHaveLength(2);
-		expect(simple.match(/node\.menuId==='externalNotifications' && extNotifHasUnread/g)).toHaveLength(2);
-		expect(simple).not.toContain("!studioCollapsedButtons.some(item => item.menuId === 'externalNotifications')");
-		expect(simple).not.toContain("!studioExpandedMenuIds.has('externalNotifications')");
-		expect(simple).not.toContain('const studioExpandedMenuIds');
-		expect(simple).not.toContain('const extNotifItem');
-		expect(simple).not.toContain('basic.items.splice(notifIdx2 + 1');
-	});
-
 	test('Hataskey UIの通知・外部通知・お知らせバッジをメニューボタンの縦中央へ揃える', () => {
 		const simple = read('ui/simple.vue');
 		for (const selector of ['.sbBadge', '.sbExtDot', '.sbDot', '.sbNotifDot']) {
@@ -73,16 +51,6 @@ describe('HataSideStudio UI integration', () => {
 			expect(block).toContain('top:50%');
 			expect(block).toContain('transform:translateY(-50%)');
 		}
-	});
-
-	test('外部通知とそれを含むグループは、確認ダイアログより前に削除を拒否する', () => {
-		const studio = read('pages/hata-side-studio.vue');
-		const requestRemove = studio.slice(studio.indexOf('async function requestRemoveNode'), studio.indexOf('function activateProfile'));
-		expect(studio).toContain('hataSideStudioNodeContainsRequiredMenu');
-		expect(requestRemove).toContain('if (hataSideStudioNodeContainsRequiredMenu(node))');
-		expect(requestRemove).toContain("os.toast(i18n.ts._hata._sidebarEditor.alwaysVisible, 'ti ti-lock')");
-		expect(requestRemove.indexOf('hataSideStudioNodeContainsRequiredMenu(node)')).toBeLessThan(requestRemove.indexOf('askStudioConfirm'));
-		expect(requestRemove.indexOf('return;')).toBeLessThan(requestRemove.indexOf('askStudioConfirm'));
 	});
 
 	test('編集画面は拡大と縮小の相互コピー、PC二ペイン、削除モードを備える', () => {
@@ -103,7 +71,7 @@ describe('HataSideStudio UI integration', () => {
 
 	test('その場で調整はグラデーション、詳細設定、グループ編集を実際の操作へ接続する', () => {
 		const studio = read('pages/hata-side-studio.vue');
-		expect(studio).toContain('<GradientEditor v-if="!isUiS" :modelValue="selected"/>');
+		expect(studio).toContain('<GradientEditor :modelValue="selected"/>');
 		expect(studio).toContain('const GradientEditor = defineComponent');
 		expect(studio).toContain("h(GradientEditor, { modelValue: props.modelValue })");
 		expect(studio).toContain("h('span', copy.secondColor)");
@@ -196,7 +164,7 @@ describe('HataSideStudio UI integration', () => {
 		expect(studio).toContain('transform:translate(-50%,-50%)');
 		expect(studio).toContain('.header.tutorialFocus,.sidebarPreview.tutorialFocus { position:relative; }');
 		expect(studio).toContain("claimAchievement('hataSideStudioPioneer')");
-		expect(studio).toContain("studioRouter.replace('/settings/hata-custom')");
+		expect(studio).toContain("mainRouter.replace('/settings/hata-custom')");
 		expect(studio).not.toContain('modalBackdrop');
 	});
 
@@ -229,25 +197,16 @@ describe('HataSideStudio UI integration', () => {
 		expect(simple).toContain('.sidebarWide');
 	});
 
-	test('ウィジェット補正をHataSideStudio内だけへ閉じ、専用の花・地震表示を使う', () => {
+	test('ウィジェット補正をHataSideStudio内だけへ閉じる', () => {
 		const studio = read('pages/hata-side-studio.vue');
 		const simple = read('ui/simple.vue');
-		const flowers = read('components/HataSideStudioFlowers.vue');
-		const earthquake = read('components/HataSideStudioEarthquake.vue');
-		expect(studio).toContain('HataSideStudioFlowers');
-		expect(studio).toContain('HataSideStudioEarthquake');
 		expect(simple).toContain('data-hss-kind');
 		expect(simple).toContain('onStudioWidgetWheel');
-		expect(flowers).toContain('{{ flower.progress }}%');
-		expect(flowers).toContain('{{ remainingText }}');
-		expect(earthquake).toContain('MkEarthquakeTicker');
-		expect(earthquake).not.toContain('v-for="quake');
 		expect(simple).toContain('.hssWidget[data-hss-kind="postForm"]');
 		expect(simple).toContain('font-variant-numeric:tabular-nums');
 		expect(simple).toContain("if (widget.kind === 'serverMetric' && widget.size === 'small') data.view = 3");
 		expect(simple).toContain('--hss-aichan-scale');
 		expect(studio).toContain('height:350px!important');
-		expect(earthquake).toContain('transform:none');
 		expect(simple).toContain('[data-scroll-anchor]:nth-child(n+3)');
 	});
 
@@ -263,17 +222,12 @@ describe('HataSideStudio UI integration', () => {
 		expect(simple).toContain("closest?.('.mkw-post-form footer')");
 	});
 
-	test('モバイルもStudioプロファイルを描画し、Hataskとサーバーメニューに起動導線を持つ', () => {
+	test('モバイルもStudioプロファイルを描画する', () => {
 		const studio = read('pages/hata-side-studio.vue');
 		const simple = read('ui/simple.vue');
-		const hatask = read('pages/hatask.vue');
 		expect(simple).toContain('$style.hssMobileRoot');
 		expect(simple).toContain('submitStudioMobileSearch');
 		expect(simple).toContain('copy.openHataSideStudio');
-		expect(hatask).toMatch(/label:\s*'HataSideStudio'/);
-		expect(hatask).toContain("routeRouter.push('/hata-side-studio')");
-		expect(hatask).toMatch(/label:\s*copy\.appWhatsNew/);
-		expect(hatask).toContain("import('@/components/MkHataWhatsNew.vue')");
 		expect(studio).not.toContain('端末内で編集');
 		expect(studio).toContain('copy.exportImportSettings');
 	});
@@ -295,7 +249,6 @@ describe('HataSideStudio UI integration', () => {
 		expect(simple).toContain('.hssWidget[data-hss-kind="federation"][data-hss-size="large"] :global(.instances > .instance:nth-child(n+4))');
 		expect(simple).toContain('.hssWidget[data-hss-kind="notifications"] :global(.mkw-notifications)');
 		expect(simple).toContain('height:auto!important;min-height:var(--hss-widget-min-height,112px)!important;');
-		expect(simple).toContain('.hssWidget[data-hss-kind="externalNotifications"][data-hss-size="small"]');
 		expect(simple).toContain('.hssWidget[data-hss-kind="photos"][data-hss-size="small"]');
 		expect(simple).toContain('.hssWidget[data-hss-kind="userList"][data-hss-size="small"]');
 		expect(simple).toContain('.hssWidget[data-hss-kind="chat"][data-hss-size="small"]');
@@ -327,8 +280,6 @@ describe('HataSideStudio UI integration', () => {
 	test('合意済みモックの主要操作と実データプレビューを省略しない', () => {
 		const studio = read('pages/hata-side-studio.vue');
 		const simple = read('ui/simple.vue');
-		const hatask = read('pages/hatask.vue');
-		const routes = read('router.definition.ts');
 		expect(studio).toContain('copy.createWidget');
 		expect(studio).toContain('copy.createGroup');
 		expect(studio).toContain('copy.createButton');
@@ -344,11 +295,6 @@ describe('HataSideStudio UI integration', () => {
 		expect(studio).not.toContain('この構成を試す');
 		expect(simple).toContain("api('i/notifications', { limit: 1, markAsRead: false })");
 		expect(simple).toContain("api('chat/history', { room: false })");
-		expect(simple).toContain("api('hata/hatady/stats', { tzOffset: hatadyTzOffset() })");
-		expect(simple).toContain("api('hata/feedback/available', {})");
-		expect(simple).toContain("targetPath: `/hatask?tab=${tabs[index] ?? 'home'}`");
-		expect(routes).toMatch(/path: '\/hatask',[\s\S]{0,100}query: \{[\s\S]{0,50}tab: 'tab'/);
-		expect(hatask).toContain("routeRouter.currentRef.value.props.get('tab')");
 	});
 
 	test('公開テーマの送受信処理は検証前の段階では実装しない', () => {

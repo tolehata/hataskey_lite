@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { userExportableEntities, type HatadyNotificationSubtype } from '@/types.js';
+import { userExportableEntities } from '@/types.js';
 import { MiUser } from './User.js';
 import { MiNote } from './Note.js';
 import { MiUserGroupInvitation } from './UserGroupInvitation.js';
@@ -11,7 +11,6 @@ import { MiAccessToken } from './AccessToken.js';
 import { MiRole } from './Role.js';
 import { MiDriveFile } from './DriveFile.js';
 import { MiNoteDraft } from './NoteDraft.js';
-import { MiChannelInvitation } from './ChannelInvitation.js';
 
 // cherrypick-js の notificationTypes と同期すべし
 export type MiNotification = {
@@ -145,7 +144,7 @@ export type MiNotification = {
 
 	/**
 	 * アプリ通知のクリック時の遷移先パス
-	 * 旗鯖fork: hatask等の旗鯖独自機能の通知をクリックすると該当画面に遷移できるようにするため。
+	 * 旗鯖fork: 旗鯖独自機能の通知をクリックすると該当画面に遷移できるようにするため。
 	 * セキュリティ上 '/' で始まる相対パスのみ許可される (絶対URLや javascript: は拒否)。
 	 */
 	customLink: string | null;
@@ -154,101 +153,6 @@ export type MiNotification = {
 	 * アプリ通知のアプリ(のトークン)
 	 */
 	appAccessTokenId: MiAccessToken['id'] | null;
-} | {
-	// 旗鯖fork: HataFeed(フィードバックセンター)の通知。app通知と同形だが、通知フィルタで
-	//   個別にON/OFFできるよう専用タイプにしている。
-	type: 'hataFeed';
-	id: string;
-	createdAt: string;
-	/** Older HataFeed entries have no source ID and keep their existing read state. */
-	sourceNotificationId?: string;
-	customBody: string;
-	customHeader: string | null;
-	customIcon: string | null;
-	customLink: string | null;
-} | {
-	type: 'hatady';
-	id: string;
-	createdAt: string;
-	sourceNotificationId: string;
-	subtype: HatadyNotificationSubtype;
-	/** Immutable primary target, retained even when a source FK uses SET NULL. */
-	targetType: 'none' | 'log' | 'comment' | 'work' | 'session' | 'mediaComment';
-	targetId: string | null;
-	notifierId?: MiUser['id'];
-} | {
-	// Hataskの花が収穫できるようになった通知。
-	type: 'hataskFlowerReady';
-	id: string;
-	createdAt: string;
-	customBody: string;
-	customHeader: string | null;
-	customIcon: string | null;
-	customLink: string | null;
-} | {
-	type: 'hataskFlowerBloomed';
-	id: string;
-	createdAt: string;
-	customBody: string;
-	customHeader: string | null;
-	customIcon: string | null;
-	customLink: string | null;
-} | {
-	type: 'hataskZukanUpdated';
-	id: string;
-	createdAt: string;
-	customBody: string;
-	customHeader: string | null;
-	customIcon: string | null;
-	customLink: string | null;
-} | {
-	type: 'hataskFestivalBloomed';
-	id: string;
-	createdAt: string;
-	customBody: string;
-	customHeader: string | null;
-	customIcon: string | null;
-	customLink: string | null;
-} | {
-	// Hataskのアイコンデコ獲得通知。送信者を持たず、受信・種類フィルタの対象外。ブランド選択には従う。
-	type: 'hataskDecorationUnlocked';
-	id: string;
-	createdAt: string;
-	customBody: string;
-	customHeader: string | null;
-	customIcon: string | null;
-	customLink: string | null;
-} | {
-	// 旗鯖fork: 地震・津波情報の通知。app通知と同形だが、通知フィルタで個別ON/OFFできるよう専用タイプ。
-	type: 'earthquake';
-	id: string;
-	createdAt: string;
-	customBody: string;
-	customHeader: string | null;
-	customIcon: string | null;
-	customLink: string | null;
-} | {
-	// 旗鯖fork: プライベートチャンネルのメンバーに追加された通知 (app通知と同形)。
-	type: 'addedToPrivateChannel';
-	id: string;
-	createdAt: string;
-	notifierId: MiUser['id'] | null;
-	customBody: string;
-	customHeader: string | null;
-	customIcon: string | null;
-	customLink: string | null;
-	/** 通常メンバーへの参加招待だけに付く。副管理者への即時追加通知では未指定。 */
-	channelInvitationId?: MiChannelInvitation['id'];
-} | {
-	// 旗鯖fork: プライベートチャンネルのメンバーから外された通知 (app通知と同形)。
-	type: 'removedFromPrivateChannel';
-	id: string;
-	createdAt: string;
-	notifierId: MiUser['id'] | null;
-	customBody: string;
-	customHeader: string | null;
-	customIcon: string | null;
-	customLink: string | null;
 } | {
 	type: 'test';
 	id: string;

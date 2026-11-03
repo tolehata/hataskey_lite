@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import type { LtlPunchState } from '@/misc/ltl-punch.js';
 import { Inject, Injectable } from '@nestjs/common';
 import * as Redis from 'ioredis';
 import * as Reversi from 'misskey-reversi';
@@ -49,11 +48,6 @@ export interface BroadcastTypes {
 	};
 	announcementCreated: {
 		announcement: Packed<'Announcement'>;
-	};
-	// 旗鯖fork: 地震・津波情報の新着(P2PQuake)を全クライアントへリアルタイム配信。
-	earthquakeEvent: {
-		code: number; // 551=地震情報 / 552=津波予報
-		item: Record<string, any>;
 	};
 	// 旗鯖fork: Hataskey UIの隠しタイムライン崩壊演出。投稿情報は配信しない。
 	hataTimelineCollapse: Record<string, never>;
@@ -145,10 +139,6 @@ export interface NoteEventTypes {
 		reaction: string;
 		userId: MiUser['id'];
 	};
-	// 宴の開始・進捗・確定をrevision付きで配信。本人向け参加情報はRESTだけで返す。
-	utageStatusUpdated: ReturnType<typeof import('@/misc/utage-revival.js').utageSnapshot> & {
-		status: 'running' | 'reviving' | 'succeeded' | 'failed';
-	};
 }
 type NoteStreamEventTypes = {
 	[key in keyof NoteEventTypes]: {
@@ -188,12 +178,6 @@ export interface RoleTimelineEventTypes {
 	note: Packed<'Note'>;
 }
 
-export type HatadyTimelineSource = 'log' | 'session';
-export interface HatadyTimelineEventTypes {
-	changed: { source: HatadyTimelineSource; id: string };
-	refresh: { viewerId: MiUser['id'] };
-}
-
 export interface AdminEventTypes {
 	newAbuseUserReport: {
 		id: MiAbuseUserReport['id'];
@@ -216,19 +200,6 @@ export interface ChatEventTypes {
 		user?: Packed<'UserLite'>;
 		messageId: MiChatMessage['id'];
 	};
-}
-
-export interface HataigoEventTypes {
-	matched: { gameId: string };
-	invited: { gameId: string };
-}
-
-export interface HataigoGameEventTypes {
-	chatMessage: { messageId: string };
-	chatDeleted: { messageId: string };
-	updated: { revision: number };
-	reacted: { reaction: string };
-	spectators: { count: number };
 }
 
 export interface ReversiEventTypes {
@@ -329,8 +300,6 @@ export type EventTypesToEventPayload<T> = EventUnionFromDictionary<UndefinedAsNu
 
 // name/messages(spec) pairs dictionary
 export type GlobalEvents = {
-	ltlPunch: { name: 'ltlPunchStream'; payload: { type: 'state'; body: LtlPunchState | null }; };
-	hatadyTimeline: { name: 'hatadyTimelineStream'; payload: EventTypesToEventPayload<HatadyTimelineEventTypes>; };
 	internal: {
 		name: 'internal';
 		payload: EventTypesToEventPayload<InternalEventTypes>;
@@ -386,14 +355,6 @@ export type GlobalEvents = {
 	chatRoom: {
 		name: `chatRoomStream:${MiChatRoom['id']}`;
 		payload: EventTypesToEventPayload<ChatEventTypes>;
-	};
-	hataigo: {
-		name: `hataigoStream:${string}`;
-		payload: EventTypesToEventPayload<HataigoEventTypes>;
-	};
-	hataigoGame: {
-		name: `hataigoGameStream:${string}`;
-		payload: EventTypesToEventPayload<HataigoGameEventTypes>;
 	};
 	reversi: {
 		name: `reversiStream:${MiUser['id']}`;
@@ -518,30 +479,8 @@ export class GlobalEventService {
 	}
 
 	@bindThis
-	public publishHataigoStream<K extends keyof HataigoEventTypes>(userId: string, type: K, value: HataigoEventTypes[K]): void {
-		this.publish(`hataigoStream:${userId}`, type, value);
-	}
-
-	@bindThis
-	public publishHataigoGameStream<K extends keyof HataigoGameEventTypes>(gameId: string, type: K, value: HataigoGameEventTypes[K]): void {
-		this.publish(`hataigoGameStream:${gameId}`, type, value);
-	}
-
-	@bindThis
 	public publishReversiStream<K extends keyof ReversiEventTypes>(userId: MiUser['id'], type: K, value?: ReversiEventTypes[K]): void {
 		this.publish(`reversiStream:${userId}`, type, typeof value === 'undefined' ? null : value);
-	}
-
-	public publishLtlPunchStream(state: LtlPunchState | null): Promise<number> {
-		return this.publish('ltlPunchStream', 'state', state);
-	}
-
-	public publishHatadyActivityStream(source: HatadyTimelineSource, id: string): void {
-		this.publish('hatadyTimelineStream', 'changed', { source, id });
-	}
-
-	public publishHatadyTimelineRefresh(viewerId: MiUser['id']): void {
-		this.publish('hatadyTimelineStream', 'refresh', { viewerId });
 	}
 
 	public publishReversiGameStream<K extends keyof ReversiGameEventTypes>(gameId: MiReversiGame['id'], type: K, value?: ReversiGameEventTypes[K]): void {

@@ -85,49 +85,7 @@ function controlFixture(): TestControlItem[] {
 }
 
 describe('settings-search-v2', () => {
-	test('専用チャームページの検索結果はプロフィールと同じアカウント分類を維持する', () => {
-		const catalog = buildSettingsCatalogV2([], [{ ...controlFixture()[0], stableId: 'settings.control.charm', route: '/settings/note-charm', label: 'チャームの色', aliases: [], preferenceKeys: [], sourceFile: 'src/components/MkNoteCharmSettings.vue' }]);
-		expect(catalog.byStableId.get('settings.control.charm')?.categoryId).toBe('account');
-	});
-	test('Concrntの正式routeを独立した端末設定として索引へ登録する', () => {
-		const catalog = buildSettingsCatalogV2([
-			{ id: 'concrnt', path: '/settings/concrnt', label: 'コンカレント連携(BETA)', keywords: ['concrnt'], texts: [], icon: 'concrnt-icon' },
-			{ id: 'misskey-external', path: '/settings/external-account', label: '外部アカウント連携', keywords: ['external account'], texts: [] },
-		]);
-		const concrnt = catalog.byLegacyId.get('concrnt');
-		expect(concrnt).toMatchObject({ route: '/settings/concrnt', categoryId: 'data-connect', persistence: 'device', owner: 'hatasaba', icon: 'concrnt-icon', semanticGroupId: 'settings.semantic.feature.concrnt-linking' });
-		expect(concrnt?.activation).toBeUndefined();
-		expect(catalog.byLegacyId.get('misskey-external')?.route).toBe('/settings/external-account');
-		expect(catalog.fallbackRoutes).not.toContain('/settings/concrnt');
-		for (const query of ['Concrnt', 'コンカレント', 'CTL', 'concurrent']) {
-			expect(searchSettingsV2(catalog, query).results.some(result => result.route === '/settings/concrnt')).toBe(true);
-		}
-	});
-
-	test('Concrntの条件付き設定は常設group focusと未充足説明を保ち、自動activationを作らない', () => {
-		const group = 'settings.group.concrnt-connection-settings';
-		const catalog = buildSettingsCatalogV2([], [{
-			stableId: 'settings.control.concrnt-notifications', route: '/settings/concrnt', label: 'コンカレントの通知を表示', aliases: ['Concrnt'], preferenceKeys: [],
-			sourceFile: 'src/components/concrnt/ConcrntSettings.vue', sourceLine: 118, destructive: false, persistence: 'device', owner: 'hatasaba',
-			focusId: group, sourceSemanticGroupId: 'settings.semantic.feature.concrnt-linking', unmet: [{ kind: 'runtime-data', id: 'concrnt-account-and-section', behavior: 'explain' }],
-		}]);
-		expect(catalog.byStableId.get('settings.control.concrnt-notifications')).toMatchObject({ route: '/settings/concrnt', persistence: 'device', focusId: group, unmet: [{ kind: 'runtime-data', id: 'concrnt-account-and-section', behavior: 'explain' }] });
-		expect(catalog.byStableId.get('settings.control.concrnt-notifications')?.activation).toBeUndefined();
-	});
-
-	test('外部通知の関連先はcontrol IDに依存せず連携の有効設定へ結び、タイムライン設定は混ぜない', () => {
-		const items = [
-			{ stableId: 'settings.control.external-enabled-native', label: '外部アカウント連携を有効にする', preferenceKeys: ['external.enabled'] },
-			{ stableId: 'settings.control.external-toast-native', label: '外部通知のポップアップを無効化', preferenceKeys: ['external.disableNotificationToast'] },
-			{ stableId: 'settings.control.external-timeline-native', label: '外部ホームタイムラインを表示', preferenceKeys: ['external.enableOHTL'] },
-		].map((item, index) => ({ ...item, route: '/settings/external-account', aliases: [], sourceFile: 'src/pages/settings/external-account.vue', sourceLine: index + 1, destructive: false, sourceSemanticGroupId: 'settings.semantic.feature.external-account-linking' }));
-		const catalog = buildSettingsCatalogV2([], items);
-		const toast = catalog.byStableId.get('settings.control.external-toast-native');
-		expect(toast?.relatedIds).toContain('settings.control.external-enabled-native');
-		expect(toast?.relatedIds).not.toContain('settings.control.external-timeline-native');
-	});
-
-	test('全件を落とさず、13の生成不能ルートを明示登録する', () => {
+	test('全件を落とさず、12の生成不能ルートを明示登録する', () => {
 		const source = Array.from({ length: 278 }, (_, index) => ({
 			id: `fixture-${index}`,
 			path: '/settings/preferences',
@@ -136,10 +94,10 @@ describe('settings-search-v2', () => {
 			texts: [],
 		}));
 		const catalog = buildSettingsCatalogV2(source);
-		expect(catalog.descriptors).toHaveLength(291);
-		expect(catalog.fallbackRoutes).toHaveLength(13);
+		expect(catalog.descriptors).toHaveLength(290);
+		expect(catalog.fallbackRoutes).toHaveLength(12);
 		expect(catalog.descriptors.filter(item => item.isFallback).every(item => item.anchor === undefined)).toBe(true);
-		expect(new Set(catalog.descriptors.map(item => item.stableId)).size).toBe(291);
+		expect(new Set(catalog.descriptors.map(item => item.stableId)).size).toBe(290);
 		expect(catalog.byLegacyId.size).toBe(278);
 		expect(catalog.descriptors.every(item => item.route.startsWith('/settings/'))).toBe(true);
 		expect(catalog.descriptors.every(item => item.relatedIds.every(id => id !== item.stableId && catalog.byStableId.has(id)))).toBe(true);
@@ -261,26 +219,20 @@ describe('settings-search-v2', () => {
 				activation: { kind: 'hata-custom-category', category: 'glassUi' }, destructive: false,
 			},
 			{
-				stableId: 'settings.control.custom-font', route: '/settings/hata-custom', label: 'カスタムフォント', aliases: [], preferenceKeys: [],
-				sourceFile: 'src/pages/settings/hata-custom.vue', sourceLine: 1,
-				activation: { kind: 'hata-custom-category', category: 'font' }, destructive: false,
-			},
-			{
 				stableId: 'settings.control.note-density', route: '/settings/hata-custom', label: 'ノートの間隔', aliases: [], preferenceKeys: [],
 				sourceFile: 'src/pages/settings/hata-custom.vue', sourceLine: 2,
 				activation: { kind: 'hata-custom-category', category: 'visual' }, destructive: false,
 			},
 			{
-				stableId: 'settings.control.hatask', route: '/settings/hata-custom', label: 'Hataskの通知', aliases: [], preferenceKeys: [],
+				stableId: 'settings.control.settings-transfer', route: '/settings/hata-custom', label: '設定の書き出し', aliases: [], preferenceKeys: [],
 				sourceFile: 'src/pages/settings/hata-custom.vue', sourceLine: 3,
-				activation: { kind: 'popup', category: 'hatask', popup: 'hatask' }, destructive: false,
+				activation: { kind: 'popup', category: 'general', popup: 'settings-transfer' }, destructive: false,
 			},
 		]);
 		expect(catalog.byStableId.get('settings.group.ui2-glass')).toMatchObject({ categoryId: 'hataskey-ui', categoryLabel: 'Hataskey UI', label: 'ガラスとぼかし' });
 		expect(catalog.byStableId.get('settings.control.ui2-immediate')?.categoryId).toBe('hataskey-ui');
-		expect(catalog.byStableId.get('settings.control.custom-font')).toMatchObject({ categoryId: 'theme-font', categoryLabel: 'Themes and fonts' });
 		expect(catalog.byStableId.get('settings.control.note-density')).toMatchObject({ categoryId: 'display-notes', categoryLabel: 'Display density and notes' });
-		expect(catalog.byStableId.get('settings.control.hatask')?.categoryId).toBe('hata-tools');
+		expect(catalog.byStableId.get('settings.control.settings-transfer')?.categoryId).toBe('hata-tools');
 	});
 
 	test('catalog presentationはja/en/zh-CNとfallbackでカテゴリ・fallback・関連理由をlocale化する', () => {
@@ -554,7 +506,7 @@ describe('settings-search-v2', () => {
 	test('設定ナビはBentoカテゴリを表示し、旧manifestの検索・遷移先を維持する', () => {
 		for (const path of [
 			'/settings/notifications', '/settings/sounds', '/settings/theme', '/settings/mute-block', '/settings/drive', '/settings/security',
-			'/settings/other', '/settings/external-account', '/settings/account-data', '/settings/cherrypick', '/settings/deck', '/settings/navbar', '/settings/statusbar',
+			'/settings/other', '/settings/account-data', '/settings/cherrypick', '/settings/deck', '/settings/navbar', '/settings/statusbar',
 		]) expect(settingsDestinationsSource).toContain(path);
 		expect(settingsDestinationsSource).toContain('label: copy.nav.hataTools');
 		expect(settingsDestinationsSource).toContain('label: copy.nav.cherrypick');
@@ -580,7 +532,7 @@ describe('settings-search-v2', () => {
 		}]);
 		expect(withFallbackRoute.descriptors.filter(descriptor => descriptor.sourceRoute === '/settings/theme/install')).toHaveLength(0);
 		expect(withFallbackRoute.fallbackRoutes).not.toContain('/settings/theme/install');
-		expect(withFallbackRoute.fallbackRoutes).toHaveLength(12);
+		expect(withFallbackRoute.fallbackRoutes).toHaveLength(11);
 		expect(new Set(withFallbackRoute.fallbackRoutes)).toEqual(new Set(withFallbackRoute.descriptors.flatMap(descriptor => descriptor.isFallback && descriptor.sourceRoute != null ? [descriptor.sourceRoute] : [])));
 		const webhook = buildSettingsCatalogV2([]).descriptors.find(descriptor => descriptor.sourceRoute === '/settings/webhook/edit/:webhookId');
 		expect(webhook?.route).toBe('/settings/connect');

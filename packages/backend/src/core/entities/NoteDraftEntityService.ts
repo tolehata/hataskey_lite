@@ -14,7 +14,6 @@ import type { NoteDraftsRepository, ChannelsRepository } from '@/models/_.js';
 import { bindThis } from '@/decorators.js';
 import { DebounceLoader } from '@/misc/loader.js';
 import { IdService } from '@/core/IdService.js';
-import { PrivateChannelNoteVisibilityError } from '@/misc/private-channel-note-visibility-error.js';
 import type { OnModuleInit } from '@nestjs/common';
 import type { UserEntityService } from './UserEntityService.js';
 import type { DriveFileEntityService } from './DriveFileEntityService.js';
@@ -96,7 +95,7 @@ export class NoteDraftEntityService implements OnModuleInit {
 			try {
 				return await promise;
 			} catch (err) {
-				if (err instanceof EntityNotFoundError || err instanceof PrivateChannelNoteVisibilityError) {
+				if (err instanceof EntityNotFoundError) {
 					return null;
 				}
 				throw err;

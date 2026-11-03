@@ -10,19 +10,6 @@
  * 新しいUIのマウント時に明示的に掃除する必要がある。
  */
 export function cleanupStaleUiElements(): void {
-	// Hatask mobile nav (Teleported to body)
-	document.querySelectorAll<HTMLElement>('.htk-nav-mobile').forEach(el => el.remove());
-	document.querySelectorAll<HTMLElement>('.htk-nav-pad').forEach(el => el.remove());
-
-	// Hatask hidden elements restore
-	document.querySelectorAll<HTMLElement>('[data-htask-hidden]').forEach(el => {
-		el.style.removeProperty('display');
-		delete el.dataset.htaskHidden;
-	});
-	delete document.body.dataset.hataskActive;
-
-	// External TL: programmatic side menu button
-	document.querySelectorAll<HTMLElement>('.ext-tl-side-menu-btn').forEach(el => el.remove());
 
 	// External TL: hidden mobile footer restore
 	document.querySelectorAll<HTMLElement>('[data-ext-tl-hidden]').forEach(el => {

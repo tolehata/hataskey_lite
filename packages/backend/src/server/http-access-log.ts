@@ -7,7 +7,6 @@ import { Buffer } from 'node:buffer';
 import { logManager } from '@/logging/logging-runtime.js';
 import type { LogManager } from '@/logging/LogManager.js';
 import type { LogTraceContext } from '@/logging/types.js';
-import { isLtlEmojiVoteApiPath } from '@/core/ltl-emoji-vote.js';
 import type { FastifyInstance } from 'fastify';
 
 type AccessRequestState = {
@@ -126,7 +125,6 @@ export function registerHttpAccessLog(fastify: FastifyInstance, manager: LogMana
 
 	// リクエスト開始時のactiveなTrace Contextを保存します。
 	fastify.addHook('onRequest', (request, _reply, done) => {
-		if (isLtlEmojiVoteApiPath(request.routeOptions.url)) { done(); return; }
 		states.set(request, {
 			traceContext: manager.getActiveTraceContext(),
 		});
@@ -135,7 +133,6 @@ export function registerHttpAccessLog(fastify: FastifyInstance, manager: LogMana
 
 	// Fastifyが応答へ変換したErrorから、型名だけをリクエストへ一時保存します。
 	fastify.addHook('onError', (request, _reply, error, done) => {
-		if (isLtlEmojiVoteApiPath(request.routeOptions.url)) { done(); return; }
 		const state = states.get(request) ?? {};
 		state.errorType = getErrorType(error);
 		states.set(request, state);
@@ -144,7 +141,6 @@ export function registerHttpAccessLog(fastify: FastifyInstance, manager: LogMana
 
 	// 送信前のpayloadを読み取りますが、元の値は変更せず、そのまま次のhookへ渡します。
 	fastify.addHook('onSend', (request, reply, payload, done) => {
-		if (isLtlEmojiVoteApiPath(request.routeOptions.url)) { done(null, payload); return; }
 		if (!manager.shouldWriteAccess(reply.statusCode)) {
 			done(null, payload);
 			return;
@@ -167,7 +163,6 @@ export function registerHttpAccessLog(fastify: FastifyInstance, manager: LogMana
 
 	// 応答完了時にFastifyの値を集め、LogManagerへAccess logを渡します。
 	fastify.addHook('onResponse', (request, reply, done) => {
-		if (isLtlEmojiVoteApiPath(request.routeOptions.url)) { done(); return; }
 		const state = states.get(request);
 		const input = {
 			method: request.method,

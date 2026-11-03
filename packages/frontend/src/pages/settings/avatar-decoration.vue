@@ -6,12 +6,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 <template>
 <SearchMarker path="/settings/avatar-decoration" :label="i18n.ts.avatarDecorations" :keywords="['avatar', 'icon', 'decoration']" icon="ti ti-sparkles">
 	<div>
-		<div v-if="loadError" class="_gaps_s" role="alert">
-			<MkInfo warn>{{ i18n.ts._hataskDecoration.loadFailed }}</MkInfo>
-			<MkButton @click="loadDecorations">{{ i18n.ts.retry }}</MkButton>
-		</div>
 		<div v-if="!loading" class="_gaps">
-			<MkInfo>{{ i18n.tsx._profile.avatarDecorationMax({ max: $i.policies.avatarDecorationLimit }) }} ({{ i18n.tsx.remainingN({ n: $i.policies.avatarDecorationLimit - wornCount }) }})</MkInfo>
+			<MkInfo>{{ i18n.tsx._profile.avatarDecorationMax({ max: $i.policies.avatarDecorationLimit }) }} ({{ i18n.tsx.remainingN({ n: $i.policies.avatarDecorationLimit - $i.avatarDecorations.length }) }})</MkInfo>
 
 			<MkAvatar :class="$style.avatar" :user="$i" forceShowDecoration/>
 
@@ -53,11 +49,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, defineAsyncComponent, computed } from 'vue';
 import * as Misskey from 'cherrypick-js';
 import XDecoration from './avatar-decoration.decoration.vue';
 import XDialog from './avatar-decoration.dialog.vue';
-import type { DecorationAvailability } from '@/utility/avatar-decoration-availability.js';
 import MkButton from '@/components/MkButton.vue';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
@@ -65,46 +60,27 @@ import { i18n } from '@/i18n.js';
 import { ensureSignin } from '@/i.js';
 import MkInfo from '@/components/MkInfo.vue';
 import { definePage } from '@/page.js';
-import { decorationUnavailableReason, isDecorationWithinPeriod } from '@/utility/avatar-decoration-availability.js';
-import { useAvatarDecorationClock } from '@/composables/use-avatar-decoration-clock.js';
 
 const $i = ensureSignin();
 
 const loading = ref(true);
 const avatarDecorations = ref<Misskey.entities.GetAvatarDecorationsResponse>([]);
-const loadError = ref(false);
-let loadPending: Promise<void> | undefined;
 
-function loadDecorations(): Promise<void> {
-	if (loadPending) return loadPending;
-	loadPending = misskeyApi('get-avatar-decorations').then(decorations => {
-		avatarDecorations.value = decorations;
-		loadError.value = false;
-	}).catch(() => { loadError.value = true; }).finally(() => { loading.value = false; loadPending = undefined; });
-	return loadPending;
-}
-
-void loadDecorations();
-const now = useAvatarDecorationClock(() => [...avatarDecorations.value, ...$i.avatarDecorations], () => { void loadDecorations(); });
-const wornCount = computed(() => $i.avatarDecorations.filter(decoration => isDecorationWithinPeriod(decoration, now.value)).length);
-onMounted(() => window.addEventListener('focus', loadDecorations));
-onUnmounted(() => window.removeEventListener('focus', loadDecorations));
+misskeyApi('get-avatar-decorations').then(_avatarDecorations => {
+	avatarDecorations.value = _avatarDecorations;
+	loading.value = false;
+});
 
 function openAttachedDecoration(index: number) {
 	openDecoration(avatarDecorations.value.find(d => d.id === $i.avatarDecorations[index].id) ?? { id: '', url: '', name: '?', roleIdsThatCanBeUsedThisDecoration: [] }, index);
 }
 
-async function openDecoration(selected: DecorationAvailability & {
+async function openDecoration(avatarDecoration: {
 	id: string;
 	url: string;
 	name: string;
 	roleIdsThatCanBeUsedThisDecoration: string[];
 }, index?: number) {
-	await loadDecorations();
-	if (loadError.value) return;
-	const avatarDecoration = avatarDecorations.value.find(decoration => decoration.id === selected.id) ?? selected;
-	if (index != null && $i.avatarDecorations[index]?.id !== avatarDecoration.id) return;
-	if (index == null && decorationUnavailableReason(avatarDecoration, $i.roles.map(role => role.id), Date.now())) return;
 	const { dispose } = os.popup(XDialog, {
 		decoration: avatarDecoration,
 		usingIndex: index ?? null,
@@ -120,14 +96,13 @@ async function openDecoration(selected: DecorationAvailability & {
 				scale: payload.scale,
 				opacity: payload.opacity,
 			};
-			const update = [...$i.avatarDecorations.filter(item => isDecorationWithinPeriod(item, Date.now())), decoration];
-			const updated = await os.apiWithDialog('i/update', {
+			const update = [...$i.avatarDecorations, decoration];
+			await os.apiWithDialog('i/update', {
 				avatarDecorations: update,
 			});
-			$i.avatarDecorations = updated.avatarDecorations;
+			$i.avatarDecorations = update;
 		},
 		'update': async (payload) => {
-			if (index == null || $i.avatarDecorations[index]?.id !== avatarDecoration.id) return;
 			const decoration = {
 				id: avatarDecoration.id,
 				url: avatarDecoration.url,
@@ -139,20 +114,19 @@ async function openDecoration(selected: DecorationAvailability & {
 				opacity: payload.opacity,
 			};
 			const update = [...$i.avatarDecorations];
-			update[index] = decoration;
-			const updated = await os.apiWithDialog('i/update', {
+			update[index!] = decoration;
+			await os.apiWithDialog('i/update', {
 				avatarDecorations: update,
 			});
-			$i.avatarDecorations = updated.avatarDecorations;
+			$i.avatarDecorations = update;
 		},
 		'detach': async () => {
-			if (index == null || $i.avatarDecorations[index]?.id !== avatarDecoration.id) return;
 			const update = [...$i.avatarDecorations];
-			update.splice(index, 1);
-			const updated = await os.apiWithDialog('i/update', {
+			update.splice(index!, 1);
+			await os.apiWithDialog('i/update', {
 				avatarDecorations: update,
 			});
-			$i.avatarDecorations = updated.avatarDecorations;
+			$i.avatarDecorations = update;
 		},
 		closed: () => dispose(),
 	});

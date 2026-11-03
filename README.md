@@ -1,16 +1,14 @@
-# Hataskey
+# Hataskey Lite
 
-**超高機能で独自UIを備え、使いやすさを追求したカスタムCherryPickフォークです**
+**Hataskeyらしさを残したまま、SNSとして毎日使う機能だけに絞ったHataskeyの軽量版です**
 
 ## 概要
 
 - **ベースバージョン**: Misskey 2026.10.1（CherryPick ベース）
 - **最新バージョン**: [hata-13.0](./HATA-CHANGELOG.md#hata-130)
 - **チェンジログ**: [HATA-CHANGELOG.md](./HATA-CHANGELOG.md)
-
-## Hataskeyが使用されているインスタンス
-
-- [はたすきー](https://misskey.hatachanoima.net/)
+- **元になったソフトウェア**: [Hataskey](https://github.com/tolehata/hataskey)
+- **Hataskeyからの移行**: [MIGRATION-FROM-HATASKEY.md](./MIGRATION-FROM-HATASKEY.md)（hata-13.0 から）
 
 ## ベースプロジェクト
 

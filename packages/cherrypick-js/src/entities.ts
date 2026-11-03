@@ -14,7 +14,6 @@ import type { AuthenticationResponseJSON, PublicKeyCredentialRequestOptionsJSON 
 
 export * from './autogen/entities.js';
 export * from './autogen/models.js';
-export * from './hata-media.js';
 
 export type ID = string;
 export type DateString = string;
@@ -55,9 +54,6 @@ export type ModerationLog = {
 } & ({
 	type: 'voteRegistrationApplication';
 	info: ModerationLogPayloads['voteRegistrationApplication'];
-} | {
-	type: 'deleteHatadyRecord' | 'deleteHataskRecord' | 'warnHatadyUser' | 'warnHataskUser';
-	info: ModerationLogPayloads['deleteHatadyRecord'];
 } | {
 	type: 'approveRegistrationApplication';
 	info: ModerationLogPayloads['approveRegistrationApplication'];

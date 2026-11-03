@@ -77,14 +77,6 @@ export const packedChannelSchema = {
 			type: 'boolean',
 			optional: false, nullable: false,
 		},
-		isPrivate: {
-			type: 'boolean',
-			optional: false, nullable: false,
-		},
-		hasPassword: {
-			type: 'boolean',
-			optional: false, nullable: false,
-		},
 		moderatorUserIds: {
 			type: 'array',
 			optional: false, nullable: false,
@@ -95,10 +87,6 @@ export const packedChannelSchema = {
 			optional: true, nullable: false,
 		},
 		isFavorited: {
-			type: 'boolean',
-			optional: true, nullable: false,
-		},
-		isMember: {
 			type: 'boolean',
 			optional: true, nullable: false,
 		},

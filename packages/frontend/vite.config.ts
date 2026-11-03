@@ -19,7 +19,6 @@ import pluginCreateSettingsSearchIndexV2, { type SettingsSearchIndexV2Options } 
 import pluginWatchLocales from './lib/vite-plugin-watch-locales.js';
 import { pluginRemoveUnrefI18n } from '../frontend-builder/rollup-plugin-remove-unref-i18n.js';
 import { Features } from 'lightningcss';
-import { hataigoSourceUrl } from './src/utility/hataigo/source.js';
 
 const url = process.env.NODE_ENV === 'development' ? yaml.load(await fsp.readFile('../../.config/default.yml', 'utf-8')).url : null;
 const host = url ? (new URL(url)).hostname : undefined;
@@ -36,16 +35,6 @@ function getGitHash(): string {
 }
 
 const gitHash = getGitHash();
-const hataigoSource = (() => {
-	try {
-		const cwd = path.resolve(__dirname, '../..');
-		const remote = execaSync('git', ['remote', 'get-url', 'origin'], { cwd }).stdout.trim();
-		const clean = execaSync('git', ['status', '--porcelain', '--untracked-files=normal'], { cwd }).stdout.trim() === '';
-		return hataigoSourceUrl(process.env.HATAIGO_SOURCE_URL, remote, gitHash, clean);
-	} catch {
-		return hataigoSourceUrl(process.env.HATAIGO_SOURCE_URL, '', gitHash, false);
-	}
-})();
 
 const extensions = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.json', '.json5', '.svg', '.sass', '.scss', '.css', '.vue'];
 
@@ -67,22 +56,7 @@ export const searchIndexes = [{
 /** Source-level settings-control inventory for the redesigned settings search. */
 export const settingsControlSearchIndexV2 = {
 	targetFilePaths: [
-		{
-			filePath: 'src/components/MkNoteCharmSettings.vue',
-			routeOverride: '/settings/note-charm',
-			owner: 'hatasaba',
-			applicableUi: 'all',
-		},
 		'src/pages/settings/*.vue',
-		{
-			filePath: 'src/components/concrnt/ConcrntSettings.vue',
-			routeOverride: '/settings/concrnt',
-			persistence: 'device',
-			saveMode: 'immediate',
-			availability: 'all',
-			owner: 'hatasaba',
-			applicableUi: 'all',
-		},
 		{
 			// The root settings notice owns the existing auto-backup enable action.
 			// Its exact target overrides the page glob so the descriptor can retain
@@ -115,14 +89,6 @@ export const settingsControlSearchIndexV2 = {
 			applicableUi: 'simple',
 		},
 		{
-			filePath: 'src/components/MkEarthquakeSettings.vue',
-			routeOverride: '/settings/hata-custom',
-			activation: { kind: 'popup', category: 'earthquake', popup: 'earthquake' },
-			persistence: 'device',
-			owner: 'hatasaba',
-			applicableUi: 'all',
-		},
-		{
 			// Imported by notifications.vue. Search only focuses this existing
 			// control; it must never invoke the browser permission or subscription
 			// handler while navigating to the result.
@@ -152,49 +118,17 @@ export const settingsControlSearchIndexV2 = {
 			owner: 'hatasaba',
 			applicableUi: 'all',
 		},
-		{
-			filePath: 'src/pages/HataskSettings.vue',
-			routeOverride: '/settings/hata-custom',
-			activation: { kind: 'popup', category: 'hatask', popup: 'hatask' },
-			persistence: 'account',
-			owner: 'hatasaba',
-			applicableUi: 'all',
-		},
-		{
-			filePath: 'src/components/HataFeedDisplaySettings.vue',
-			routeOverride: '/settings/hatafeed',
-			saveMode: 'immediate',
-			owner: 'hatasaba',
-			applicableUi: 'all',
-		},
-		{
-			filePath: 'src/components/HatadyDisplaySettings.vue',
-			routeOverride: '/settings/hata-custom',
-			activation: { kind: 'popup', category: 'hatady', popup: 'hatady' },
-			persistence: 'device',
-			owner: 'hatasaba',
-			applicableUi: 'all',
-		},
-		{
-			filePath: 'src/pages/MkMascotSettings.vue',
-			routeOverride: '/settings/hata-custom',
-			activation: { kind: 'popup', category: 'mascot', popup: 'mascot' },
-			persistence: 'device',
-			owner: 'hatasaba',
-			applicableUi: 'all',
-		},
 	],
 	mainVirtualModule: 'search-index-v2:settings',
 	routerDefinitionPath: 'src/router.definition.ts',
 	// The shared UI2 body and immediate companion are independently inventoried:
-	// 547 source descriptors plus three explicit shell actions. Concrnt keeps
-	// its device settings independent from the external-account preferences.
-	// HataFeed now
-	// owns its theme and existing leaves setting. The permanent
+	// 391 source descriptors plus three explicit shell actions (hataskey Lite removed
+	// the 58 controls of the withdrawn features, 93 more with the mascot and font picker,
+	// then 5 with utage badges, LTL emoji vote and weather effects). The permanent
 	// UI2 root is a real focusable group for the former broad "UI" tab aliases;
 	// eight static popup controls resolve through the audited `editor.copy`
 	// proxy, while dynamic values/runtime collections use semantic groups.
-	expectedControlCount: 550,
+	expectedControlCount: 393,
 	manualDescriptors: [
 		{ stableId: 'settings.shell.clear-cache', route: '/settings', sourceFile: 'settings-shell', sourceLine: 0, component: 'SettingsShellAction', label: '', labelExpression: '${i18n.ts.clearCache}', labelI18nKeys: ['i18n.ts.clearCache'], preferenceKeys: [], legacyMarkerAncestorIds: [], conditions: [], searchable: true, destructive: true, persistence: 'device', saveMode: 'immediate', availability: 'all', owner: 'hatasaba', applicableUi: 'all', metadataEvidence: { persistence: '端末キャッシュを消去する既存shell操作', saveMode: '既存確認後に即時実行', availability: 'shell操作は端末幅を問わない', owner: 'settings shell', applicableUi: '全UIで表示するshell操作' }, relatedHostId: 'settings.shell.clear-cache' },
 		{ stableId: 'settings.shell.logout', route: '/settings', sourceFile: 'settings-shell', sourceLine: 0, component: 'SettingsShellAction', label: '', labelExpression: '${i18n.ts.logout}', labelI18nKeys: ['i18n.ts.logout'], preferenceKeys: [], legacyMarkerAncestorIds: [], conditions: [], searchable: true, destructive: true, persistence: 'account', saveMode: 'immediate', availability: 'all', owner: 'hatasaba', applicableUi: 'all', metadataEvidence: { persistence: '現在のアカウントsessionを終了する既存shell操作', saveMode: '既存確認後に即時実行', availability: 'shell操作は端末幅を問わない', owner: 'settings shell', applicableUi: '全UIで表示するshell操作' }, relatedHostId: 'settings.shell.logout' },
@@ -344,7 +278,6 @@ export function getConfig(): UserConfig {
 			_VERSION_: JSON.stringify(meta.version),
 			_BASEDMISSKEYVERSION_: JSON.stringify(meta.basedMisskeyVersion),
 			_GIT_HASH_: JSON.stringify(gitHash),
-			'import.meta.env.HATAIGO_SOURCE_URL': JSON.stringify(hataigoSource),
 			_LANGS_: JSON.stringify(Object.entries(locales).map(([k, v]) => [k, v._lang_])),
 			_ENV_: JSON.stringify(process.env.NODE_ENV),
 			_DEV_: process.env.NODE_ENV !== 'production',

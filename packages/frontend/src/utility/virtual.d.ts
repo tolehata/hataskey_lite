@@ -16,23 +16,13 @@ type XGeneratedSearchIndexItem = {
 
 type XHataCustomCategoryV2 =
 	| 'general'
-	| 'font'
 	| 'glassUi'
-	| 'visual'
-	| 'hatask'
-	| 'hatady'
-	| 'mascot'
-	| 'earthquake'
-	| 'accessibility';
+	| 'visual';
 
 type XSettingsPopupIdV2 =
 	| 'hatasaba-ui2'
-	| 'earthquake'
 	| 'ui-setup'
-	| 'settings-transfer'
-	| 'hatask'
-	| 'hatady'
-	| 'mascot';
+	| 'settings-transfer';
 
 type XSettingsActivationStepV2 =
 	| { kind: 'category'; id: XHataCustomCategoryV2 }

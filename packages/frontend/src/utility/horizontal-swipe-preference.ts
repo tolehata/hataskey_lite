@@ -10,7 +10,7 @@ import { setTabSwipeEnabled, tabSwipeEnabled } from '@/utility/hatasaba-device-p
 /** UI changes reload the app; Hataskey's switch belongs to this device. */
 export const usesDeviceHorizontalSwipe = computed(() => {
 	const ui = miLocalStorage.getItem('ui') ?? 'simple';
-	return ui === 'simple' || ui === 'hataskey3';
+	return ui === 'simple';
 });
 
 /** Shared by page gestures and both settings entry points. */

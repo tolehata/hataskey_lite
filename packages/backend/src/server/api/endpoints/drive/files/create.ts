@@ -12,7 +12,6 @@ import { DriveFileEntityService } from '@/core/entities/DriveFileEntityService.j
 import { DriveService } from '@/core/DriveService.js';
 import { MiMeta } from '@/models/_.js';
 import { DI } from '@/di-symbols.js';
-import type { UserProfilesRepository } from '@/models/_.js';
 import { ApiError } from '../../../error.js';
 
 export const meta = {
@@ -40,12 +39,6 @@ export const meta = {
 	},
 
 	errors: {
-		drawingConsentRequired: {
-			message: 'Hatadint consent is required before saving a drawing to Drive or attaching it to a post.',
-			code: 'DRAWING_CONSENT_REQUIRED',
-			id: '5b94fcaa-95b7-4b97-a754-e4613332f42d',
-		},
-
 		invalidFileName: {
 			message: 'Invalid file name.',
 			code: 'INVALID_FILE_NAME',
@@ -87,7 +80,6 @@ export const paramDef = {
 		comment: { type: 'string', nullable: true, maxLength: DB_MAX_IMAGE_COMMENT_LENGTH, default: null },
 		isSensitive: { type: 'boolean', default: false },
 		force: { type: 'boolean', default: false },
-		source: { type: 'string', enum: ['hatadint'] },
 	},
 	required: [],
 } as const;
@@ -98,23 +90,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		@Inject(DI.meta)
 		private serverSettings: MiMeta,
 
-		@Inject(DI.userProfilesRepository)
-		private userProfilesRepository: UserProfilesRepository,
-
 		private driveFileEntityService: DriveFileEntityService,
 		private driveService: DriveService,
 	) {
 		super(meta, paramDef, async (ps, me, _1, _2, file, cleanup, ip, headers) => {
-			if (ps.source === 'hatadint') {
-				try {
-					const profile = await this.userProfilesRepository.findOneBy({ userId: me.id });
-					if (!profile?.hataConsentDrawing) throw new ApiError(meta.errors.drawingConsentRequired);
-				} catch (error) {
-					cleanup?.();
-					throw error;
-				}
-			}
-
 			// Get 'name' parameter
 			let name = ps.name ?? file!.name ?? null;
 			if (name != null) {

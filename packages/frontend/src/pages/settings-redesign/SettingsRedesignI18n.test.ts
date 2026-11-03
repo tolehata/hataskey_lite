@@ -76,14 +76,16 @@ describe('settings redesign translations', () => {
 		// ⚠️検索欄の例文（search.placeholder「お困りでしょうか？」）を足したので219へ。
 		// ⚠️削除済みのモバイル一覧だけが使っていた frequentlyUsedSettings / sessionAndLogin と
 		//   mobile の6件を外したので211へ。mobile.featureDescription はカテゴリ面が使うので残す。
-		expect(ja.size).toBe(211);
+		// 旗鯖fork(Lite): UI S の行き先を投稿フォームの枠色に置き換え、postFormBorderTitle/Description の2件を足して213。
+		// 旗鯖fork(Lite): 撤去した行き先(外部アカウント・HataFeed・タブレット用ツール・地震ビューア・UI S 等)の11件を外して202。
+		// 旗鯖fork(Lite): マスコットとフォント選択の行き先名(nav.mascotHatakyu / nav.font)の2件を外して200。
+		expect(ja.size).toBe(200);
 		assertSameLocaleShape(ja, en);
 		assertSameLocaleShape(ja, zh);
 		expect(ja.get('search.relatedHeading')).toBe('こちらをお探しですか？');
-		expect(ja.get('nav.hataToolsDescription')).toBe('Hatask・Hatady');
-		expect(ja.get('nav.hataFeedHataLyze')).toBe('HataFeed');
+		expect(ja.get('nav.hataToolsDescription')).toBe('マスコット・設定の書き出し');
 		expect(ja.get('nav.hataToolsDescription')).not.toContain('HATAlyze');
-		expect(ja.get('nav.hataFeedHataLyze')).not.toContain('HATAlyze');
+		expect(ja.get('nav.hataFeedHataLyze')).toBeUndefined();
 		expect(ja.get('legacySettings')).toBe('旧設定');
 		expect(ja.get('search.searchTrigger')).toBeUndefined();
 		expect(ja.get('searchTrigger')).toBe('お困りでしょうか？');
@@ -94,14 +96,12 @@ describe('settings redesign translations', () => {
 		expect(ja.get('ui2.preview.title')).toBe('Hataskey UI プレビュー');
 		expect(ja.get('mobile.featureDescription')).toBe('ナビ・透過率・吹き出し・デッキの表示をまとめて調整します');
 		expect(ja.get('mobile.connectionsAndData')).toBeUndefined();
-		expect(ja.get('nav.tabletTools')).toBe('独自ツール');
 		expect(ja.get('actions.logoutAll')).toBe('すべての端末からログアウト');
 		expect(ja.get('immediate.title')).toBe('すぐ反映される設定');
 		expect(ja.get('catalog.categories.hataskeyUi')).toBe('Hataskey UI');
-		expect(ja.get('immediate.uiSImmediate')).toBe('変更はすぐに保存・反映されます。');
 		expect(ja.get('catalog.fallback.hiddenReactions.label')).toBe('非表示リアクション');
 		expect(ja.get('catalog.fallback.hiddenReactions.description')).toBe('非表示にするリアクションの管理');
-		for (const key of ['driveCleaner', 'themeInstall', 'themeManage', 'statusbar', 'pluginInstall', 'apps', 'webhookEdit', 'webhookNew', 'customCss', 'accountStats', 'externalAccount', 'hataCustom', 'hiddenReactions']) {
+		for (const key of ['driveCleaner', 'themeInstall', 'themeManage', 'statusbar', 'pluginInstall', 'apps', 'webhookEdit', 'webhookNew', 'customCss', 'accountStats', 'hataCustom', 'hiddenReactions']) {
 			expect(ja.get(`catalog.fallback.${key}.label`), key).toBeTruthy();
 			expect(ja.get(`catalog.fallback.${key}.description`), key).toBeTruthy();
 		}

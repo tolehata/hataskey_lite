@@ -11,7 +11,6 @@ vi.mock('@/utility/unison-reload.js', () => ({ unisonReload: state.reload }));
 vi.mock('@/utility/idb-proxy.js', () => ({ clear: vi.fn() }));
 vi.mock('@/i.js', () => ({ $i: { id: 'owner', token: 'account-token' } }));
 vi.mock('@/preferences.js', () => ({ prefer: { commit: vi.fn() } }));
-vi.mock('@/utility/concrnt/runtime.js', () => ({ purgeConcrnt: state.purge, preserveConcrntPurgeMarkers: state.preserve }));
 beforeEach(() => {
 	vi.clearAllMocks();
 	globalThis.localStorage.clear();
@@ -50,39 +49,3 @@ test('signout proves ownership of the shared browser subscription before removin
 	expect(state.reload).toHaveBeenCalledWith('/');
 });
 
-test('Concrnt未使用でIDBが利用できなくても通常ログアウトを完了する', async () => {
-	state.purge.mockRejectedValue(new Error('IDB unavailable'));
-	vi.stubGlobal('indexedDB', undefined);
-	vi.stubGlobal('navigator', {});
-	globalThis.localStorage.setItem('account', 'login-data');
-	await signout();
-	expect(state.purge).toHaveBeenCalledOnce();
-	expect(globalThis.localStorage.getItem('account')).toBeNull();
-	expect(state.reload).toHaveBeenCalledWith('/');
-});
-
-test('Concrnt消去が停止しても5秒でログアウトし、消去未完了標識を保持する', async () => {
-	vi.useFakeTimers();
-	state.purge.mockReturnValue(new Promise(() => {}));
-	const marker = 'hataskey:concrnt:pending-purge:*';
-	globalThis.localStorage.setItem(marker, 'pending');
-	globalThis.localStorage.setItem('account', 'login-data');
-	state.preserve.mockImplementation(() => {
-		const value = globalThis.localStorage.getItem(marker)!;
-		return () => globalThis.localStorage.setItem(marker, value);
-	});
-	vi.stubGlobal('navigator', {});
-	vi.stubGlobal('indexedDB', { deleteDatabase: vi.fn(() => {
-		const request: { onsuccess?: () => void } = {};
-		Promise.resolve().then(() => request.onsuccess?.());
-		return request;
-	}) });
-	const result = signout();
-	await vi.advanceTimersByTimeAsync(4999);
-	expect(state.reload).not.toHaveBeenCalled();
-	await vi.advanceTimersByTimeAsync(1);
-	await result;
-	expect(state.reload).toHaveBeenCalledWith('/');
-	expect(globalThis.localStorage.getItem(marker)).toBe('pending');
-	expect(globalThis.localStorage.getItem('account')).toBeNull();
-});

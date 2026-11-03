@@ -14,12 +14,12 @@ export function genOpenapiSpec(config: Config, includeSelfRef = false) {
 
 		info: {
 			version: `${config.version} (${config.basedMisskeyVersion})`,
-			title: 'Hataskey API',
+			title: 'Hataskey Lite API',
 		},
 
 		externalDocs: {
 			description: 'Repository',
-			url: 'https://github.com/tolehata/hataskey',
+			url: 'https://github.com/tolehata/hataskey_lite',
 		},
 
 		servers: [{
@@ -98,7 +98,7 @@ export function genOpenapiSpec(config: Config, includeSelfRef = false) {
 			description: desc,
 			externalDocs: {
 				description: 'Source code',
-				url: `https://github.com/tolehata/hataskey/blob/master/packages/backend/src/server/api/endpoints/${endpoint.name}.ts`,
+				url: `https://github.com/tolehata/hataskey_lite/blob/master/packages/backend/src/server/api/endpoints/${endpoint.name}.ts`,
 			},
 			...(endpoint.meta.tags ? {
 				tags: [endpoint.meta.tags[0]],

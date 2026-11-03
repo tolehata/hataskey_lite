@@ -52,7 +52,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	:enterFromClass="prefer.s.animation ? $style.transition_widgetsDrawer_enterFrom : ''"
 	:leaveToClass="prefer.s.animation ? $style.transition_widgetsDrawer_leaveTo : ''"
 >
-	<div v-if="widgetsShowing" :class="$style.widgetsDrawer" data-widget-border="on" data-note-charm-exclusion>
+	<div v-if="widgetsShowing" :class="$style.widgetsDrawer" data-widget-border="on">
 		<button class="_button" :class="$style.widgetsCloseButton" @click="widgetsShowing = false"><i class="ti ti-x"></i></button>
 		<XWidgets/>
 	</div>
@@ -104,12 +104,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<button class="_textButton" style="pointer-events: all;" @click="exitSafeMode">{{ i18n.ts.turnItOff }}</button>
 </div>
 
-<!-- 旗鯖fork: 外部通知トースト (右下スライドイン、UI被らず) -->
-<XExternalNotificationToastContainer v-if="$i && !hataskeyToasts" />
-<XConcrntNotificationToasts v-if="$i && !hataskeyToasts" />
-
-<!-- 旗鯖fork: フローティングマスコット(段階C) -->
-<MkMascotFloating v-if="$i" />
 </template>
 
 <script lang="ts" setup>
@@ -133,15 +127,10 @@ import { globalEvents } from '@/events.js';
 import { store } from '@/store.js';
 import XNavbar from '@/ui/_common_/navbar.vue';
 import { haptic } from '@/utility/haptic.js';
-import { announceNotification, shouldSuppressStandardToast, loadMascot, loadDisplaySettings } from '@/utility/mascot-store.js';
 import { notificationToastsSuppressed, shouldSuppressNotificationToasts } from '@/utility/notification-toast-suppression.js';
 
 const XStreamIndicator = defineAsyncComponent(() => import('./stream-indicator.vue'));
 const XWidgets = defineAsyncComponent(() => import('./widgets.vue'));
-// 旗鯖fork: 外部通知トーストコンテナ (右下表示)
-const XExternalNotificationToastContainer = defineAsyncComponent(() => import('@/components/MkExternalNotificationToastContainer.vue'));
-const XConcrntNotificationToasts = defineAsyncComponent(() => import('@/components/concrnt/ConcrntNotificationToasts.vue'));
-const MkMascotFloating = defineAsyncComponent(() => import('@/components/MkMascotFloating.vue'));
 
 const props = withDefaults(defineProps<{ loadingIntegrated?: boolean }>(), { loadingIntegrated: false });
 
@@ -160,12 +149,8 @@ watch(notificationToastsSuppressed, (suppressed) => {
 });
 
 function onNotification(notification: Misskey.entities.Notification) {
-	// 旗鯖fork: マスコットに通知を伝える(設定ON時)
-	announceNotification(notification);
-
 	if (window.document.visibilityState === 'visible') {
-		// 旗鯖fork: マスコットが通知を伝える設定のときは標準トーストを出さない
-		if (!shouldSuppressStandardToast() && !shouldSuppressNotificationToasts()) {
+		if (!shouldSuppressNotificationToasts()) {
 			const toastContext = getNotificationPageContext() ?? hataskeyToasts;
 			if (toastContext) {
 				toastContext.enqueue(notification, 'local');
@@ -225,10 +210,6 @@ function exitSafeMode() {
 }
 
 if ($i) {
-	// 旗鯖fork: マスコットが通知を伝えられるよう、データと表示設定を先読みする
-	loadMascot();
-	loadDisplaySettings();
-
 	if (store.s.realtimeMode) {
 		const connection = useStream().useChannel('main');
 		connection.on('notification', onNotification);

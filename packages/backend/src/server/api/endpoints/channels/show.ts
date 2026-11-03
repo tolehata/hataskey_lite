@@ -7,7 +7,6 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import type { ChannelsRepository } from '@/models/_.js';
 import { ChannelEntityService } from '@/core/entities/ChannelEntityService.js';
-import { ChannelService } from '@/core/ChannelService.js';
 import { DI } from '@/di-symbols.js';
 import { ApiError } from '../../error.js';
 
@@ -46,7 +45,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private channelsRepository: ChannelsRepository,
 
 		private channelEntityService: ChannelEntityService,
-		private channelService: ChannelService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
 			const channel = await this.channelsRepository.findOneBy({
@@ -57,10 +55,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				throw new ApiError(meta.errors.noSuchChannel);
 			}
 
-			// 旗鯖fork: プライベートチャンネルは閲覧権限が無いとピン留めノート等の詳細(中身)を返さない。
-			//   基本情報(名前・あいことばの有無等)はあいことば入室UIのために返す。
-			const canView = await this.channelService.canView(channel, me?.id ?? null);
-			return await this.channelEntityService.pack(channel, me, canView);
+			return await this.channelEntityService.pack(channel, me, true);
 		});
 	}
 }

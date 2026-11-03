@@ -51,7 +51,7 @@ export class FeedService {
 
 		const profile = await this.userProfilesRepository.findOneByOrFail({ userId: user.id });
 
-		const candidates = await this.notesRepository.find({
+		const notes = await this.notesRepository.find({
 			where: {
 				userId: user.id,
 				renoteId: IsNull(),
@@ -62,17 +62,15 @@ export class FeedService {
 			take: 20,
 		}).then(notes => notes.filter(note => {
 			const createdAt = this.idService.parse(note.id).date;
-			return !note.channel?.isPrivate
-				&& !shouldHideNoteByTime(user.makeNotesHiddenBefore, createdAt)
+			return !shouldHideNoteByTime(user.makeNotesHiddenBefore, createdAt)
 				&& !shouldHideNoteByTime(user.makeNotesFollowersOnlyBefore, createdAt);
 		}));
-		const notes = await this.noteEntityService.filterChannelVisibleNotes(candidates, null);
 
 		const feed = new Feed({
 			id: author.link,
 			title: `${author.name} (@${user.username}@${this.config.host})`,
 			updated: notes.length !== 0 ? this.idService.parse(notes[0].id).date : undefined,
-			generator: 'CherryPick',
+			generator: 'Hataskey Lite',
 			description: `${user.notesCount} Notes, ${profile.followingVisibility === 'public' ? user.followingCount : '?'} Following, ${profile.followersVisibility === 'public' ? user.followersCount : '?'} Followers${profile.description ? ` · ${profile.description}` : ''}`,
 			link: author.link,
 			image: (user.avatarId == null ? null : user.avatarUrl) ?? this.userEntityService.getIdenticonUrl(user),

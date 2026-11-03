@@ -65,26 +65,8 @@ const moderatorLogInfoEnums: Readonly<Record<string, Readonly<Record<string, rea
 	voteRegistrationApplication: { choice: ['agree', 'oppose'] },
 };
 
-// Only these four new operations expose the required moderation audit text.
-// Other operations retain the existing ID-only policy, including their search.
-const recordLogTypes = ['deleteHatadyRecord', 'deleteHataskRecord', 'warnHatadyUser', 'warnHataskUser'];
-const recordLogFields: Readonly<Record<string, number>> = {
-	operationId: 32, product: 16, targetType: 32, targetId: 64, title: 300,
-	targetUserId: 32, targetUsername: 128, targetName: 300,
-	moderatorId: 32, moderatorUsername: 128, moderatorName: 300,
-	performedAt: 24, reason: 1000, warningId: 32,
-};
-
 export function projectModeratorLogInfo(type: string, info: unknown): Record<string, string> {
 	const projected: Record<string, string> = {};
-	if (recordLogTypes.includes(type)) {
-		if (info == null || typeof info !== 'object' || Array.isArray(info)) return projected;
-		for (const [field, max] of Object.entries(recordLogFields)) {
-			const value = Object.hasOwn(info, field) ? (info as Record<string, unknown>)[field] : null;
-			if (typeof value === 'string' && Array.from(value).length >= 1 && Array.from(value).length <= max) projected[field] = value;
-		}
-		return projected;
-	}
 	if (info == null || typeof info !== 'object' || Array.isArray(info) || !Object.hasOwn(moderatorLogInfoFields, type)) return projected;
 	for (const field of moderatorLogInfoFields[type]) {
 		if (!Object.hasOwn(info, field)) continue;
@@ -107,7 +89,7 @@ export function projectModeratorLogInfo(type: string, info: unknown): Record<str
 // SQL identifiers/fields come only from the static table above, never a request.
 // Do not replace the search expression with raw log.info: that leaks redacted
 // values through matches and page boundaries even when the response is redacted.
-export const moderatorLogInfoSql = `(CASE "log"."type" ${recordLogTypes.map(type => `WHEN '${type}' THEN jsonb_strip_nulls(jsonb_build_object(${Object.entries(recordLogFields).map(([field, max]) => `'${field}', CASE WHEN jsonb_typeof("log"."info"->'${field}')='string' AND char_length("log"."info"->>'${field}') BETWEEN 1 AND ${max} THEN "log"."info"->'${field}' ELSE NULL END`).join(', ')}))`).join(' ')} ${Object.entries(moderatorLogInfoFields).map(([type, fields]) => {
+export const moderatorLogInfoSql = `(CASE "log"."type" ${Object.entries(moderatorLogInfoFields).map(([type, fields]) => {
 	const values = fields.map(field => {
 		const value = `"log"."info"->>'${field}'`;
 		return `'${field}', CASE WHEN jsonb_typeof("log"."info"->'${field}') = 'string' AND char_length(${value}) BETWEEN 1 AND 32 AND ${value} !~ '[^a-zA-Z0-9]' THEN "log"."info"->'${field}' ELSE NULL END`;

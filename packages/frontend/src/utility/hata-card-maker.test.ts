@@ -49,13 +49,11 @@ describe('カードメーカー', () => {
 	test('内部ページとしてログイン済み情報とローカル依存だけを使う', () => {
 		const page = readFrontendFile('src/pages/hata-card-maker.vue');
 		const router = readFrontendFile('src/router.definition.ts');
-		const hatask = readFrontendFile('src/pages/hatask.vue');
 		expect(page).toContain('const $i = ensureSignin();');
 		expect(page).toContain('import QRCodeStyling from \'qr-code-styling\';');
 		expect(page).toContain('getProxiedImageUrl($i.avatarUrl, \'avatar\', true)');
 		expect(page).not.toMatch(/miauth|concrnt\/resolve|html2canvas|cdn\.jsdelivr|fonts\.googleapis/i);
 		expect(router).toMatch(/path: '\/hatask\/card-maker',[\s\S]*?loginRequired: true/);
-		expect(hatask).toContain('routeRouter.push(\'/hatask/card-maker\')');
 	});
 
 	test('非入力画面のキャレット残置を防ぎ、端末傾きと装飾コードを結線する', () => {
@@ -96,9 +94,6 @@ describe('カードメーカー', () => {
 		expect(page).not.toContain('>Hataskey</span>');
 		expect(page).toContain('font-family: \'HataRighteous\'');
 		expect(page).toContain('url(\'/client-assets/Righteous-Regular.woff2\')');
-		expect(page).toContain('<div v-show="!inHataGoes || privacyAcknowledged" :class="$style.workspace">');
-		expect(page).toContain('v-if="inHataGoes && !privacyAcknowledged"');
-		expect(page).toContain('if (inHataGoes && !privacyAcknowledged.value) return;');
 		expect(page).toContain(':class="$style.editor"');
 		expect(page).toContain(':class="$style.preview"');
 		expect(page).toContain('@click="resetTilt"');

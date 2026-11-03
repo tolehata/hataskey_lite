@@ -79,7 +79,7 @@ function assertFooterWordmark(templateSource: string, stylesSource: string): voi
 	template.innerHTML = parsed.descriptor.template.content;
 	const brand = template.content.querySelector('#join .join-ack-brand');
 	assert.ok(brand);
-	assert.equal(brand.textContent, 'Hataskey');
+	assert.equal(brand.textContent, 'Hataskey Lite');
 	assert.equal(brand.childElementCount, 1, 'footer brand must contain only the wordmark');
 	assert.equal(brand.firstElementChild?.tagName, 'SPAN');
 	assert.equal(brand.firstElementChild.childElementCount, 0, 'wordmark must not contain decorative elements');
@@ -98,8 +98,8 @@ function assertProjectDisclaimer(templateSource: string): void {
 	assert.equal(rights.length, 1, 'footer must contain one project-rights disclosure');
 	const notice = rights[0].querySelector(':scope > div > p:last-child');
 	assert.ok(notice, 'project-rights disclosure copy must exist');
-	assert.equal(notice.textContent, 'HataskeyはMisskey ProjectおよびCherryPick Projectの公式プロジェクトではなく、両プロジェクトとの提携・推薦を示すものではありません。');
-	assert.equal(notice.getAttribute('data-en'), 'Hataskey is not an official project of Misskey Project or CherryPick Project and is not affiliated with or endorsed by either project.');
+	assert.equal(notice.textContent, 'Hataskey LiteはMisskey ProjectおよびCherryPick Projectの公式プロジェクトではなく、両プロジェクトとの提携・推薦を示すものではありません。');
+	assert.equal(notice.getAttribute('data-en'), 'Hataskey Lite is not an official project of Misskey Project or CherryPick Project and is not affiliated with or endorsed by either project.');
 }
 
 type Point = { x: number; y: number };
@@ -161,7 +161,7 @@ function assertTrajectoryFits(points: Point[], height: number): void {
 }
 
 describe('welcome entrance JOIN mobile source contracts', () => {
-	test('最下部のロゴは装飾のないHataskey文字だけを中央揃えにする', () => {
+	test('最下部のロゴは装飾のないHataskey Lite文字だけを中央揃えにする', () => {
 		assertFooterWordmark(source, css);
 	});
 
@@ -282,7 +282,7 @@ describe('welcome entrance JOIN plane controller geometry', () => {
 		const fixture = planeFixture(44);
 		fixture.plane.style.transform = 'none';
 		fixture.path.setAttribute('d', 'M0,22 L360,22');
-		Object.defineProperty(fixture.controller, 'deckMotionQuery', { value: { matches: true } });
+		Object.defineProperty(fixture.controller, 'motionQuery', { value: { matches: true } });
 		fixture.tick(0.5);
 		expect(fixture.plane.style.transform).toBe('none');
 		expect(fixture.path.getAttribute('d')).toBe('M0,22 L360,22');

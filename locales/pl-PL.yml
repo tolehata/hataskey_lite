@@ -2,7 +2,7 @@
 _lang_: "Polski"
 headlineMisskey: "Sieć połączona wpisami"
 introMisskey: "CherryPick jest serwisem mikroblogowym typu open source.\nCherryPick to opensource'owy serwis mikroblogowy, w którym możesz tworzyć \"notatki\", aby dzielić się tym, co się dzieje i opowiadać wszystkim o sobie.\nMożesz również użyć funkcji \"Reakcje\", aby szybko dodać własne reakcje do notatek innych użytkowników👍.\nOdkrywaj nowy świat🚀!"
-poweredByMisskeyDescription: "{name} jest jedną z usług działającą na otwartoźródłowej platformie <b>Hataskey</b> (określana jako \"instancja Hataskey\")."
+poweredByMisskeyDescription: "{name} jest jedną z usług działającą na otwartoźródłowej platformie <b>Hataskey Lite</b> (określana jako \"instancja Hataskey\")."
 monthAndDay: "{month}-{day}"
 search: "Szukaj"
 notifications: "Powiadomienia"

@@ -4,11 +4,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-<div :class="[$style.root, { '_forceShrinkSpacer': deviceKind === 'smartphone' }]" :data-note-charm-lane="noteCharmShellAvailable ? 'on' : undefined" :style="{ '--note-charm-rail-width': `${CHARM_RAIL_WIDTH}px` }">
+<div :class="[$style.root, { '_forceShrinkSpacer': deviceKind === 'smartphone' }]">
 	<XTitlebar v-if="prefer.r.showTitlebar.value" style="flex-shrink: 0;"/>
 
 	<div :class="$style.nonTitlebarArea">
-		<XSidebar v-if="!isMobile" :collapsed="isHataGoesPage ? sidebarCollapsed : undefined" :class="$style.sidebar" :showWidgetButton="!isDesktop" @widgetButtonClick="widgetsShowing = true" @toggleCollapse="sidebarCollapsed = !sidebarCollapsed"/>
+		<XSidebar v-if="!isMobile" :class="$style.sidebar" :showWidgetButton="!isDesktop" @widgetButtonClick="widgetsShowing = true"/>
 
 		<div :class="[$style.contents, !isMobile && prefer.r.showTitlebar.value ? $style.withSidebarAndTitlebar : null]" @contextmenu.stop="onContextmenu">
 			<div>
@@ -19,12 +19,12 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</div>
 			<StackingRouterView v-if="prefer.s['experimental.stackingRouterView']" :class="$style.content"/>
 			<RouterView v-else :class="$style.content"/>
-			<XMobileFooterMenu v-if="isMobile && mainRouter.currentRoute.value.path !== '/hatagoes'" ref="navFooter" v-model:drawerMenuShowing="drawerMenuShowing" v-model:widgetsShowing="widgetsShowing"/>
+			<XMobileFooterMenu v-if="isMobile" ref="navFooter" v-model:drawerMenuShowing="drawerMenuShowing" v-model:widgetsShowing="widgetsShowing"/>
 		</div>
 
-		<div v-if="isDesktop && !pageMetadata?.needWideArea && prefer.s.enableWidgetsArea" data-note-charm-exclusion :class="$style.widgets" :data-collapsed="rightWidgetsCollapsed" :data-motion="prefer.r.animation.value" :data-widget-border="prefer.r['simpleUi.widgetBorder']?.value ? 'on' : 'off'">
+		<div v-if="isDesktop && !pageMetadata?.needWideArea && prefer.s.enableWidgetsArea" :class="$style.widgets" :data-collapsed="rightWidgetsCollapsed" :data-motion="prefer.r.animation.value" :data-widget-border="prefer.r['simpleUi.widgetBorder']?.value ? 'on' : 'off'">
 			<div :class="$style.widgetsInner">
-				<XWidgets collapsible :collapsed="rightWidgetsCollapsed" @toggleCollapse="rightWidgetsCollapsed = !rightWidgetsCollapsed"/>
+				<XWidgets collapsible :collapsed="rightWidgetsCollapsed" @toggleCollapse="setRightWidgetsCollapsed(!rightWidgetsCollapsed)"/>
 			</div>
 		</div>
 
@@ -38,7 +38,6 @@ import { defineAsyncComponent, provide, onMounted, computed, ref, onUnmounted } 
 import { instanceName } from '@@/js/config.js';
 import { isLink } from '@@/js/is-link.js';
 import XCommon from './_common_/common.vue';
-import { showLoginBonusIfNeeded } from './_common_/common.js';
 import type { PageMetadata } from '@/page.js';
 import XMobileFooterMenu from '@/ui/_common_/mobile-footer-menu.vue';
 import XPreferenceRestore from '@/ui/_common_/PreferenceRestore.vue';
@@ -55,22 +54,14 @@ import { mainRouter } from '@/router.js';
 import { prefer } from '@/preferences.js';
 import { shouldSuggestRestoreBackup } from '@/preferences/utility.js';
 import { DI } from '@/di.js';
-import { concrntPagePostContextKey } from '@/utility/concrnt/post-interceptor.js';
 import { shouldSuggestReload } from '@/utility/reload-suggest.js';
-import { rightWidgetsCollapsed as savedRightWidgetsCollapsed, setRightWidgetsCollapsed } from '@/utility/hatasaba-device-prefs.js';
-import { useHatagoesBarCollapse } from '@/utility/hatagoes-bar-collapse.js';
-import { useNoteCharmAvailability } from '@/composables/use-note-charm-context.js';
-import { CHARM_RAIL_WIDTH } from '@/utility/note-charm-physics.js';
+import { rightWidgetsCollapsed, setRightWidgetsCollapsed } from '@/utility/hatasaba-device-prefs.js';
 
 const XWidgets = defineAsyncComponent(() => import('./_common_/widgets.vue'));
 const XStatusBars = defineAsyncComponent(() => import('@/ui/_common_/statusbars.vue'));
 const XAnnouncements = defineAsyncComponent(() => import('@/ui/_common_/announcements.vue'));
 
 const isRoot = computed(() => mainRouter.currentRoute.value.name === 'index');
-const isHataGoesPage = computed(() => mainRouter.currentRoute.value.path === '/hatagoes');
-const sidebarCollapsed = useHatagoesBarCollapse(isHataGoesPage, () => false);
-const rightWidgetsCollapsed = useHatagoesBarCollapse(isHataGoesPage, () => savedRightWidgetsCollapsed.value, setRightWidgetsCollapsed);
-const noteCharmShellAvailable = useNoteCharmAvailability();
 
 const DESKTOP_THRESHOLD = 1100;
 const MOBILE_THRESHOLD = 500;
@@ -88,7 +79,6 @@ const pageMetadata = ref<null | PageMetadata>(null);
 const widgetsShowing = ref(false);
 
 provide(DI.router, mainRouter);
-provide(concrntPagePostContextKey, () => true);
 provideMetadataReceiver((metadataGetter) => {
 	const info = metadataGetter();
 	pageMetadata.value = info;
@@ -116,11 +106,6 @@ if (window.innerWidth > 1024) {
 		window.location.reload();
 	}
 }
-
-onMounted(() => {
-	// ログインボーナスダイアログを表示（設定を尊重）
-	showLoginBonusIfNeeded();
-});
 
 onMounted(() => {
 	if (!isDesktop.value) {
@@ -193,11 +178,6 @@ $widgets-hide-threshold: 1090px;
 .content {
 	flex: 1;
 	min-height: 0;
-}
-
-// Keep a stable outside lane even when the widget column is collapsed or absent.
-.root[data-note-charm-lane='on'] > .nonTitlebarArea > .contents {
-	margin-right: var(--note-charm-rail-width);
 }
 
 .statusbars {

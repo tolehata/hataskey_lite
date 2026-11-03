@@ -22,8 +22,6 @@ import {
 	MiChannel,
 	MiChannelFavorite,
 	MiChannelFollowing,
-	MiChannelMember,
-	MiChannelInvitation,
 	MiClip,
 	MiClipFavorite,
 	MiClipNote,
@@ -63,8 +61,6 @@ import {
 	miRepository,
 	MiRetentionAggregation,
 	MiReversiGame,
-	MiHataigoGame,
-	MiHataigoChatMessage,
 	MiRole,
 	MiRoleAssignment,
 	MiSignin,
@@ -96,38 +92,6 @@ import {
 } from './_.js';
 import { NoteHistory } from './NoteHistory.js';
 import { MiRegistrationApplication } from './RegistrationApplication.js';
-import { MiHataskEvent } from './HataskEvent.js';
-import { MiHataskRsvp } from './HataskRsvp.js';
-import { MiHataskFlower } from './HataskFlower.js';
-import { MiHataskRecipe } from './HataskRecipe.js';
-import { MiHataskCookingRecord } from './HataskCookingRecord.js';
-import { MiUtageSession } from './UtageSession.js';
-import { MiFeedbackIssue } from './FeedbackIssue.js';
-import { MiFeedbackAgree } from './FeedbackAgree.js';
-import { MiFeedbackComment } from './FeedbackComment.js';
-import { MiFeedbackCommentReaction } from './FeedbackCommentReaction.js';
-import { MiEarthquakeNotification } from './EarthquakeNotification.js';
-import { MiHatadyBook } from './HatadyBook.js';
-import { MiHatadyLog } from './HatadyLog.js';
-import { MiHatadyComment } from './HatadyComment.js';
-import { MiHatadyReaction } from './HatadyReaction.js';
-import { MiHatadyNotification } from './HatadyNotification.js';
-import { MiHatadyFollowing } from './HatadyFollowing.js';
-import { MiHatadyUserProfile } from './HatadyUserProfile.js';
-import { MiHatadyBookmark } from './HatadyBookmark.js';
-import { MiHatadyBookMemo } from './HatadyBookMemo.js';
-import { MiHatadySubject } from './HatadySubject.js';
-import { MiHatadyGoal } from './HatadyGoal.js';
-import { MiHatadyMediaWork } from './HatadyMediaWork.js';
-import { MiHatadyMediaSession } from './HatadyMediaSession.js';
-import { MiHatadyMediaComment } from './HatadyMediaComment.js';
-import { MiHatadyMediaReaction } from './HatadyMediaReaction.js';
-import { MiHataskEmotionAnalysis } from './HataskEmotionAnalysis.js';
-import { MiFeedbackIssueModerator } from './FeedbackIssueModerator.js';
-import { MiFeedbackEmojiRequest } from './FeedbackEmojiRequest.js';
-import { MiFeedbackEmojiChangeRequest } from './FeedbackEmojiChangeRequest.js';
-import { MiFeedbackNotification } from './FeedbackNotification.js';
-import { MiFeedbackProject } from './FeedbackProject.js';
 import type { Provider } from '@nestjs/common';
 import type { DataSource } from 'typeorm';
 
@@ -497,18 +461,6 @@ const $channelFollowingsRepository: Provider = {
 	inject: [DI.db],
 };
 
-const $channelMembersRepository: Provider = {
-	provide: DI.channelMembersRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiChannelMember).extend(miRepository as MiRepository<MiChannelMember>),
-	inject: [DI.db],
-};
-
-const $channelInvitationsRepository: Provider = {
-	provide: DI.channelInvitationsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiChannelInvitation).extend(miRepository as MiRepository<MiChannelInvitation>),
-	inject: [DI.db],
-};
-
 const $channelFavoritesRepository: Provider = {
 	provide: DI.channelFavoritesRepository,
 	useFactory: (db: DataSource) => db.getRepository(MiChannelFavorite).extend(miRepository as MiRepository<MiChannelFavorite>),
@@ -623,18 +575,6 @@ const $reversiGamesRepository: Provider = {
 	inject: [DI.db],
 };
 
-const $hataigoChatMessagesRepository: Provider = {
-	provide: DI.hataigoChatMessagesRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHataigoChatMessage).extend(miRepository as MiRepository<MiHataigoChatMessage>),
-	inject: [DI.db],
-};
-
-const $hataigoGamesRepository: Provider = {
-	provide: DI.hataigoGamesRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHataigoGame).extend(miRepository as MiRepository<MiHataigoGame>),
-	inject: [DI.db],
-};
-
 const $abuseReportResolversRepository: Provider = {
 	provide: DI.abuseReportResolversRepository,
 	useFactory: (db: DataSource) => db.getRepository(MiAbuseReportResolver).extend(miRepository as MiRepository<MiAbuseReportResolver>),
@@ -650,198 +590,6 @@ const $noteHistoryRepository: Provider = {
 const $registrationApplicationsRepository: Provider = {
 	provide: DI.registrationApplicationsRepository,
 	useFactory: (db: DataSource) => db.getRepository(MiRegistrationApplication).extend(miRepository as MiRepository<MiRegistrationApplication>),
-	inject: [DI.db],
-};
-
-const $hataskRecipesRepository: Provider = {
-	provide: DI.hataskRecipesRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHataskRecipe).extend(miRepository as MiRepository<MiHataskRecipe>),
-	inject: [DI.db],
-};
-
-const $hataskCookingRecordsRepository: Provider = {
-	provide: DI.hataskCookingRecordsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHataskCookingRecord).extend(miRepository as MiRepository<MiHataskCookingRecord>),
-	inject: [DI.db],
-};
-
-const $hataskEventsRepository: Provider = {
-	provide: DI.hataskEventsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHataskEvent).extend(miRepository as MiRepository<MiHataskEvent>),
-	inject: [DI.db],
-};
-
-const $hataskRsvpsRepository: Provider = {
-	provide: DI.hataskRsvpsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHataskRsvp).extend(miRepository as MiRepository<MiHataskRsvp>),
-	inject: [DI.db],
-};
-
-const $hataskFlowersRepository: Provider = {
-	provide: DI.hataskFlowersRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHataskFlower).extend(miRepository as MiRepository<MiHataskFlower>),
-	inject: [DI.db],
-};
-
-const $utageSessionsRepository: Provider = {
-	provide: DI.utageSessionsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiUtageSession).extend(miRepository as MiRepository<MiUtageSession>),
-	inject: [DI.db],
-};
-
-const $feedbackIssuesRepository: Provider = {
-	provide: DI.feedbackIssuesRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiFeedbackIssue).extend(miRepository as MiRepository<MiFeedbackIssue>),
-	inject: [DI.db],
-};
-
-const $feedbackAgreesRepository: Provider = {
-	provide: DI.feedbackAgreesRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiFeedbackAgree).extend(miRepository as MiRepository<MiFeedbackAgree>),
-	inject: [DI.db],
-};
-
-const $earthquakeNotificationsRepository: Provider = {
-	provide: DI.earthquakeNotificationsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiEarthquakeNotification).extend(miRepository as MiRepository<MiEarthquakeNotification>),
-	inject: [DI.db],
-};
-
-const $hatadyBooksRepository: Provider = {
-	provide: DI.hatadyBooksRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHatadyBook).extend(miRepository as MiRepository<MiHatadyBook>),
-	inject: [DI.db],
-};
-
-const $hatadyLogsRepository: Provider = {
-	provide: DI.hatadyLogsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHatadyLog).extend(miRepository as MiRepository<MiHatadyLog>),
-	inject: [DI.db],
-};
-
-const $hatadyCommentsRepository: Provider = {
-	provide: DI.hatadyCommentsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHatadyComment).extend(miRepository as MiRepository<MiHatadyComment>),
-	inject: [DI.db],
-};
-
-const $hatadyReactionsRepository: Provider = {
-	provide: DI.hatadyReactionsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHatadyReaction).extend(miRepository as MiRepository<MiHatadyReaction>),
-	inject: [DI.db],
-};
-
-const $hatadyNotificationsRepository: Provider = {
-	provide: DI.hatadyNotificationsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHatadyNotification).extend(miRepository as MiRepository<MiHatadyNotification>),
-	inject: [DI.db],
-};
-
-const $hatadyFollowingsRepository: Provider = {
-	provide: DI.hatadyFollowingsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHatadyFollowing).extend(miRepository as MiRepository<MiHatadyFollowing>),
-	inject: [DI.db],
-};
-
-const $hatadyUserProfilesRepository: Provider = {
-	provide: DI.hatadyUserProfilesRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHatadyUserProfile).extend(miRepository as MiRepository<MiHatadyUserProfile>),
-	inject: [DI.db],
-};
-
-const $hatadyBookmarksRepository: Provider = {
-	provide: DI.hatadyBookmarksRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHatadyBookmark).extend(miRepository as MiRepository<MiHatadyBookmark>),
-	inject: [DI.db],
-};
-
-const $hatadyBookMemosRepository: Provider = {
-	provide: DI.hatadyBookMemosRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHatadyBookMemo).extend(miRepository as MiRepository<MiHatadyBookMemo>),
-	inject: [DI.db],
-};
-
-const $hatadySubjectsRepository: Provider = {
-	provide: DI.hatadySubjectsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHatadySubject).extend(miRepository as MiRepository<MiHatadySubject>),
-	inject: [DI.db],
-};
-
-const $hatadyGoalsRepository: Provider = {
-	provide: DI.hatadyGoalsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHatadyGoal).extend(miRepository as MiRepository<MiHatadyGoal>),
-	inject: [DI.db],
-};
-
-const $hatadyMediaWorksRepository: Provider = {
-	provide: DI.hatadyMediaWorksRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHatadyMediaWork).extend(miRepository as MiRepository<MiHatadyMediaWork>),
-	inject: [DI.db],
-};
-
-const $hatadyMediaSessionsRepository: Provider = {
-	provide: DI.hatadyMediaSessionsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHatadyMediaSession).extend(miRepository as MiRepository<MiHatadyMediaSession>),
-	inject: [DI.db],
-};
-
-const $hatadyMediaCommentsRepository: Provider = {
-	provide: DI.hatadyMediaCommentsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHatadyMediaComment).extend(miRepository as MiRepository<MiHatadyMediaComment>),
-	inject: [DI.db],
-};
-
-const $hatadyMediaReactionsRepository: Provider = {
-	provide: DI.hatadyMediaReactionsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHatadyMediaReaction).extend(miRepository as MiRepository<MiHatadyMediaReaction>),
-	inject: [DI.db],
-};
-
-const $hataskEmotionAnalysesRepository: Provider = {
-	provide: DI.hataskEmotionAnalysesRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiHataskEmotionAnalysis).extend(miRepository as MiRepository<MiHataskEmotionAnalysis>),
-	inject: [DI.db],
-};
-
-const $feedbackCommentsRepository: Provider = {
-	provide: DI.feedbackCommentsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiFeedbackComment).extend(miRepository as MiRepository<MiFeedbackComment>),
-	inject: [DI.db],
-};
-
-const $feedbackCommentReactionsRepository: Provider = {
-	provide: DI.feedbackCommentReactionsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiFeedbackCommentReaction).extend(miRepository as MiRepository<MiFeedbackCommentReaction>),
-	inject: [DI.db],
-};
-
-const $feedbackIssueModeratorsRepository: Provider = {
-	provide: DI.feedbackIssueModeratorsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiFeedbackIssueModerator).extend(miRepository as MiRepository<MiFeedbackIssueModerator>),
-	inject: [DI.db],
-};
-
-const $feedbackEmojiRequestsRepository: Provider = {
-	provide: DI.feedbackEmojiRequestsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiFeedbackEmojiRequest).extend(miRepository as MiRepository<MiFeedbackEmojiRequest>),
-	inject: [DI.db],
-};
-
-const $feedbackEmojiChangeRequestsRepository: Provider = {
-	provide: DI.feedbackEmojiChangeRequestsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiFeedbackEmojiChangeRequest).extend(miRepository as MiRepository<MiFeedbackEmojiChangeRequest>),
-	inject: [DI.db],
-};
-
-const $feedbackNotificationsRepository: Provider = {
-	provide: DI.feedbackNotificationsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiFeedbackNotification).extend(miRepository as MiRepository<MiFeedbackNotification>),
-	inject: [DI.db],
-};
-
-const $feedbackProjectsRepository: Provider = {
-	provide: DI.feedbackProjectsRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiFeedbackProject).extend(miRepository as MiRepository<MiFeedbackProject>),
 	inject: [DI.db],
 };
 
@@ -909,8 +657,6 @@ const $feedbackProjectsRepository: Provider = {
 		$relaysRepository,
 		$channelsRepository,
 		$channelFollowingsRepository,
-		$channelMembersRepository,
-		$channelInvitationsRepository,
 		$channelFavoritesRepository,
 		$registryItemsRepository,
 		$webhooksRepository,
@@ -930,43 +676,9 @@ const $feedbackProjectsRepository: Provider = {
 		$chatApprovalsRepository,
 		$bubbleGameRecordsRepository,
 		$reversiGamesRepository,
-		$hataigoGamesRepository,
-		$hataigoChatMessagesRepository,
 		$abuseReportResolversRepository,
 		$noteHistoryRepository,
 		$registrationApplicationsRepository,
-		$hataskEventsRepository,
-		$hataskRsvpsRepository,
-		$hataskFlowersRepository,
-		$hataskRecipesRepository,
-		$hataskCookingRecordsRepository,
-		$utageSessionsRepository,
-		$feedbackIssuesRepository,
-		$feedbackAgreesRepository,
-		$earthquakeNotificationsRepository,
-		$hatadyBooksRepository,
-		$hatadyLogsRepository,
-		$hatadyCommentsRepository,
-		$hatadyReactionsRepository,
-		$hatadyNotificationsRepository,
-		$hatadyFollowingsRepository,
-		$hatadyUserProfilesRepository,
-		$hatadyBookmarksRepository,
-		$hatadyBookMemosRepository,
-		$hatadySubjectsRepository,
-		$hatadyGoalsRepository,
-		$hatadyMediaWorksRepository,
-		$hatadyMediaSessionsRepository,
-		$hatadyMediaCommentsRepository,
-		$hatadyMediaReactionsRepository,
-		$hataskEmotionAnalysesRepository,
-		$feedbackCommentsRepository,
-		$feedbackCommentReactionsRepository,
-		$feedbackIssueModeratorsRepository,
-		$feedbackEmojiRequestsRepository,
-		$feedbackEmojiChangeRequestsRepository,
-		$feedbackNotificationsRepository,
-		$feedbackProjectsRepository,
 	],
 	exports: [
 		$usersRepository,
@@ -1030,8 +742,6 @@ const $feedbackProjectsRepository: Provider = {
 		$relaysRepository,
 		$channelsRepository,
 		$channelFollowingsRepository,
-		$channelMembersRepository,
-		$channelInvitationsRepository,
 		$channelFavoritesRepository,
 		$registryItemsRepository,
 		$webhooksRepository,
@@ -1051,43 +761,9 @@ const $feedbackProjectsRepository: Provider = {
 		$chatApprovalsRepository,
 		$bubbleGameRecordsRepository,
 		$reversiGamesRepository,
-		$hataigoGamesRepository,
-		$hataigoChatMessagesRepository,
 		$abuseReportResolversRepository,
 		$noteHistoryRepository,
 		$registrationApplicationsRepository,
-		$hataskEventsRepository,
-		$hataskRsvpsRepository,
-		$hataskFlowersRepository,
-		$hataskRecipesRepository,
-		$hataskCookingRecordsRepository,
-		$utageSessionsRepository,
-		$feedbackIssuesRepository,
-		$feedbackAgreesRepository,
-		$earthquakeNotificationsRepository,
-		$hatadyBooksRepository,
-		$hatadyLogsRepository,
-		$hatadyCommentsRepository,
-		$hatadyReactionsRepository,
-		$hatadyNotificationsRepository,
-		$hatadyFollowingsRepository,
-		$hatadyUserProfilesRepository,
-		$hatadyBookmarksRepository,
-		$hatadyBookMemosRepository,
-		$hatadySubjectsRepository,
-		$hatadyGoalsRepository,
-		$hatadyMediaWorksRepository,
-		$hatadyMediaSessionsRepository,
-		$hatadyMediaCommentsRepository,
-		$hatadyMediaReactionsRepository,
-		$hataskEmotionAnalysesRepository,
-		$feedbackCommentsRepository,
-		$feedbackCommentReactionsRepository,
-		$feedbackIssueModeratorsRepository,
-		$feedbackEmojiRequestsRepository,
-		$feedbackEmojiChangeRequestsRepository,
-		$feedbackNotificationsRepository,
-		$feedbackProjectsRepository,
 	],
 })
 export class RepositoryModule {

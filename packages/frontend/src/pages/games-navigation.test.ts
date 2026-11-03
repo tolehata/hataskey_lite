@@ -37,10 +37,4 @@ describe('Hataskey Games の戻る導線', () => {
 		}
 	});
 
-	test('HataGoes 内では対象外のバブルとリバーシだけを隠す', () => {
-		expect(gamesSource).toContain("inject(HATA_GOES_HOST, null) != null");
-		for (const route of ['/bubble-game', '/reversi']) {
-			expect(gamesSource).toMatch(new RegExp(`<div v-if="!inHataGoes" class="_panel" :class="\\$style.link">\\s*<MkA to="${route}"`));
-		}
-	});
 });

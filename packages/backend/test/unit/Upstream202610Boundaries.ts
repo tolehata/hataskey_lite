@@ -80,15 +80,15 @@ describe('push endpoint and shared browser subscription', () => {
 		const repository = { findOneBy: vi.fn(), insert: vi.fn() };
 		const api = new RegisterEndpoint({} as never, repository as never, {} as never, f.service);
 		await expect(api.exec({ ...keys, endpoint }, { id: 'owner' } as never, null, null)).rejects.toMatchObject({ code: 'INVALID_ENDPOINT' });
-		await f.service.pushNotification('owner', 'hatadyNotification', { id: 'source', notificationType: 'comment' });
+		await f.service.pushNotification('owner', 'notification', { id: 'source', type: 'follow' });
 		expect(repository.findOneBy).not.toHaveBeenCalled();
 		expect(webPush.sendNotification).not.toHaveBeenCalled();
 	});
 
-	test('delivery uses the checked HTTPS agent and preserves the private Hatady payload', async () => {
+	test('delivery uses the checked HTTPS agent and preserves the notification payload', async () => {
 		const f = setup();
-		const body = { id: 'source', notificationType: 'comment' };
-		await f.service.pushNotification('owner', 'hatadyNotification', body);
+		const body = { id: 'source', type: 'follow' };
+		await f.service.pushNotification('owner', 'notification', body);
 		expect(f.service.httpRequestService.getAgentForHttps).toHaveBeenCalledWith(new URL(keys.endpoint));
 		expect(webPush.sendNotification).toHaveBeenCalledWith(expect.anything(), expect.any(String), { agent: f.agent });
 		const payload = JSON.parse((webPush.sendNotification.mock.calls as unknown[][])[0][1] as string);
@@ -104,7 +104,7 @@ describe('push endpoint and shared browser subscription', () => {
 	test('410 only removes the expired account/key tuple and refreshes its cache', async () => {
 		const f = setup();
 		webPush.sendNotification.mockRejectedValueOnce({ statusCode: 410 });
-		await f.service.pushNotification('owner', 'hatadyNotification', { id: 'source', notificationType: 'comment' });
+		await f.service.pushNotification('owner', 'notification', { id: 'source', type: 'follow' });
 		await Promise.resolve();
 		expect(f.repository.delete).toHaveBeenCalledWith({ ...keys, userId: 'owner' });
 		expect(f.service.subscriptionsCache.refresh).toHaveBeenCalledWith('owner');

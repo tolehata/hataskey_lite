@@ -108,8 +108,6 @@ import XMentionsColumn from '@/ui/deck/mentions-column.vue';
 import XDirectColumn from '@/ui/deck/direct-column.vue';
 import XRoleTimelineColumn from '@/ui/deck/role-timeline-column.vue';
 import XChatColumn from '@/ui/deck/chat-column.vue';
-import XEarthquakeColumn from '@/ui/deck/earthquake-column.vue';
-import XExternalNotificationsColumn from '@/ui/deck/external-notifications-column.vue';
 import { mainRouter } from '@/router.js';
 import { columns, layout, columnTypes, switchProfileMenu, addColumn as addColumnToStore, deleteProfile as deleteProfile_ } from '@/deck.js';
 import { shouldSuggestRestoreBackup } from '@/preferences/utility.js';
@@ -132,16 +130,9 @@ const columnComponents = {
 	direct: XDirectColumn,
 	roleTimeline: XRoleTimelineColumn,
 	chat: XChatColumn,
-	earthquake: XEarthquakeColumn,
-	externalNotifications: XExternalNotificationsColumn,
 };
 
 mainRouter.navHook = (path, flag): boolean => {
-	// 旗鯖fork(Hatady): デッキUIでも常に全画面で開く(ウィンドウ表示にせず最大化ウィンドウ)。
-	if (path === '/hatady' || path.startsWith('/hatady/')) {
-		os.pageWindow(path, { fullscreen: true });
-		return true;
-	}
 	if (flag === 'forcePage') return false;
 	const noMainColumn = !columns.value.some(x => x.type === 'main');
 	if (prefer.s['deck.navWindow'] || noMainColumn) {

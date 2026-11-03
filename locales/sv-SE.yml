@@ -2,7 +2,7 @@
 _lang_: "Svenska"
 headlineMisskey: "Ett nätverk kopplat av noter"
 introMisskey: "Välkommen! CherryPick är en öppen och decentraliserad mikrobloggningstjänst.\nSkapa en \"not\" och dela dina tankar med alla runtomkring dig. 📡\nMed \"reaktioner\" kan du snabbt uttrycka dina känslor kring andras noter. 👍\nLåt oss utforska en ny värld! 🚀"
-poweredByMisskeyDescription: "{name} är en tjänst driven av den öppna källkodsplatformen <b>Hataskey</b> (benämns \"Hataskey instans\")."
+poweredByMisskeyDescription: "{name} är en tjänst driven av den öppna källkodsplatformen <b>Hataskey Lite</b> (benämns \"Hataskey instans\")."
 monthAndDay: "{day}/{month}"
 search: "Sök"
 notifications: "Notifikationer"

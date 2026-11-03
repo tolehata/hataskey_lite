@@ -74,55 +74,6 @@ beforeEach(() => {
 });
 afterEach(() => { app?.unmount(); app = null; host?.remove(); vi.unstubAllGlobals(); vi.useRealTimers(); forgetNotificationUnreadState('owner-a'); });
 
-test.each(['all', 'hatask'])('reward history and live events stay visible and can be read in %s when optional types are disabled', async brand => {
-	vi.useFakeTimers();
-	fixture.account = { id: 'owner-a', hasUnreadNotification: true, unreadNotificationsCount: 1 };
-	const reward = { ...item('reward', 'earned'), type: 'hataskDecorationUnlocked' };
-	fixture.api.mockImplementation((endpoint: string) => endpoint === 'i/notifications'
-		? Promise.resolve([reward, item('ordinary', 'hidden')])
-		: endpoint === 'notifications/unread-count'
-			? Promise.resolve({ unreadNotificationsCount: 0, revision: '1' })
-			: Promise.resolve());
-	mount({ brand, includeBrands: ['hatask'], excludeTypes: ['hataskDecorationUnlocked', 'app'], excludeBots: true });
-	await settle();
-	expect(title()).toBe('earned');
-	expect(host.querySelectorAll('article')).toHaveLength(1);
-	const row = [...fixture.observed].find(element => element.getAttribute('data-notification-ids') === '["reward"]');
-	if (!row || !fixture.intersection) throw new Error('Reward must be observed for individual reads');
-	fixture.intersection([{ target: row, isIntersecting: true } as IntersectionObserverEntry], {} as IntersectionObserver);
-	vi.advanceTimersByTime(80); await settle();
-	expect(fixture.api).toHaveBeenCalledWith('notifications/mark-as-read', { notificationIds: ['reward'] });
-	expect(fixture.account).toMatchObject({ hasUnreadNotification: false, unreadNotificationsCount: 0 });
-	const onNotification = fixture.events.get('notification');
-	if (!onNotification) throw new Error('Notification stream must be subscribed');
-	onNotification({ ...reward, id: 'next-reward', title: 'earned next' });
-	onNotification(item('next-ordinary', 'still hidden'));
-	await settle();
-	expect([...host.querySelectorAll('article')].map(element => element.getAttribute('data-title'))).toEqual(['earned next', 'earned']);
-});
-
-test.each([
-	{ brand: 'standard' }, { brand: 'hatady' }, { brand: 'hataFeed' },
-	{ brand: 'all', includeBrands: ['standard'] }, { brand: 'all', includeBrands: ['hatady'] },
-	{ brand: 'all', includeBrands: ['hataFeed'] }, { brand: 'all', includeBrands: [] },
-])('reward history and live events stay out of an unrelated brand selection: %j', async filters => {
-	vi.useFakeTimers();
-	fixture.account = { id: 'owner-a', hasUnreadNotification: true, unreadNotificationsCount: 1 };
-	const reward = { ...item('reward', 'earned'), type: 'hataskDecorationUnlocked' };
-	fixture.api.mockResolvedValue([reward]);
-	mount(filters); await settle();
-	expect(host.querySelectorAll('article')).toHaveLength(0);
-	const onNotification = fixture.events.get('notification');
-	if (!onNotification) throw new Error('Notification stream must be subscribed');
-	onNotification({ ...reward, id: 'next-reward', title: 'earned next' });
-	await settle();
-	expect(host.querySelectorAll('article')).toHaveLength(0);
-	expect([...fixture.observed].some(element => element.hasAttribute('data-notification-ids'))).toBe(false);
-	vi.advanceTimersByTime(80); await settle();
-	expect(fixture.api.mock.calls.some(([endpoint]) => endpoint === 'notifications/mark-as-read')).toBe(false);
-	expect(fixture.account).toMatchObject({ hasUnreadNotification: true, unreadNotificationsCount: 1 });
-});
-
 test('a visible read reconciles the badge without a stream event while realtime is disabled', async () => {
 	vi.useFakeTimers();
 	fixture.realtimeMode = false;

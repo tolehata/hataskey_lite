@@ -18,8 +18,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 >
 	<template #header>
 		<template v-if="pageMetadata">
-			<HataAppLogo v-if="pageMetadata.hataApp" :app="pageMetadata.hataApp" :size="20" :monochrome="store.r.darkMode.value" style="margin-right: 0.5em;"/><i v-else-if="pageMetadata.icon" :class="pageMetadata.icon" style="margin-right: 0.5em;"></i>
-			<HataAppWordmark v-if="isExactHataAppTitle(pageMetadata)" :app="pageMetadata.hataApp!" inheritColor/><span v-else>{{ pageMetadata.title }}</span>
+			<i v-if="pageMetadata.icon" :class="pageMetadata.icon" style="margin-right: 0.5em;"></i>
+			<span>{{ pageMetadata.title }}</span>
 		</template>
 	</template>
 
@@ -34,10 +34,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { computed, onMounted, onUnmounted, provide, ref, useTemplateRef } from 'vue';
 import { url } from '@@/js/config.js';
 import type { PageMetadata } from '@/page.js';
-import { isExactHataAppTitle } from '@/page.js';
-import HataAppLogo from '@/components/HataAppLogo.vue';
-import HataAppWordmark from '@/components/HataAppWordmark.vue';
-import { store } from '@/store.js';
 import RouterView from '@/components/global/RouterView.vue';
 import MkWindow from '@/components/MkWindow.vue';
 import { popout as _popout } from '@/utility/popout.js';
@@ -47,7 +43,6 @@ import { provideMetadataReceiver, provideReactiveMetadata } from '@/page.js';
 import { openingWindowsCount } from '@/os.js';
 import { claimAchievement } from '@/utility/achievements.js';
 import { createRouter, mainRouter } from '@/router.js';
-import { isHatagoesIntroPath } from '@/utility/hatagoes-navigation.js';
 import { analytics } from '@/analytics.js';
 import { DI } from '@/di.js';
 import { prefer } from '@/preferences.js';
@@ -72,7 +67,6 @@ const _history_ = ref<{ path: string; }[]>([{
 	path: windowRouter.getCurrentFullPath(),
 }]);
 const buttonsLeft = computed(() => {
-	if (isHatagoesIntroPath(windowRouter.currentRef.value._parsedRoute.fullPath)) return [];
 	return _history_.value.length > 1 ? [{
 		icon: 'ti ti-chevron-left',
 		title: i18n.ts.goBack,

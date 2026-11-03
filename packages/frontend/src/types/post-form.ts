@@ -6,23 +6,6 @@
 import * as Misskey from 'cherrypick-js';
 import type { PollEditorModelValue } from '@/components/MkPollEditor.vue';
 
-export interface ExternalNote {
-	id: string;
-	text: string | null;
-	cw: string | null;
-	user: {
-		id: string;
-		username: string;
-		host: string | null;
-		name: string | null;
-		avatarUrl: string | null;
-	};
-	createdAt: string;
-	files?: any[];
-	replyId?: string | null;
-	renoteId?: string | null;
-}
-
 export interface PostFormProps {
 	reply?: Misskey.entities.Note | null;
 	renote?: Misskey.entities.Note | null;
@@ -51,7 +34,4 @@ export interface PostFormProps {
 	instant?: boolean;
 	updateMode?: boolean;
 	// 外部サーバーへの投稿用
-	externalReply?: ExternalNote | null;
-	externalRenote?: ExternalNote | null;
-	initialUseExternalAccount?: boolean;
 }

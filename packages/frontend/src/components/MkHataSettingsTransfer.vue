@@ -26,7 +26,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		role="dialog"
 		aria-modal="false"
 		aria-labelledby="hata-settings-transfer-title"
-		:aria-busy="busy || dedicatedExportBusy != null"
+		:aria-busy="busy"
 	>
 		<div data-hata-settings-transfer-scroll :class="$style.scrollArea">
 			<div :class="$style.body">
@@ -53,27 +53,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<i class="ti ti-eye-exclamation"></i>
 						<div><b>{{ copy.urlWarningTitle }}</b><br>{{ copy.urlWarningDescription }}</div>
 					</div>
-					<section :class="$style.dedicatedExports" aria-labelledby="hata-dedicated-export-title">
-						<div :class="$style.dedicatedHeading">
-							<i class="ti ti-database-export"></i>
-							<div>
-								<b id="hata-dedicated-export-title">{{ copy.dedicatedExportTitle }}</b>
-								<small>{{ copy.dedicatedExportDescription }}</small>
-							</div>
-						</div>
-						<div :class="$style.dedicatedGrid">
-							<button type="button" :class="$style.dedicatedButton" :disabled="busy || dedicatedExportBusy != null" @click="openHatadyExport">
-								<span :class="$style.dedicatedIcon"><i v-if="dedicatedExportBusy === 'hatady'" class="ti ti-loader-2"></i><HataAppLogo v-else app="hatady" :size="32" :monochrome="store.r.darkMode.value"/></span>
-								<span :class="$style.dedicatedCopy"><b><HataAppWordmark app="hatady" inheritColor/></b><small>{{ copy.hatadyExportDescription }}</small></span>
-								<i class="ti ti-chevron-right" :class="$style.dedicatedArrow"></i>
-							</button>
-							<button type="button" :class="$style.dedicatedButton" :disabled="busy || dedicatedExportBusy != null" @click="openHataFeedExport">
-								<span :class="$style.dedicatedIcon"><i v-if="dedicatedExportBusy === 'hatafeed'" class="ti ti-loader-2"></i><HataAppLogo v-else app="hatafeed" :size="32" :monochrome="store.r.darkMode.value"/></span>
-								<span :class="$style.dedicatedCopy"><b><HataAppWordmark app="hatafeed" inheritColor/></b><small>{{ copy.hatafeedExportDescription }}</small></span>
-								<i class="ti ti-chevron-right" :class="$style.dedicatedArrow"></i>
-							</button>
-						</div>
-					</section>
 				</template>
 
 				<template v-else>
@@ -118,11 +97,7 @@ import { computed, ref, useTemplateRef } from 'vue';
 import SettingsEmbeddedWindow from '@/components/SettingsEmbeddedWindow.vue';
 import type { HataSettingsCategoryId, HataSettingsTransferFile } from '@/utility/hata-settings-transfer.js';
 import MkWindow from '@/components/MkWindow.vue';
-import HataAppLogo from '@/components/HataAppLogo.vue';
-import HataAppWordmark from '@/components/HataAppWordmark.vue';
-import { store } from '@/store.js';
 import * as os from '@/os.js';
-import { misskeyApi } from '@/utility/misskey-api.js';
 import { i18n } from '@/i18n.js';
 import {
 	applyHataSettingsTransfer,
@@ -154,17 +129,10 @@ const selectedImport = ref<HataSettingsCategoryId[]>([]);
 const importFile = ref<HataSettingsTransferFile | null>(null);
 const importFileName = ref('');
 const unknownCategoryCount = ref(0);
-const dedicatedExportBusy = ref<'hatady' | 'hatafeed' | null>(null);
 
 function closeWindow() {
 	transferWindow.value?.close();
 }
-
-type HataFeedProject = {
-	id: string;
-	name: string;
-	isOfficial?: boolean;
-};
 
 const importableCategories = computed(() => {
 	const file = importFile.value;
@@ -192,84 +160,6 @@ async function doExport() {
 		os.alert({ type: 'error', text: copy.exportFailed });
 	} finally {
 		busy.value = false;
-	}
-}
-
-async function openHatadyExport() {
-	if (dedicatedExportBusy.value != null) return;
-	dedicatedExportBusy.value = 'hatady';
-	try {
-		const { dispose } = os.popup((await import('@/components/HatadyExportDialog.vue')).default, {}, {
-			closed: () => dispose(),
-		});
-	} catch (error) {
-		console.error(error);
-		os.alert({ type: 'error', title: copy.hatadyExportOpenFailedTitle, text: copy.reloadAndRetry });
-	} finally {
-		dedicatedExportBusy.value = null;
-	}
-}
-
-async function openHataFeedExport() {
-	if (dedicatedExportBusy.value != null) return;
-	dedicatedExportBusy.value = 'hatafeed';
-	try {
-		const availability = await misskeyApi('hata/feedback/available', {}) as { available: boolean; isStaff: boolean };
-		if (!availability.available) {
-			await os.alert({ type: 'info', title: copy.hatafeedUnavailableTitle, text: copy.hatafeedUnavailableDescription });
-			return;
-		}
-
-		const projects = await misskeyApi('hata/feedback/projects', {
-			mine: !availability.isStaff,
-			limit: 100,
-		}) as unknown as HataFeedProject[];
-		const exportableProjects = projects.filter(project => !project.isOfficial);
-		const items = [
-			...(availability.isStaff ? [{ value: '__official__', label: copy.hataskeyOfficial }] : []),
-			...exportableProjects.map(project => ({ value: project.id, label: project.name })),
-		];
-
-		if (items.length === 0) {
-			await os.alert({
-				type: 'info',
-				title: copy.noExportableHatafeedTitle,
-				text: copy.noExportableHatafeedDescription,
-			});
-			return;
-		}
-
-		const selection = items.length === 1
-			? { canceled: false as const, result: items[0].value }
-			: await os.select<string>({
-				title: copy.hatafeedExportTargetTitle,
-				text: copy.hatafeedExportTargetDescription,
-				items,
-			});
-		if (selection.canceled) return;
-
-		const project = exportableProjects.find(candidate => candidate.id === selection.result) ?? null;
-		if (selection.result !== '__official__' && project == null) {
-			await os.alert({ type: 'error', title: copy.exportTargetMissingTitle, text: copy.reloadHatafeedAndRetry });
-			return;
-		}
-		const projectId = selection.result === '__official__' ? null : (project?.id ?? null);
-		const projectName = selection.result === '__official__' ? 'Hataskey' : project?.name;
-		if (projectName == null || (selection.result !== '__official__' && projectId == null)) {
-			await os.alert({ type: 'error', title: copy.exportTargetMissingTitle, text: copy.reloadHatafeedAndRetry });
-			return;
-		}
-		const { dispose } = os.popup((await import('@/components/HataFeedExportWindow.vue')).default, {
-			projectId,
-			projectName,
-		}, {
-			closed: () => dispose(),
-		});
-	} catch (error) {
-		console.error(error);
-		os.alert({ type: 'error', title: copy.hatafeedExportOpenFailedTitle, text: copy.checkPermissionAndConnection });
-	} finally {
-		dedicatedExportBusy.value = null;
 	}
 }
 
@@ -422,23 +312,6 @@ defineProps<{ embedded?: boolean }>();
 .fileTitle small { opacity:.65; }
 .warning { display:flex; gap:8px; white-space:pre-line; padding:10px; border-radius:10px; color:var(--MI_THEME-warn); background:color-mix(in srgb,var(--MI_THEME-warn) 10%,transparent); font-size:.8em; line-height:1.55; }
 .skipNote { font-size:.78em; opacity:.7; }
-.dedicatedExports { display:flex; flex-direction:column; gap:11px; padding-top:2px; }
-.dedicatedHeading { display:flex; align-items:flex-start; gap:10px; }
-.dedicatedHeading > i { flex:0 0 auto; margin-top:2px; color:var(--MI_THEME-accent); font-size:1.25em; }
-.dedicatedHeading > div { display:flex; flex-direction:column; gap:2px; min-width:0; }
-.dedicatedHeading small { opacity:.67; line-height:1.45; }
-.dedicatedGrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr)); gap:9px; }
-.dedicatedButton { min-width:0; min-height:68px; display:grid; grid-template-columns:34px minmax(0,1fr) 18px; align-items:center; gap:9px; padding:11px; border:1px solid var(--MI_THEME-divider); border-radius:14px; color:var(--MI_THEME-fg); background:var(--MI_THEME-panel); cursor:pointer; text-align:left; font:inherit; transition:border-color .15s ease,background .15s ease,transform .15s ease; }
-.dedicatedButton:not(:disabled):hover { border-color:var(--MI_THEME-accent); background:var(--MI_THEME-accentedBg); transform:translateY(-1px); }
-.dedicatedButton:focus-visible { outline:2px solid var(--MI_THEME-accent); outline-offset:2px; }
-.dedicatedButton:disabled { opacity:.55; cursor:not-allowed; }
-.dedicatedIcon { width:34px; height:34px; display:grid; place-items:center; border-radius:11px; color:var(--MI_THEME-accent); font-size:1.15em; }
-.dedicatedCopy { min-width:0; display:flex; flex-direction:column; gap:2px; }
-.dedicatedCopy b { line-height:1.25; }
-.dedicatedCopy small { min-width:0; opacity:.67; font-size:.75em; line-height:1.35; overflow-wrap:anywhere; }
-.dedicatedArrow { opacity:.45; justify-self:end; }
-.dedicatedButton .ti-loader-2 { animation:dedicated-spin .8s linear infinite; }
-@keyframes dedicated-spin { to { transform:rotate(360deg); } }
 
 .actionBar {
 	min-width: 0;

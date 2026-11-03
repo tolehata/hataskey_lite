@@ -91,13 +91,6 @@ export class UserBlockingService implements OnModuleInit {
 			this.cacheService.userBlockingCache.refresh(blocker.id),
 			this.cacheService.userBlockedCache.refresh(blockee.id),
 		]);
-		this.globalEventService.publishHatadyTimelineRefresh(blocker.id);
-		this.globalEventService.publishHatadyTimelineRefresh(blockee.id);
-		const notificationService = this.moduleRef.get<NotificationService>('NotificationService', { strict: false });
-		await Promise.all([
-			notificationService.refreshHatadyNotificationsForViewer(blocker.id),
-			notificationService.refreshHatadyNotificationsForViewer(blockee.id),
-		]);
 
 		this.globalEventService.publishInternalEvent('blockingCreated', {
 			blockerId: blocker.id,
@@ -207,13 +200,6 @@ export class UserBlockingService implements OnModuleInit {
 		await Promise.all([
 			this.cacheService.userBlockingCache.refresh(blocker.id),
 			this.cacheService.userBlockedCache.refresh(blockee.id),
-		]);
-		this.globalEventService.publishHatadyTimelineRefresh(blocker.id);
-		this.globalEventService.publishHatadyTimelineRefresh(blockee.id);
-		const notificationService = this.moduleRef.get<NotificationService>('NotificationService', { strict: false });
-		await Promise.all([
-			notificationService.refreshHatadyNotificationsForViewer(blocker.id),
-			notificationService.refreshHatadyNotificationsForViewer(blockee.id),
 		]);
 
 		this.globalEventService.publishInternalEvent('blockingDeleted', {

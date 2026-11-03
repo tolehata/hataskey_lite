@@ -79,7 +79,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 			const query = this.queryService.makePaginationQuery(this.notesRepository.createQueryBuilder('note'), ps.sinceId, ps.untilId, ps.sinceDate, ps.untilDate);
 			query.andWhere(':file <@ note.fileIds', { file: [file.id] });
-			await this.queryService.generateChannelVisibilityQuery(query, me);
 
 			const notes = await query.limit(ps.limit).getMany();
 

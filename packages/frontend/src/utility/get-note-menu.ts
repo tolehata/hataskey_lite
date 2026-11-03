@@ -31,8 +31,6 @@ import { addDividersBetweenMenuSections } from '@/utility/add-dividers-between-m
 import { popup } from '@/os.js';
 import { openFavoriteFolderPicker, removeFavoriteNote } from '@/utility/favorite-folders.js';
 import { requestNoteActionConfirmation } from '@/utility/note-action-confirmation.js';
-import { noteCharmDisplay, setNoteCharmDisplay } from '@/utility/hatasaba-device-prefs.js';
-import { isNoteCharmMobileDisplay } from '@/utility/note-charm-device.js';
 
 export async function getNoteClipMenu(props: {
 	note: Misskey.entities.Note;
@@ -779,15 +777,6 @@ export function getNoteMenu(props: {
 		});
 	}
 
-	if (!isNoteCharmMobileDisplay() && noteCharmDisplay.value.show && appearNote.userId !== $i?.id && appearNote.user.noteCharm) {
-		const showOthers = !noteCharmDisplay.value.showOthers;
-		menuItems.push({ type: 'divider' }, {
-			icon: showOthers ? 'ti ti-eye' : 'ti ti-eye-off',
-			text: showOthers ? i18n.ts._noteCharm.showOthers : i18n.ts._noteCharm.hideOthers,
-			action: () => setNoteCharmDisplay({ showOthers }),
-		});
-	}
-
 	const noteActions = getPluginHandlers('note_action');
 	if (noteActions.length > 0) {
 		menuItems.push({ type: 'divider' });
@@ -841,8 +830,7 @@ export function getQuoteMenu(props: {
 	const menu: MenuItem[] = [];
 	const appearNote = getAppearNote(props.note);
 
-	// 旗鯖fork: プライベートチャンネルのノートはチャンネル外へ引用させない
-	if (appearNote && (!appearNote.channel || (appearNote.channel.allowRenoteToExternal && !appearNote.channel.isPrivate))) {
+	if (appearNote && (!appearNote.channel || (appearNote.channel.allowRenoteToExternal))) {
 		menu.push({
 			text: i18n.ts.quote,
 			icon: 'ti ti-quote',
@@ -964,8 +952,7 @@ export async function getRenoteMenu(props: {
 		}
 	}
 
-	// 旗鯖fork: プライベートチャンネルのノートはチャンネル外へリノートさせない
-	if (!appearNote.channel || (appearNote.channel.allowRenoteToExternal && !appearNote.channel.isPrivate)) {
+	if (!appearNote.channel || (appearNote.channel.allowRenoteToExternal)) {
 		normalRenoteItems.push({
 			text: i18n.ts.renote,
 			icon: 'ti ti-repeat',
@@ -1176,8 +1163,7 @@ export async function getRenoteOnly(props: {
 		}
 	}
 
-	// 旗鯖fork: プライベートチャンネルのノートはチャンネル外へリノートさせない
-	if (!appearNote.channel || (appearNote.channel.allowRenoteToExternal && !appearNote.channel.isPrivate)) {
+	if (!appearNote.channel || (appearNote.channel.allowRenoteToExternal)) {
 		const el = props.renoteButton.value as HTMLElement | null | undefined;
 		if (el && prefer.s.animation) {
 			const rect = el.getBoundingClientRect();

@@ -34,7 +34,6 @@ import type {
 	DbQueue,
 	DeliverQueue,
 	EndedPollNotificationQueue,
-	UtageResolveQueue,
 	PostScheduledNoteQueue,
 	InboxQueue,
 	ObjectStorageQueue,
@@ -58,8 +57,6 @@ export const QUEUE_TYPES = [
 	'objectStorage',
 	'userWebhookDeliver',
 	'systemWebhookDeliver',
-	// 旗鯖fork: 宴(utage)セッション解決ジョブ
-	'utageResolve',
 ] as const;
 
 const REPEATABLE_SYSTEM_JOB_DEF = [{
@@ -77,12 +74,6 @@ const REPEATABLE_SYSTEM_JOB_DEF = [{
 }, {
 	name: 'clean',
 	pattern: '0 0 * * *',
-}, {
-	name: 'checkHataskFlowers',
-	pattern: '* * * * *',
-}, {
-	name: 'checkHataskMoodReminders',
-	pattern: '* * * * *',
 }, {
 	name: 'checkExpiredMutings',
 	pattern: '*/5 * * * *',
@@ -111,7 +102,6 @@ export class QueueService implements OnModuleInit {
 
 		@Inject('queue:system') public systemQueue: SystemQueue,
 		@Inject('queue:endedPollNotification') public endedPollNotificationQueue: EndedPollNotificationQueue,
-		@Inject('queue:utageResolve') public utageResolveQueue: UtageResolveQueue,
 		@Inject('queue:postScheduledNote') public postScheduledNoteQueue: PostScheduledNoteQueue,
 		@Inject('queue:deliver') public deliverQueue: DeliverQueue,
 		@Inject('queue:inbox') public inboxQueue: InboxQueue,
@@ -314,28 +304,6 @@ export class QueueService implements OnModuleInit {
 			},
 			removeOnFail: {
 				age: 3600 * 24 * 7, // keep up to 7 days
-				count: 100,
-			},
-		});
-	}
-
-	// 通常期限と復活期限を別のjobIdで登録し、古い通常ジョブとの混同を防ぐ。
-	// 連合先には何も配送しない、サーバー内完結のジョブ。
-	@bindThis
-	public createUtageResolveJob(noteId: string, delay: number, phase: 'normal' | 'revival' = 'normal') {
-		return this.utageResolveQueue.add('resolve', {
-			noteId, phase,
-		}, {
-			jobId: `utage-${noteId}-${phase}`,
-			attempts: 5,
-			backoff: { type: 'exponential', delay: 1000 },
-			delay,
-			removeOnComplete: {
-				age: 3600 * 24, // keep up to 1 day
-				count: 100,
-			},
-			removeOnFail: {
-				age: 3600 * 24 * 3,
 				count: 100,
 			},
 		});
@@ -827,7 +795,6 @@ export class QueueService implements OnModuleInit {
 		switch (type) {
 			case 'system': return this.systemQueue;
 			case 'endedPollNotification': return this.endedPollNotificationQueue;
-			case 'utageResolve': return this.utageResolveQueue;
 			case 'postScheduledNote': return this.postScheduledNoteQueue;
 			case 'deliver': return this.deliverQueue;
 			case 'inbox': return this.inboxQueue;

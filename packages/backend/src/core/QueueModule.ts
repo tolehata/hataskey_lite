@@ -13,7 +13,6 @@ import { allSettled } from '@/misc/promise-tracker.js';
 import {
 	DeliverJobData,
 	EndedPollNotificationJobData,
-	UtageResolveJobData,
 	InboxJobData,
 	RelationshipJobData,
 	UserWebhookDeliverJobData,
@@ -25,7 +24,6 @@ import type { Provider } from '@nestjs/common';
 
 export type SystemQueue = Bull.Queue<Record<string, unknown>>;
 export type EndedPollNotificationQueue = Bull.Queue<EndedPollNotificationJobData>;
-export type UtageResolveQueue = Bull.Queue<UtageResolveJobData>;
 export type PostScheduledNoteQueue = Bull.Queue<PostScheduledNoteJobData>;
 export type DeliverQueue = Bull.Queue<DeliverJobData>;
 export type InboxQueue = Bull.Queue<InboxJobData>;
@@ -45,12 +43,6 @@ const $system: Provider = {
 const $endedPollNotification: Provider = {
 	provide: 'queue:endedPollNotification',
 	useFactory: (config: Config, redisForJobQueue: Redis.Redis) => new Bull.Queue(QUEUE.ENDED_POLL_NOTIFICATION, baseQueueOptions(config, QUEUE.ENDED_POLL_NOTIFICATION, redisForJobQueue)),
-	inject: [DI.config, DI.redisForJobQueue],
-};
-
-const $utageResolve: Provider = {
-	provide: 'queue:utageResolve',
-	useFactory: (config: Config, redisForJobQueue: Redis.Redis) => new Bull.Queue(QUEUE.UTAGE_RESOLVE, baseQueueOptions(config, QUEUE.UTAGE_RESOLVE, redisForJobQueue)),
 	inject: [DI.config, DI.redisForJobQueue],
 };
 
@@ -114,7 +106,6 @@ const $scheduledNoteDelete: Provider = {
 	providers: [
 		$system,
 		$endedPollNotification,
-		$utageResolve,
 		$postScheduledNote,
 		$deliver,
 		$inbox,
@@ -128,7 +119,6 @@ const $scheduledNoteDelete: Provider = {
 	exports: [
 		$system,
 		$endedPollNotification,
-		$utageResolve,
 		$postScheduledNote,
 		$deliver,
 		$inbox,
@@ -144,7 +134,6 @@ export class QueueModule implements OnApplicationShutdown {
 	constructor(
 		@Inject('queue:system') public systemQueue: SystemQueue,
 		@Inject('queue:endedPollNotification') public endedPollNotificationQueue: EndedPollNotificationQueue,
-		@Inject('queue:utageResolve') public utageResolveQueue: UtageResolveQueue,
 		@Inject('queue:postScheduledNote') public postScheduledNoteQueue: PostScheduledNoteQueue,
 		@Inject('queue:deliver') public deliverQueue: DeliverQueue,
 		@Inject('queue:inbox') public inboxQueue: InboxQueue,
@@ -163,7 +152,6 @@ export class QueueModule implements OnApplicationShutdown {
 		await Promise.all([
 			this.systemQueue.close(),
 			this.endedPollNotificationQueue.close(),
-			this.utageResolveQueue.close(),
 			this.postScheduledNoteQueue.close(),
 			this.deliverQueue.close(),
 			this.inboxQueue.close(),

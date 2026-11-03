@@ -23,7 +23,6 @@ vi.mock('@/i.js', async () => {
 	return { $i: reactive<Record<string, unknown>>({}) };
 });
 vi.mock('@/signout.js', () => ({ signout: vi.fn() }));
-vi.mock('@/utility/concrnt/runtime.js', () => ({ purgeConcrnt: vi.fn() }));
 
 const me = $i as unknown as Record<string, unknown>;
 

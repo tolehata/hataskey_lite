@@ -229,7 +229,7 @@ describe('HataskeyUIのお知らせバナー', () => {
 		}
 		const root = templateElements().find(({ node }) => node.props.some(prop => prop.type === 6 && prop.name === 'ref' && prop.value?.content === 'timelineCollapseRoot'));
 		if (!root) throw new Error('Missing root');
-		expect(expression(root.node, 'bind', 'style')).toBe('{ \'--simple-announcements-height\': `${announcementsHeight}px`, \'--note-charm-rail-width\': `${CHARM_RAIL_WIDTH}px` }');
+		expect(expression(root.node, 'bind', 'style')).toBe('{ \'--simple-announcements-height\': `${announcementsHeight}px` }');
 	});
 
 	test('コンパイル済みCSSでバナーの高さ確保とPC/モバイル上部ナビの押し下げを保つ', async () => {

@@ -24,7 +24,6 @@ import {
 	ServerStatsLog,
 	ReversiGameDetailed,
 } from './entities.js';
-import type { HataHatadyActivitiesResponse } from './autogen/entities.js';
 import {
 	ReversiUpdateKey,
 } from './consts.js';
@@ -34,41 +33,7 @@ type ReversiUpdateSettings<K extends ReversiUpdateKey> = {
 	value: ReversiGameDetailed[K];
 };
 
-export type LtlPunchState = {
-	id: string;
-	revision: number;
-	startedAt: number;
-	fallAt: number;
-	endsAt: number;
-	finishedAt: number | null;
-	status: 'active' | 'won' | 'escaped';
-	hp: number;
-	maxHp: number;
-	people: number;
-	serverNow: number;
-};
-
 export type Channels = {
-	hatadyTimeline: {
-		params: { scope: 'mine' | 'recent' | 'following'; kind?: 'study' | 'movie' | 'game' | 'exercise' | 'work' | 'cooking' };
-		events: {
-			activity: (payload: { seq: number; key: string; activity: HataHatadyActivitiesResponse['items'][number] }) => void;
-			removed: (payload: { seq: number; key: string; id: string }) => void;
-			synced: (payload: { seq: number; requestId: number }) => void;
-			resyncRequired: (payload: { seq: number; requestId?: number }) => void;
-		};
-		receives: { sync: { ids: string[]; seenThrough: number; requestId: number } };
-	};
-	ltlPunch: {
-		params: null;
-		events: {
-			state: (payload: LtlPunchState | null) => void;
-		};
-		receives: {
-			sync: Record<string, never>;
-			attack: { eventId: string; requestId: string };
-		};
-	};
 	main: {
 		params: null;
 		events: {
@@ -355,11 +320,6 @@ export type Channels = {
 };
 
 export type NoteUpdatedEvent = { id: Note['id'] } & ({
-	type: 'utageStatusUpdated';
-	body: Required<Pick<Note, 'utageStatus' | 'utageRevision' | 'utageExpiresAt' | 'utageServerNow' | 'utageRevival' | 'utageSuccessMethod'>> & {
-		status: NonNullable<Note['utageStatus']>;
-	};
-} | {
 	type: 'reacted';
 	body: {
 		reaction: string;
@@ -397,8 +357,6 @@ export type BroadcastEvents = {
 	emojiUpdated: (payload: EmojiUpdated) => void;
 	emojiDeleted: (payload: EmojiDeleted) => void;
 	announcementCreated: (payload: AnnouncementCreated) => void;
-	// 旗鯖fork: 地震・津波情報のリアルタイム配信。
-	earthquakeEvent: (payload: { code: number; item: Record<string, any> }) => void;
 	// 旗鯖fork: Hataskey UIの隠しタイムライン崩壊演出。
 	hataTimelineCollapse: (payload: Record<string, never>) => void;
 };

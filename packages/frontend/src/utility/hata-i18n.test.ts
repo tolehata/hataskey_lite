@@ -55,7 +55,6 @@ const SHARED_CUSTOM_PATHS = [
 	'_achievements._types._setNameToHatacha.title',
 	'_achievements._types._setNameToHatacha.description',
 	'_widgets.externalNotifications',
-	'_widgets.mascot',
 	'_widgets.hataskFlowers',
 	'_timelines.trending',
 	'_trending.newNotesAvailable',

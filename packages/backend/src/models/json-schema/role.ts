@@ -224,61 +224,7 @@ export const packedRolePoliciesSchema = {
 			type: 'boolean',
 			optional: false, nullable: false,
 		},
-		mascotMaxExpressions: {
-			type: 'integer',
-			optional: false, nullable: false,
-		},
-		mascotMaxPhrases: {
-			type: 'integer',
-			optional: false, nullable: false,
-		},
-		mascotMaxCharacters: {
-			type: 'integer',
-			optional: false, nullable: false,
-		},
 		hataSideStudioProfileLimit: {
-			type: 'integer',
-			optional: false, nullable: false,
-		},
-		canUseMascot: {
-			type: 'boolean',
-			optional: false, nullable: false,
-		},
-		canUseHatalyze: {
-			type: 'boolean',
-			optional: false, nullable: false,
-		},
-		canAccessHataFeed: {
-			type: 'boolean',
-			optional: false, nullable: false,
-		},
-		canUseHatadySync: {
-			type: 'boolean',
-			optional: false, nullable: false,
-		},
-		hatadyBookLimit: {
-			type: 'integer',
-			optional: false, nullable: false,
-		},
-		hatadyBookmarkLimit: {
-			type: 'integer',
-			optional: false, nullable: false,
-		},
-		hatadyGameTitleLimit: {
-			type: 'integer',
-			minimum: 0,
-			maximum: 1000,
-			optional: false, nullable: false,
-		},
-		canMakePrivateChannel: {
-			type: 'boolean',
-			optional: false, nullable: false,
-		},
-		canRequestRemoteEmoji: {
-			type: 'boolean',
-			optional: false, nullable: false,
-		},
-		emojiRequestLimit: {
 			type: 'integer',
 			optional: false, nullable: false,
 		},
@@ -329,9 +275,6 @@ export const packedRolePoliciesSchema = {
 		favoriteFolderLimit: {
 			type: 'integer',
 			optional: false, nullable: false,
-		},
-		canUseNoteCharm: {
-			type: 'boolean', nullable: false, optional: false,
 		},
 		canCreateFavoriteSubfolders: {
 			type: 'boolean',

@@ -6,25 +6,8 @@
 import { ref } from 'vue';
 import { miLocalStorage } from '@/local-storage.js';
 
-/** HataGoes caches never use the account-synchronized preference store. */
-export type HatagoesDeviceKey = `hatagoes:${'state' | 'create' | 'scroll'}:${string}`;
-export function readHatagoesDeviceCache(key: HatagoesDeviceKey): string | null {
-	try { return miLocalStorage.getItem(key); } catch { return null; }
-}
-
-export function writeHatagoesDeviceCache(key: HatagoesDeviceKey, value: unknown): void {
-	try { miLocalStorage.setItem(key, JSON.stringify(value)); } catch { /* Optional device cache. */ }
-}
-
-export type HataNotificationBrand = 'all' | 'standard' | 'hatady' | 'hatask' | 'hataFeed';
-export const HATA_NOTIFICATION_CATEGORIES = ['standard', 'hatady', 'hatask', 'hataFeed'] as const;
-export type HataNotificationCategory = typeof HATA_NOTIFICATION_CATEGORIES[number];
 export type HataNotificationView = {
-	brand: HataNotificationBrand;
-	includeBrands: HataNotificationCategory[] | null;
 	includeTypes: string[] | null;
-	includeHatadySubtypes: string[] | null;
-	includeHataskApp: boolean;
 	excludeBots: boolean;
 };
 
@@ -34,20 +17,8 @@ export function readHataNotificationView(): HataNotificationView {
 		const parsed: unknown = JSON.parse(miLocalStorage.getItem('hataNotificationView') ?? '{}');
 		if (parsed != null && typeof parsed === 'object' && !Array.isArray(parsed)) saved = parsed as Record<string, unknown>;
 	} catch { /* use defaults */ }
-	const brand = saved.brand;
-	const includeTypes = Array.isArray(saved.includeTypes) ? saved.includeTypes.filter((value): value is string => typeof value === 'string') : null;
-	const savedBrands = Array.isArray(saved.includeBrands) ? saved.includeBrands.filter((value): value is HataNotificationCategory => HATA_NOTIFICATION_CATEGORIES.some(category => category === value)) : null;
-	const includeBrands = savedBrands != null
-		? HATA_NOTIFICATION_CATEGORIES.filter(value => savedBrands.includes(value))
-		: !Object.prototype.hasOwnProperty.call(saved, 'includeBrands') && includeTypes != null && !includeTypes.includes('hatady')
-			? HATA_NOTIFICATION_CATEGORIES.filter(value => value !== 'hatady')
-			: null;
 	return {
-		brand: brand === 'standard' || brand === 'hatady' || brand === 'hatask' || brand === 'hataFeed' ? brand : 'all',
-		includeBrands,
-		includeTypes,
-		includeHatadySubtypes: Array.isArray(saved.includeHatadySubtypes) ? saved.includeHatadySubtypes.filter((value): value is string => typeof value === 'string') : null,
-		includeHataskApp: typeof saved.includeHataskApp === 'boolean' ? saved.includeHataskApp : includeTypes == null || includeTypes.includes('app'),
+		includeTypes: Array.isArray(saved.includeTypes) ? saved.includeTypes.filter((value): value is string => typeof value === 'string') : null,
 		excludeBots: saved.excludeBots === true,
 	};
 }
@@ -62,36 +33,6 @@ export function setHataNotificationView(patch: Partial<HataNotificationView>): v
 	} catch { /* use defaults */ }
 	miLocalStorage.setItem('hataNotificationView', JSON.stringify({ ...previous, ...next }));
 	hataNotificationView.value = next;
-}
-
-export type HataskeyUiSDisplaySize = 'standard' | 'small';
-
-function readHataskeyUiSDisplaySize(): HataskeyUiSDisplaySize {
-	return miLocalStorage.getItem('hataskeyUiSDisplaySize') === 'small' ? 'small' : 'standard';
-}
-
-export const hataskeyUiSDisplaySize = ref<HataskeyUiSDisplaySize>(readHataskeyUiSDisplaySize());
-export function setHataskeyUiSDisplaySize(size: HataskeyUiSDisplaySize): void {
-	miLocalStorage.setItem('hataskeyUiSDisplaySize', size);
-	hataskeyUiSDisplaySize.value = size;
-}
-
-export const HATAFEED_THEMES = ['light', 'dark', 'paper', 'espresso'] as const;
-export type HataFeedTheme = typeof HATAFEED_THEMES[number];
-
-function readHataFeedTheme(): HataFeedTheme {
-	try {
-		const saved = miLocalStorage.getItem('hatafeedTheme');
-		return HATAFEED_THEMES.find(theme => theme === saved) ?? 'light';
-	} catch {
-		return 'light';
-	}
-}
-
-export const hataFeedTheme = ref<HataFeedTheme>(readHataFeedTheme());
-export function setHataFeedTheme(theme: HataFeedTheme): void {
-	miLocalStorage.setItem('hatafeedTheme', theme);
-	hataFeedTheme.value = theme;
 }
 
 // 旗鯖fork: 端末ローカル(プロファイル非同期)の Hataskey UI 設定。
@@ -199,39 +140,3 @@ export function setGlassUiBubbleLocal(v: boolean): void {
 }
 applyGlassUiBubbleClass(glassUiBubbleLocal.value);
 
-// 旗鯖fork(#34): 地震・津波情報の「お住いの都道府県」。
-//   居住地はプライバシーに関わるため、サーバーには一切送らず、この端末にのみ保存する。
-//   未設定は空文字。
-export const earthquakePref = ref(miLocalStorage.getItem('hataEarthquakePref') ?? '');
-export function setEarthquakePref(v: string): void {
-	earthquakePref.value = v;
-	if (v) miLocalStorage.setItem('hataEarthquakePref', v);
-	else miLocalStorage.removeItem('hataEarthquakePref');
-}
-
-// 旗鯖fork(#34): 地震情報の取得間隔(秒)。'10'=リアルタイム相当(最短)。端末ローカル。
-export const earthquakePollSec = ref(Number(miLocalStorage.getItem('hataEarthquakePollSec') ?? '10'));
-export function setEarthquakePollSec(v: number): void {
-	earthquakePollSec.value = v;
-	miLocalStorage.setItem('hataEarthquakePollSec', String(v));
-}
-
-/** Viewer-only controls: account charm selection remains on the server. */
-export type NoteCharmDisplay = { show: boolean; motion: boolean; showOthers: boolean; wind: boolean };
-
-function readNoteCharmDisplay(): NoteCharmDisplay {
-	try {
-		const saved: unknown = JSON.parse(miLocalStorage.getItem('noteCharmDisplay') ?? '{}');
-		if (saved && typeof saved === 'object') {
-			const values = saved as Partial<NoteCharmDisplay>;
-			return { show: values.show !== false, motion: values.motion !== false, showOthers: values.showOthers !== false, wind: values.wind !== false };
-		}
-	} catch { /* Use defaults when device storage is unavailable. */ }
-	return { show: true, motion: true, showOthers: true, wind: true };
-}
-
-export const noteCharmDisplay = ref<NoteCharmDisplay>(readNoteCharmDisplay());
-export function setNoteCharmDisplay(patch: Partial<NoteCharmDisplay>): void {
-	noteCharmDisplay.value = { ...noteCharmDisplay.value, ...patch };
-	try { miLocalStorage.setItem('noteCharmDisplay', JSON.stringify(noteCharmDisplay.value)); } catch { /* Session preferences still apply. */ }
-}

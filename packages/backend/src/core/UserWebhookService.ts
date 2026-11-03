@@ -92,7 +92,6 @@ export class UserWebhookService implements OnApplicationShutdown {
 		const webhooks = await this.getActiveWebhooks()
 			.then(webhooks => webhooks.filter(webhook => webhook.userId === userId && webhook.on.includes(type)));
 		if (webhooks.length === 0) return [];
-		if ('note' in content && !await this.noteEntityService.isChannelVisibleForMe(content.note, userId)) return [];
 		return Promise.all(
 			webhooks.map(webhook => {
 				return this.queueService.userWebhookDeliver(webhook, type, content);

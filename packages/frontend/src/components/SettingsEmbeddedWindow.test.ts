@@ -17,7 +17,7 @@ const mounted: { app: App; container: HTMLDivElement }[] = [];
 function mountWindow(initialProps: Record<string, unknown> = {}, withHeader = true) {
 	const handle = ref<InstanceType<typeof SettingsEmbeddedWindow> | null>(null);
 	const onClosed = vi.fn();
-	// The real Hatask, earthquake and mascot owners all call close() here.
+	// The real popup owners all call close() here.
 	// Limit re-entry so a regression is an assertion failure, not a stack overflow.
 	const onClose = vi.fn(() => {
 		if (onClose.mock.calls.length < 3) handle.value?.close();

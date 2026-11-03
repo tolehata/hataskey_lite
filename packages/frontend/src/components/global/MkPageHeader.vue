@@ -32,11 +32,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<div v-if="pageMetadata.avatar" :class="$style.titleAvatarContainer">
 					<MkAvatar :class="$style.titleAvatar" :user="pageMetadata.avatar" indicator/>
 				</div>
-				<HataAppLogo v-else-if="pageMetadata.hataApp" :app="pageMetadata.hataApp" :size="20" :monochrome="store.r.darkMode.value" :class="$style.titleBrandLogo"/><i v-else-if="pageMetadata.icon" :class="[$style.titleIcon, pageMetadata.icon]"></i>
+				<i v-else-if="pageMetadata.icon" :class="[$style.titleIcon, pageMetadata.icon]"></i>
 
 				<div :class="$style.title">
 					<MkUserName v-if="pageMetadata.userName" :user="pageMetadata.userName" :nowrap="true"/>
-					<div v-else-if="pageMetadata.title"><HataAppWordmark v-if="isExactHataAppTitle(pageMetadata)" :app="pageMetadata.hataApp!" inheritColor/><template v-else>{{ pageMetadata.title }}</template></div>
+					<div v-else-if="pageMetadata.title">{{ pageMetadata.title }}</div>
 					<div v-if="pageMetadata.subtitle" :class="$style.subtitle">
 						{{ pageMetadata.subtitle }}
 					</div>
@@ -103,9 +103,6 @@ import { scrollToVisibility } from '@/utility/scroll-to-visibility.js';
 import MkFollowButton from '@/components/MkFollowButton.vue';
 import { haptic } from '@/utility/haptic.js';
 import { getVisibleBottomNav } from '@/utility/hatasaba-navigation.js';
-import { isExactHataAppTitle } from '@/page.js';
-import HataAppLogo from '@/components/HataAppLogo.vue';
-import HataAppWordmark from '@/components/HataAppWordmark.vue';
 import { store } from '@/store.js';
 
 const { showEl } = scrollToVisibility();
@@ -481,7 +478,6 @@ onUnmounted(() => {
 	text-align: center;
 }
 
-.titleBrandLogo { margin-right: 8px; }
 
 .title {
 	min-width: 0;

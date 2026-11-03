@@ -30,21 +30,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<span :class="$style.optionEnd"><span v-if="currentUi === 'simple'">{{ i18n.ts.inUse }}</span><ChevronRight v-else :size="16" aria-hidden="true"/></span>
 					</span>
 				</button>
-				<button type="button" data-ui="hataskey3" :class="[$style.card, { [$style.selected]: currentUi === 'hataskey3' }]" :aria-pressed="currentUi === 'hataskey3'" :disabled="busy" @click="choose('hataskey3')">
-					<span :class="$style.stage" aria-hidden="true">
-						<span :class="$style.desk">
-							<span :class="$style.rail"><span :class="$style.railLogo"></span><span :class="[$style.dot, $style.dotActive]"></span><span :class="$style.dot"></span><span :class="$style.dot"></span><span :class="$style.dot"></span></span>
-							<span :class="$style.deskMain"><span :class="$style.composer"></span><span v-for="n in 2" :key="n" :class="$style.note"><span :class="[$style.avatar, n === 2 && $style.avatarAlt]"></span><span :class="$style.lines"><span :class="$style.line" style="width: 64%"></span><span :class="$style.line" style="width: 88%"></span></span></span></span>
-							<span :class="$style.deskSide"><span :class="$style.widget"><span :class="$style.bloom"></span><span :class="$style.line" style="width: 60%"></span></span><span :class="$style.widget"><span :class="$style.line" style="width: 80%"></span><span :class="$style.line" style="width: 50%"></span></span></span>
-						</span>
-						<span v-if="currentUi === 'hataskey3'" :class="$style.check"><Check :size="14"/></span>
-					</span>
-					<span :class="$style.meta">
-						<span :class="$style.nameRow"><PanelsTopLeft :size="18" aria-hidden="true" :class="$style.optionIcon"/><span :class="$style.brandName">Hataskey UI S</span></span>
-						<span :class="$style.description">{{ copy.ui3Description }}</span>
-						<span :class="$style.optionEnd"><span v-if="currentUi === 'hataskey3'">{{ i18n.ts.inUse }}</span><ChevronRight v-else :size="16" aria-hidden="true"/></span>
-					</span>
-				</button>
 			</div>
 			<details :class="$style.legacy" :open="legacyOpen" @toggle="legacyOpen = ($event.target as HTMLDetailsElement).open">
 				<summary :class="$style.legacySummary" @click="busy && $event.preventDefault()"><ChevronDown :size="16" aria-hidden="true"/>{{ copy.otherUis }}<span :class="$style.deprecatedBadge">{{ copy.notRecommended }}</span></summary>
@@ -75,21 +60,21 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import { nextTick, onBeforeUnmount, ref } from 'vue';
-import { Check, ChevronsLeftRight, ChevronDown, ChevronRight, LayoutTemplate, PanelsTopLeft, LayoutList, Columns3, X } from '@lucide/vue';
+import { Check, ChevronsLeftRight, ChevronDown, ChevronRight, LayoutTemplate, LayoutList, Columns3, X } from '@lucide/vue';
 import SettingsEmbeddedWindow from '@/components/SettingsEmbeddedWindow.vue';
 import MkModal from '@/components/MkModal.vue';
 import { miLocalStorage } from '@/local-storage.js';
 import { prefer } from '@/preferences.js';
 import { i18n } from '@/i18n.js';
 
-type Ui = 'simple' | 'hataskey3' | 'default' | 'deck';
+type Ui = 'simple' | 'default' | 'deck';
 const props = defineProps<{ embedded?: boolean }>();
 const emit = defineEmits<{ (e: 'closed'): void }>();
 const modal = ref<{ close: () => void } | null>(null);
 const panel = ref<HTMLElement | null>(null);
 const copy = i18n.ts._hata._uiSetup;
 const storedUi = miLocalStorage.getItem('ui');
-const currentUi: Ui = storedUi === 'hataskey3' || storedUi === 'default' || storedUi === 'deck' ? storedUi : 'simple';
+const currentUi: Ui = storedUi === 'default' || storedUi === 'deck' ? storedUi : 'simple';
 const legacyOpen = ref(currentUi === 'default' || currentUi === 'deck');
 const pending = ref<'default' | 'deck' | null>(null);
 const busy = ref(false);
@@ -163,8 +148,7 @@ async function choose(type: Ui) {
 		miLocalStorage.setItem('ui', type);
 		miLocalStorage.setItem('ui_setup_completed', 'true');
 		navigating = true;
-		if (type === 'hataskey3') window.location.assign('/');
-		else window.location.reload();
+		window.location.reload();
 	} catch (error) {
 		navigating = false;
 		exitAnimation?.cancel();

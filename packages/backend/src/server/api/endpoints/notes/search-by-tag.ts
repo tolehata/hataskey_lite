@@ -99,7 +99,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				.leftJoinAndSelect('renote.user', 'renoteUser');
 
 			this.queryService.generateVisibilityQuery(query, me);
-			await this.queryService.generateChannelVisibilityQuery(query, me);
 			if (me == null) this.queryService.generateUgcVisibilityQueryForVisitor(query);
 			this.queryService.generateBaseNoteFilteringQuery(query, me);
 

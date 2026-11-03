@@ -7,7 +7,6 @@ import * as Vue from 'vue';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { refreshNotificationUnreadState } from '@/utility/notification-unread-sync.js';
 import { acceptNotificationUnreadState, forgetNotificationUnreadState } from '@/utility/notification-unread-state.js';
-import { normalizeUiSBottomNav, resolveUiSBottomNav } from '@/utility/hatasaba-navigation.js';
 
 const fixture = vi.hoisted(() => ({
 	account: { id: 'owner', hasUnreadNotification: true, unreadNotificationsCount: 3 },
@@ -25,8 +24,6 @@ function source(path: string) {
 }
 
 const simple = source('ui/simple.vue');
-const modern = source('components/hataskey3/Hk3App.vue');
-const dock = source('components/hataskey3/Hk3MobileDock.vue');
 type TemplateNode = typeof simple.templateAst.children[number];
 type ElementNode = Extract<TemplateNode, { type: 1 }>;
 
@@ -51,9 +48,7 @@ function compileButton(content: string, loop: string) {
 }
 
 const simpleButton = button(simple.templateAst.children, node => node.props.some(prop => prop.type === 7 && prop.name === 'else-if' && prop.exp?.type === 4 && prop.exp.content === 'item.id===\'notifications\''));
-const dockButton = button(dock.templateAst.children, node => node.props.some(prop => prop.type === 7 && prop.name === 'else') && node.loc.source.includes('item.badge'));
 const simpleRender = compileButton(simpleButton.loc.source, '[{ id: \'notifications\' }]');
-const modernRender = compileButton(dockButton.loc.source, 'mobileNav.filter(item => item.path === \'/my/notifications\')');
 
 function codeFor(file: ts.SourceFile, names: string[], includeWatch = false) {
 	const statements = file.statements.filter(statement => ts.isVariableStatement(statement)
@@ -64,7 +59,6 @@ function codeFor(file: ts.SourceFile, names: string[], includeWatch = false) {
 }
 
 const simpleCode = codeFor(simple.script, ['hasUnreadNotif', 'unreadNotifCount', 'showUnreadNotifCount', 'mainCh', 'broadcastStream', 'unreadPollTimer', 'streamUnmounted', 'syncUnreadFromI', 'checkUnread', 'initStream', 'startUnreadPoll', 'stopUnreadPoll'], true);
-const modernCode = codeFor(modern.script, ['mobileNav']);
 const cleanups: (() => void)[] = [];
 
 beforeEach(() => {
@@ -109,23 +103,6 @@ function mountSimple(showCount = true) {
 	} };
 }
 
-function mountModern() {
-	const Icon = Vue.markRaw({ render: () => Vue.h('svg') });
-	const globals = {
-		computed: Vue.computed, $i: fixture.account, normalizeUiSBottomNav, resolveUiSBottomNav,
-		copy: { tabHome: 'Home', paneWidgets: 'Widgets' }, i18n: { ts: { search: 'Search', notifications: 'Notifications' } },
-		House: Icon, Search: Icon, Bell: Icon, Sparkles: Icon, LayoutGrid: Icon, MessageSquareWarning: Icon,
-		prefer: { r: { hataskeyUi3BottomNav: Vue.ref([{ id: 'notifications' }]), 'simpleUi.bottomNav': Vue.ref([{ id: 'notifications' }]) } },
-		sharedBottomNavDefaults: [{ id: 'notifications' }], mobilePane: Vue.ref(null), isHome: Vue.ref(true), path: Vue.ref('/'),
-	};
-	const app = Vue.createApp({ render: modernRender, setup: () => ({ ...new Function(...Object.keys(globals), modernCode)(...Object.values(globals)), expanded: false, emit: vi.fn() }) });
-	const target = window.document.createElement('div'); window.document.body.append(target);
-	app.config.globalProperties.$style = new Proxy({}, { get: (_target, key) => key });
-	app.mount(target);
-	cleanups.push(() => { app.unmount(); target.remove(); });
-	return target;
-}
-
 test('the lower badge does not return at the next poll after a read event without the boot subscriber', async () => {
 	const view = mountSimple();
 	expect(view.target.querySelector('.badgeCount')?.textContent).toBe('3');
@@ -149,18 +126,14 @@ test.each([true, false])('a server refresh clears a stale lower badge with count
 	expect(view.target.querySelector('.badgeCount, .badge')).toBeNull();
 });
 
-test('both lower navbars follow the authoritative remaining count and then clear together', async () => {
+test('the lower navbar follows the authoritative remaining count and then clears', async () => {
 	const old = mountSimple();
-	const modernView = mountModern();
-	expect(modernView.querySelector('.badge')?.getAttribute('aria-label')).toBe('3');
 	fixture.api.mockResolvedValueOnce({ unreadNotificationsCount: 2, revision: '2' });
 	await refreshNotificationUnreadState('owner');
 	await Vue.nextTick();
 	expect(old.target.querySelector('.badgeCount')?.textContent).toBe('2');
-	expect(modernView.querySelector('.badge')?.getAttribute('aria-label')).toBe('2');
 	fixture.api.mockResolvedValueOnce({ unreadNotificationsCount: 0, revision: '3' });
 	await refreshNotificationUnreadState('owner');
 	await Vue.nextTick();
 	expect(old.target.querySelector('.badgeCount, .badge')).toBeNull();
-	expect(modernView.querySelector('.badge')).toBeNull();
 });

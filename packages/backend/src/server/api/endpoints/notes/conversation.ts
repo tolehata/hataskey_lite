@@ -65,7 +65,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				if (err.id === '9725d0ce-ba28-4dde-95a7-2cbb2c15de24') throw new ApiError(meta.errors.noSuchNote);
 				throw err;
 			});
-			if (!await this.noteEntityService.isChannelVisibleForMe(note, me?.id ?? null)) return [];
 
 			const conversation: MiNote[] = [];
 			const visited = new Set<string>();

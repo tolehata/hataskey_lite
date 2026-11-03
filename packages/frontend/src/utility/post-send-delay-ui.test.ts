@@ -78,37 +78,15 @@ describe('post send delay UI wiring', () => {
 			expect(vue).toContain('else if (renoteTargetNote.value) os.toast(i18n.ts.quoted, \'quote\');');
 			expect(vue).toContain('submitMotionState.value = \'success\';');
 		}
-		// Hataskey UI 3 の投稿欄は、成功を上部トーストではなく新着バナーへ流す。
-		const ui3 = source('src/components/hataskey3/Hk3Composer.vue');
-		expect(ui3).not.toContain('os.toast(');
-		expect(ui3).toContain("sendState.value = 'success';");
 	});
 
-	test('Hataskey UI 3 は待機中にプレビューを畳み、既存の待機表示で取り消せる', () => {
-		const composer = source('src/components/hataskey3/Hk3Composer.vue');
-		expect(composer).toContain("v-if=\"!compact && draftText.trim().length > 0 && sendState === 'idle'\"");
-		expect(composer).toContain('<MkHataPostDelayStatus v-if="postDelay.active.value"');
-		expect(composer).toContain('if (!await postDelay.begin(postSendDelaySeconds.value)) {');
-	});
 
-	test('HataFeedベータ画面では3・5・10秒だけを選べ、任意秒数の入力欄を置かない', () => {
-		const beta = source('src/pages/hatafeed-beta.vue');
-		const utility = source('src/utility/hatafeed.ts');
-		expect(beta).toContain('{{ copy.enableCountdown }}');
-		expect(beta).toContain('{{ copy.countdownDescription }}');
-		expect(beta).toContain('v-for="seconds in POST_SEND_DELAY_PRESETS"');
-		expect(beta).not.toContain('<MkInput');
-		expect(beta).not.toContain('POST_SEND_DELAY_MIN_SECONDS');
-		expect(beta).not.toContain('POST_SEND_DELAY_MAX_SECONDS');
-		expect(utility).toContain("{ id: 'post-send-delay', title: copy.postCountdown }");
-		expect(utility).not.toContain('{ id: \'mute-reactions\', title:');
-	});
 
 	test('待機は端末ローカル設定で、設定の持ち運びにも2項目を含める', () => {
 		const storage = source('src/local-storage.ts');
 		const transfer = source('src/utility/hata-settings-transfer.ts');
 		expect(storage).toContain('\'hataPostDelayEnabled\'');
 		expect(storage).toContain('\'hataPostDelaySeconds\'');
-		expect(transfer).toContain('localKeys: [\'hataPostDelayEnabled\', \'hataPostDelaySeconds\']');
+		expect(transfer).toContain('localKeys: [\'hataHideMutedReactions\', \'hataPostDelayEnabled\', \'hataPostDelaySeconds\']');
 	});
 });

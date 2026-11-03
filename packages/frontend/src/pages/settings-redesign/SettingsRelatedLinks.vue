@@ -65,7 +65,7 @@ const copyx = i18n.tsx._hata._settingsRedesign;
 const expanded = ref(false);
 const initialLimit = 3;
 const resolvedHeading = computed(() => props.heading ?? copy.search.relatedHeading);
-const hasSettingsBrand = (value: string): boolean => /Hataskey|Hatask|Hatady|HataFeed/u.test(value);
+const hasSettingsBrand = (value: string): boolean => /Hataskey/u.test(value);
 const meaningfulItems = computed(() => props.items.filter(item => item.destructive !== true && item.label.trim() !== ''));
 const visibleItems = computed(() => expanded.value ? meaningfulItems.value : meaningfulItems.value.slice(0, initialLimit));
 const remainingCount = computed(() => expanded.value ? 0 : Math.max(0, meaningfulItems.value.length - initialLimit));

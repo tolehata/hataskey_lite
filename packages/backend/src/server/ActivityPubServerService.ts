@@ -103,9 +103,7 @@ export class ActivityPubServerService {
 	@bindThis
 	private async canServeNote(note: MiNote, request: FastifyRequest): Promise<boolean> {
 		if (note.localOnly || !['public', 'home'].includes(note.visibility)) return false;
-		// AP の公開取得はローカルの参加者セッションを持たない。参照先も匿名として判定する。
-		return await this.noteEntityService.isChannelVisibleForMe(note, null)
-			&& await this.activityPubAccessControlService.checkNoteAccess(note, request);
+		return await this.activityPubAccessControlService.checkNoteAccess(note, request);
 	}
 
 	/**
@@ -452,10 +450,9 @@ export class ActivityPubServerService {
 			order: { id: 'DESC' },
 		});
 
-		const pinnedCandidates = (await Promise.all(pinings.map(pining =>
+		const pinnedNotes = (await Promise.all(pinings.map(pining =>
 			this.notesRepository.findOneByOrFail({ id: pining.noteId }))))
 			.filter(note => !note.localOnly && ['public', 'home'].includes(note.visibility));
-		const pinnedNotes = await this.noteEntityService.filterChannelVisibleNotes(pinnedCandidates, null);
 
 		const renderedNotes = await Promise.all(pinnedNotes.map(note => this.apRendererService.renderNote(note)));
 
@@ -524,7 +521,7 @@ export class ActivityPubServerService {
 		const partOf = `${this.config.url}/users/${userId}/outbox`;
 
 		if (page) {
-			const candidates = this.meta.enableFanoutTimeline ? await this.fanoutTimelineEndpointService.getMiNotes({
+			const notes = this.meta.enableFanoutTimeline ? await this.fanoutTimelineEndpointService.getMiNotes({
 				sinceId: sinceId ?? null,
 				untilId: untilId ?? null,
 				limit: limit,
@@ -557,7 +554,6 @@ export class ActivityPubServerService {
 				limit,
 				userId: user.id,
 			});
-			const notes = await this.noteEntityService.filterChannelVisibleNotes(candidates, null);
 
 			if (sinceId) notes.reverse();
 
@@ -610,7 +606,6 @@ export class ActivityPubServerService {
 					.orWhere('note.visibility = \'home\'');
 			}))
 			.andWhere('note.localOnly = FALSE');
-		await this.queryService.generateChannelVisibilityQuery(query, null);
 		return await query.limit(ps.limit).getMany();
 	}
 

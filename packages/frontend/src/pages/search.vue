@@ -949,18 +949,6 @@ if (!props.embedded) {
 </script>
 
 <style lang="scss" module>
-:global(html[data-hk3-ui]) .searchPage,
-:global(html[data-hk3-ui]) .embedded {
-	--MI-notes-canvas: transparent;
-	--MI-notes-surface: var(--hk3-glass-note, color-mix(in srgb, var(--MI_THEME-panel) 70%, transparent));
-	--MI-notes-backdrop-filter: var(--MI-blur, blur(20px)) saturate(1.3);
-}
-
-:global(html[data-hk3-ui]) .embedded {
-	// The dock already supplies the glass backdrop; avoid stacking two dense panels.
-	--MI-notes-surface: var(--hk3-glass-soft, color-mix(in srgb, var(--MI_THEME-panel) 30%, transparent));
-}
-
 .searchPage[data-mobile='true'] {
 	scroll-padding-bottom: var(--MI-minBottomSpacingMobile);
 }

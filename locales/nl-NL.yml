@@ -2,7 +2,7 @@
 _lang_: "Nederlands"
 headlineMisskey: "Netwerk verbonden door notities"
 introMisskey: "Welkom! CherryPick is een open source, gedecentraliseerde microblogdienst.\nMaak \"notities\" om je gedachten te delen met iedereen om je heen. 📡\nMet \"reacties\" kun je ook snel je mening geven over berichten van anderen. 👍\nLaten we een nieuwe wereld verkennen! 🚀"
-poweredByMisskeyDescription: "{name} is één van de services die door het open source platform <b>Hataskey</b> wordt geleverd (het wordt ook wel een \"Hataskey server genmoemd\")."
+poweredByMisskeyDescription: "{name} is één van de services die door het open source platform <b>Hataskey Lite</b> wordt geleverd (het wordt ook wel een \"Hataskey server genmoemd\")."
 monthAndDay: "{day} {month}"
 search: "Zoeken"
 reset: "Herstellen"

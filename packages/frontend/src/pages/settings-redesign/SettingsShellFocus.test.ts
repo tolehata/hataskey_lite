@@ -9,25 +9,23 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const fixtures = await vi.hoisted(async () => {
 	const vue = await import('vue');
 	const { Nirax } = await import('@/lib/nirax.js');
-	const { rememberHatagoesOrigin, getHatagoesOrigin } = await import('@/utility/hatagoes-navigation.js');
 	const { settingsSearchV2ContextKey } = await import('@/utility/settings-search-v2-context.js');
 	const empty = vue.defineComponent({ render: () => null });
-	const routes = ['/', '/settings', '/settings/:page(*)', '/hatask', '/hatady', '/hatafeed', '/hatagoes', '/hata-side-studio'].map(path => ({ path, component: empty }));
+	const routes = ['/', '/settings', '/settings/:page(*)', '/hata-side-studio'].map(path => ({ path, component: empty }));
 	const createRouter = () => new Nirax(routes, '/settings', true, empty);
 	const router = createRouter();
 	const pushes: string[] = [];
 	router.addListener('push', ({ beforeFullPath, fullPath }) => {
 		pushes.push(fullPath);
-		rememberHatagoesOrigin(router, beforeFullPath, fullPath);
 	});
 	router.init();
 	const page = vue.defineComponent({ setup: (_, { slots }) => () => vue.h('div', slots.default?.()) });
 	const category = vue.defineComponent({
 		emits: ['openDestination'],
 		setup: (_, { emit }) => () => vue.h('button', {
-			'data-settings-destination-id': 'hata-hatady',
-			onClick: (event: MouseEvent) => emit('openDestination', 'hata-hatady', event),
-		}, 'Hatady'),
+			'data-settings-destination-id': 'hata-settings-transfer',
+			onClick: (event: MouseEvent) => emit('openDestination', 'hata-settings-transfer', event),
+		}, 'Settings transfer'),
 	});
 	const popup = vue.defineComponent({
 		emits: ['closed'],
@@ -42,8 +40,8 @@ const fixtures = await vi.hoisted(async () => {
 			return () => vue.h('div', [
 				vue.h('button', {
 					'data-ui2-popup': '',
-					onClick: () => context?.navigateToSetting({ route: '/settings/hata-custom', activation: { kind: 'popup', category: 'hatady', popup: 'hatady' } }),
-				}, 'Hatady'),
+					onClick: () => context?.navigateToSetting({ route: '/settings/hata-custom', activation: { kind: 'popup', category: 'general', popup: 'settings-transfer' } }),
+				}, 'Settings transfer'),
 				vue.h('button', { 'data-ui2-studio': '', onClick: () => emit('sideStudio') }, 'Side studio'),
 			]);
 		},
@@ -84,7 +82,7 @@ const fixtures = await vi.hoisted(async () => {
 			}) : null;
 		},
 	});
-	return { router, activeRouter: router, createRouter, pushes, getHatagoesOrigin, empty, page, category, popup, uiSurface, requestDiscard, search, openPopup, popupDisposers, width: 1024, animation: vue.ref(true), deviceKind: vue.ref('desktop') };
+	return { router, activeRouter: router, createRouter, pushes, empty, page, category, popup, uiSurface, requestDiscard, search, openPopup, popupDisposers, width: 1024, animation: vue.ref(true), deviceKind: vue.ref('desktop') };
 });
 
 vi.mock('@/router.js', () => ({ mainRouter: fixtures.router, useRouter: () => fixtures.activeRouter }));
@@ -180,7 +178,7 @@ function deferredNativeTransition() {
 	};
 }
 
-const externalPaths = ['/', '/hatask', '/hatady', '/hatafeed', '/hatagoes'] as const;
+const externalPaths = ['/'] as const;
 
 beforeEach(() => {
 	originalStartViewTransition = Object.getOwnPropertyDescriptor(window.document, 'startViewTransition');
@@ -244,7 +242,7 @@ describe('settings shell DOM focus', () => {
 		fixtures.width = width;
 		fixtures.animation.value = false;
 		const container = await mountShell();
-		expect(container.querySelectorAll('[data-settings-category-id]')).toHaveLength(13);
+		expect(container.querySelectorAll('[data-settings-category-id]')).toHaveLength(12);
 		const category = button(container, '[data-settings-category-id="appearance"]');
 		category.focus();
 		category.click();
@@ -256,7 +254,7 @@ describe('settings shell DOM focus', () => {
 		button(container, 'header button:has(.ti-arrow-left)').click();
 		await settle();
 		expect(fixtures.router.getCurrentFullPath()).toBe('/settings');
-		expect(container.querySelectorAll('[data-settings-category-id]')).toHaveLength(13);
+		expect(container.querySelectorAll('[data-settings-category-id]')).toHaveLength(12);
 		expect(window.document.activeElement).toBe(button(container, '[data-settings-category-id="appearance"]'));
 	});
 
@@ -276,22 +274,22 @@ describe('settings shell DOM focus', () => {
 	it.each(['desktop', 'tablet'])('幅1024の %s ではカテゴリ一覧を残し、スマホへの切り替えで本文のrouteを維持する', async deviceKind => {
 		fixtures.deviceKind.value = deviceKind;
 		fixtures.width = 1024;
-		const container = await mountShell('/settings?category=apps');
+		const container = await mountShell('/settings?category=data');
 		expect(container.querySelector('aside')).not.toBeNull();
-		expect(button(container, '[data-settings-category-id="apps"]').isConnected).toBe(true);
+		expect(button(container, '[data-settings-category-id="data"]').isConnected).toBe(true);
 		fixtures.deviceKind.value = 'smartphone';
 		await settle();
 		expect(container.querySelector('aside')).toBeNull();
-		expect(fixtures.router.getCurrentFullPath()).toBe('/settings?category=apps');
-		expect(button(container, '[data-settings-destination-id="hata-hatady"]').isConnected).toBe(true);
+		expect(fixtures.router.getCurrentFullPath()).toBe('/settings?category=data');
+		expect(button(container, '[data-settings-destination-id="hata-settings-transfer"]').isConnected).toBe(true);
 	});
 
 	it.each(['desktop', 'tablet'])('%sで幅601→600→375→601を通知しても本文とrouteを維持し一覧だけを切り替える', async deviceKind => {
 		fixtures.deviceKind.value = deviceKind;
 		fixtures.width = 601;
-		const container = await mountShell('/settings?category=apps');
+		const container = await mountShell('/settings?category=data');
 		const main = container.querySelector('main');
-		const content = button(container, '[data-settings-destination-id="hata-hatady"]');
+		const content = button(container, '[data-settings-destination-id="hata-settings-transfer"]');
 		content.focus();
 		expect(container.querySelector('aside')).not.toBeNull();
 		for (const width of [600, 375, 601]) {
@@ -300,9 +298,9 @@ describe('settings shell DOM focus', () => {
 			if (width <= 600) expect(container.querySelector('aside')).toBeNull();
 			else expect(container.querySelector('aside')).not.toBeNull();
 			expect(container.querySelector('main')).toBe(main);
-			expect(button(container, '[data-settings-destination-id="hata-hatady"]')).toBe(content);
+			expect(button(container, '[data-settings-destination-id="hata-settings-transfer"]')).toBe(content);
 			expect(window.document.activeElement).toBe(content);
-			expect(fixtures.router.getCurrentFullPath()).toBe('/settings?category=apps');
+			expect(fixtures.router.getCurrentFullPath()).toBe('/settings?category=data');
 		}
 		expect(fixtures.router.pushByPath).not.toHaveBeenCalled();
 	});
@@ -310,7 +308,7 @@ describe('settings shell DOM focus', () => {
 	it.each(['smartphone', 'desktop', 'tablet'].flatMap(deviceKind => ['Tab', 'Escape'].map(key => ({ deviceKind, key }))))('幅375の$deviceKindのサブメニューで検索を$keyで閉じてもfocusが非表示のカテゴリへ逃げない', async ({ deviceKind, key }) => {
 		fixtures.deviceKind.value = deviceKind;
 		fixtures.width = 375;
-		const container = await mountShell('/settings?category=apps');
+		const container = await mountShell('/settings?category=data');
 		const searchTrigger = button(container, 'header button:has(.ti-search)');
 		searchTrigger.focus();
 		searchTrigger.click();
@@ -324,23 +322,8 @@ describe('settings shell DOM focus', () => {
 		expect(container.querySelector('aside')).toBeNull();
 	});
 
-	it('Hatagoesの出口で設定へ戻った後、設定出口からHatagoesへ循環しない', async () => {
-		fixtures.animation.value = false;
-		const container = await mountShell();
-		fixtures.router.pushByPath('/hatagoes');
-		await settle();
-		expect(fixtures.getHatagoesOrigin(fixtures.router)).toBe('/settings');
-		fixtures.router.pushByPath(fixtures.getHatagoesOrigin(fixtures.router));
-		await settle();
-		button(container, 'header button:has(.ti-arrow-left)').click();
-		await settle();
-		expect(fixtures.router.getCurrentFullPath()).toBe('/');
-		expect(fixtures.pushes).toEqual(['/hatagoes', '/settings', '/']);
-		expect(fixtures.router.pushByPath).toHaveBeenCalledTimes(3);
-	});
-
 	it.each(externalPaths)('設定から %s への通常移動を一度だけ確定し、設定へ戻さない', async path => {
-		await mountShell('/settings?category=apps');
+		await mountShell('/settings?category=data');
 		fixtures.router.pushByPath(path);
 		await settle();
 		await settle();
@@ -374,12 +357,12 @@ describe('settings shell DOM focus', () => {
 		button(container, '[data-settings-category-id="appearance"]').click();
 		await settle();
 		expect(transition.start).toHaveBeenCalledTimes(1);
-		fixtures.router.pushByPath('/hatask');
+		fixtures.router.pushByPath('/');
 		if (flushBeforeReturn) await settle();
 		fixtures.router.pushByPath('/settings');
 		await transition.complete();
 		expect(fixtures.router.getCurrentFullPath()).toBe('/settings');
-		expect(fixtures.pushes).toEqual(['/hatask', '/settings']);
+		expect(fixtures.pushes).toEqual(['/', '/settings']);
 		expect(fixtures.router.pushByPath).toHaveBeenCalledTimes(2);
 		expect(transition.skipTransition).toHaveBeenCalledTimes(1);
 	});
@@ -392,15 +375,15 @@ describe('settings shell DOM focus', () => {
 		button(container, '[data-ui2-popup]').click();
 		await settle();
 		expect(fixtures.requestDiscard).toHaveBeenCalledTimes(1);
-		fixtures.router.pushByPath('/hatask');
+		fixtures.router.pushByPath('/');
 		await settle();
 		if (approve == null) throw new Error('Draft discard confirmation was not requested');
 		approve(true);
 		await settle();
-		expect(fixtures.router.getCurrentFullPath()).toBe('/hatask');
+		expect(fixtures.router.getCurrentFullPath()).toBe('/');
 		expect(window.document.querySelector('[data-close-popup]')).toBeNull();
 		expect(fixtures.openPopup).not.toHaveBeenCalled();
-		expect(fixtures.pushes).toEqual(['/hatask']);
+		expect(fixtures.pushes).toEqual(['/']);
 		expect(fixtures.router.pushByPath).toHaveBeenCalledTimes(1);
 	});
 
@@ -411,21 +394,21 @@ describe('settings shell DOM focus', () => {
 		button(container, '[data-ui2-studio]').click();
 		await settle();
 		expect(fixtures.requestDiscard).toHaveBeenCalledTimes(1);
-		fixtures.router.pushByPath('/hatask');
+		fixtures.router.pushByPath('/');
 		await settle();
 		if (approve == null) throw new Error('Draft discard confirmation was not requested');
 		approve(true);
 		await settle();
-		expect(fixtures.router.getCurrentFullPath()).toBe('/hatask');
-		expect(fixtures.pushes).toEqual(['/hatask']);
+		expect(fixtures.router.getCurrentFullPath()).toBe('/');
+		expect(fixtures.pushes).toEqual(['/']);
 		expect(fixtures.router.pushByPath).toHaveBeenCalledTimes(1);
 	});
 
 	it.each(externalPaths.flatMap(path => [{ path, width: 1024 }, { path, width: 375 }]))('popup表示から $path へ移動すると閉じ、設定へ戻っても再表示しない（幅=$width）', async ({ path, width }) => {
 		fixtures.width = width;
 		fixtures.animation.value = false;
-		const container = await mountShell('/settings?category=apps');
-		button(container, '[data-settings-destination-id="hata-hatady"]').click();
+		const container = await mountShell('/settings?category=data');
+		button(container, '[data-settings-destination-id="hata-settings-transfer"]').click();
 		await settle();
 		const oldCloseButton = button(window.document.body, '[data-close-popup]');
 		expect(oldCloseButton.isConnected).toBe(true);
@@ -436,12 +419,12 @@ describe('settings shell DOM focus', () => {
 		oldCloseButton.click();
 		await settle();
 		expect(fixtures.router.getCurrentFullPath()).toBe(path);
-		fixtures.router.pushByPath('/settings?category=apps');
+		fixtures.router.pushByPath('/settings?category=data');
 		await settle();
 		expect(window.document.querySelector('[data-close-popup]')).toBeNull();
-		expect(button(container, '[data-settings-destination-id="hata-hatady"]').isConnected).toBe(true);
+		expect(button(container, '[data-settings-destination-id="hata-settings-transfer"]').isConnected).toBe(true);
 		expect(fixtures.openPopup).toHaveBeenCalledTimes(width === 375 ? 1 : 0);
-		expect(fixtures.pushes).toEqual([path, '/settings?category=apps']);
+		expect(fixtures.pushes).toEqual([path, '/settings?category=data']);
 		expect(fixtures.router.pushByPath).toHaveBeenCalledTimes(2);
 	});
 
@@ -534,8 +517,8 @@ describe('settings shell DOM focus', () => {
 
 	it('埋め込みpopupから閉じると、再描画された元のdestinationボタンへfocusを戻す', async () => {
 		fixtures.animation.value = false;
-		const container = await mountShell('/settings?category=apps');
-		const opener = button(container, '[data-settings-destination-id="hata-hatady"]');
+		const container = await mountShell('/settings?category=data');
+		const opener = button(container, '[data-settings-destination-id="hata-settings-transfer"]');
 		opener.focus();
 		opener.click();
 		await settle();
@@ -543,7 +526,7 @@ describe('settings shell DOM focus', () => {
 		expect(window.document.activeElement).toBe(container.querySelector('main'));
 		button(container, '[data-close-popup]').click();
 		await settle();
-		const restored = button(container, '[data-settings-destination-id="hata-hatady"]');
+		const restored = button(container, '[data-settings-destination-id="hata-settings-transfer"]');
 		expect(restored).not.toBe(opener);
 		expect(window.document.activeElement).toBe(restored);
 	});
@@ -551,8 +534,8 @@ describe('settings shell DOM focus', () => {
 	it('スマホ幅ではfocusしないクリックでもpopupを閉じると押したdestinationボタンへ戻る', async () => {
 		fixtures.width = 375;
 		fixtures.animation.value = false;
-		const container = await mountShell('/settings?category=apps');
-		const opener = button(container, '[data-settings-destination-id="hata-hatady"]');
+		const container = await mountShell('/settings?category=data');
+		const opener = button(container, '[data-settings-destination-id="hata-settings-transfer"]');
 		expect(window.document.activeElement).not.toBe(opener);
 		opener.click();
 		await settle();

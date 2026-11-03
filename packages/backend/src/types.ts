@@ -47,29 +47,14 @@ export const notificationTypes = [
 	'login',
 	'createToken',
 	'app',
-	'hataFeed',
-	'hatady',
-	'hataskFlowerReady',
-	'hataskFlowerBloomed',
-	'hataskZukanUpdated',
-	'hataskFestivalBloomed',
-	'earthquake',
 	'test',
 ] as const;
 
-// 通知の受信設定(notificationRecieveConfig)には含めないが、通知一覧の
-// includeTypes / excludeTypes が受け付ける旗鯖独自通知を含めた集合。
+// 通知一覧の includeTypes / excludeTypes が受け付ける集合。
 // フロント側の cherrypick-js notificationTypes と同期すること。
 export const notificationFilterTypes = [
 	...notificationTypes,
-	'addedToPrivateChannel',
-	'removedFromPrivateChannel',
-	// 獲得通知は受信設定・種類フィルタにかかわらず届ける。一覧のブランド選択には従う。
-	'hataskDecorationUnlocked',
 ] as const;
-
-export const hatadyNotificationSubtypes = ['follow', 'comment', 'reaction', 'milestone', 'goalDone', 'mediaComment', 'mediaReply', 'mediaReaction'] as const;
-export type HatadyNotificationSubtype = typeof hatadyNotificationSubtypes[number];
 
 export const groupedNotificationTypes = [
 	...notificationFilterTypes,
@@ -105,10 +90,6 @@ export const userExportableEntities = ['antenna', 'blocking', 'clip', 'customEmo
 export const userImportableEntities = ['antenna', 'blocking', 'customEmoji', 'following', 'muting', 'userList'] as const;
 
 export const moderationLogTypes = [
-	'deleteHatadyRecord',
-	'deleteHataskRecord',
-	'warnHatadyUser',
-	'warnHataskUser',
 	'voteRegistrationApplication',
 	'approveRegistrationApplication',
 	'rejectRegistrationApplication',
@@ -170,10 +151,6 @@ export const moderationLogTypes = [
 ] as const;
 
 export type ModerationLogPayloads = {
-	deleteHatadyRecord: import('@/misc/record-moderation.js').RecordModerationInfo;
-	deleteHataskRecord: import('@/misc/record-moderation.js').RecordModerationInfo;
-	warnHatadyUser: import('@/misc/record-moderation.js').RecordModerationInfo;
-	warnHataskUser: import('@/misc/record-moderation.js').RecordModerationInfo;
 	voteRegistrationApplication: { applicationId: string; choice: 'agree' | 'oppose' };
 	approveRegistrationApplication: { applicationId: string };
 	rejectRegistrationApplication: { applicationId: string };

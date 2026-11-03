@@ -1,0 +1,17 @@
+packages/backend/migration/1784000000000-earthquake-notification.js
+packages/backend/src/core/EarthquakeService.ts
+packages/backend/src/models/EarthquakeNotification.ts
+packages/backend/src/server/api/endpoints/hata/earthquake/history.ts
+packages/backend/src/server/api/endpoints/hata/earthquake/notification-settings-update.ts
+packages/backend/src/server/api/endpoints/hata/earthquake/notification-settings.ts
+packages/backend/src/server/api/endpoints/hata/earthquake/tsunami.ts
+packages/frontend/src/components/HataSideStudioEarthquake.vue
+packages/frontend/src/components/MkEarthquakeColumn.vue
+packages/frontend/src/components/MkEarthquakeMap.vue
+packages/frontend/src/components/MkEarthquakePicker.vue
+packages/frontend/src/components/MkEarthquakeSettings.vue
+packages/frontend/src/components/MkEarthquakeTicker.vue
+packages/frontend/src/pages/earthquake.vue
+packages/frontend/src/ui/deck/earthquake-column.vue
+packages/frontend/src/utility/earthquake.ts
+packages/frontend/src/widgets/WidgetEarthquake.vue

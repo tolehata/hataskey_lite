@@ -74,7 +74,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				.leftJoinAndSelect('renote.user', 'renoteUser');
 
 			this.queryService.generateVisibilityQuery(query, me);
-			await this.queryService.generateChannelVisibilityQuery(query, me);
 			this.queryService.generateBaseNoteFilteringQuery(query, me);
 
 			const renotes = await query.limit(ps.limit).getMany();

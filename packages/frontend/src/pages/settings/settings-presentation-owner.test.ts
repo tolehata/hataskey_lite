@@ -30,7 +30,6 @@ vi.mock('@/components/MkInput.vue', () => ({ default: stubs.body }));
 vi.mock('@/components/MkColorInput.vue', () => ({ default: stubs.body }));
 vi.mock('@/components/MkDisableSection.vue', () => ({ default: stubs.body }));
 vi.mock('@/components/MkFeatureBanner.vue', () => ({ default: stubs.body }));
-vi.mock('@/components/HataAppNavIcon.vue', () => ({ default: stubs.body }));
 vi.mock('@/components/MkHatakyuIllustration.vue', () => ({ default: stubs.body }));
 vi.mock('@/components/form/link.vue', () => ({ default: stubs.body }));
 vi.mock('@/components/MkPreferenceContainer.vue', async () => {
@@ -62,7 +61,7 @@ vi.mock('@/i18n.js', () => {
 	const copy = () => new Proxy({}, { get: (_, key) => String(key) });
 	return { i18n: {
 		ts: { _cherrypick: copy(), _nsfwOpenBehavior: copy(), _hata: { _customSettings: {
-			...Object.fromEntries(['_general', '_font', '_ui', '_visual', '_hatask', '_hatady', '_mascot', '_other'].map(key => [key, copy()])),
+			...Object.fromEntries(['_general', '_ui', '_visual', '_other'].map(key => [key, copy()])),
 			title: 'Hataskey', categoryVisual: 'categoryVisual',
 		} } },
 		tsx: { _hata: { _customSettings: {} } },
@@ -71,9 +70,7 @@ vi.mock('@/i18n.js', () => {
 vi.mock('@/page.js', () => ({ definePage: vi.fn() }));
 vi.mock('@/utility/reload-suggest.js', () => ({ suggestReload: mocks.reload }));
 vi.mock('@/utility/hatakyu-assets.js', () => ({ brandedIconUrl: () => '', useHatakyuBranding: () => false }));
-vi.mock('@/utility/hata-app-brand.js', () => ({ hataAppForMenuIcon: () => null }));
 vi.mock('@/utility/misskey-api.js', () => ({ misskeyApi: mocks.api }));
-vi.mock('@/utility/drive.js', () => ({ chooseDriveFile: vi.fn(), uploadFile: vi.fn() }));
 vi.mock('@/i.js', () => ({ ensureSignin: vi.fn() }));
 vi.mock('@/os.js', () => ({ popup: mocks.popup }));
 vi.mock('@/router.js', () => ({ useRouter: () => ({ push: vi.fn() }) }));
@@ -84,7 +81,6 @@ vi.mock('@/utility/hatasaba-device-prefs.js', async () => {
 	const { ref: createRef } = await import('vue');
 	return { glassUiLocal: createRef(true), setGlassUiLocal: vi.fn(), glassUiBubbleLocal: createRef(true), setGlassUiBubbleLocal: vi.fn(), hideMutedReactionsLocal: createRef(false), setHideMutedReactionsLocal: vi.fn(), foldableLayoutMode: createRef('auto'), setFoldableLayoutMode: vi.fn() };
 });
-vi.mock('@/scripts/hata-font-manager.js', () => ({ HATA_FONT_PRESETS: [], DEFAULT_HATA_FONT_ID: 'system', SYSTEM_HATA_FONT_STACK: 'sans-serif', applyHataFont: vi.fn(), resolveHataFontId: () => 'system' }));
 
 const mounted: { app: App; container: HTMLDivElement }[] = [];
 
@@ -263,7 +259,7 @@ describe('Hataskey custom settings category presentation', () => {
 	it('既存post操作を接続し、他ownerにある公開範囲枠を二重表示しない', async () => {
 		const { category, container } = mountOwner(HataCustomSettings, 'post');
 		const modelCount = mocks.models.mock.calls.length;
-		expect(visibleSwitches(container)).toEqual(['showHashtagButton', 'showDrawingButton']);
+		expect(visibleSwitches(container)).toEqual(['showHashtagButton']);
 		[...container.querySelectorAll<HTMLButtonElement>('[data-setting-switch]')].find(button => visible(button) && button.textContent === 'showHashtagButton')?.click();
 		await nextTick();
 		expect(mocks.writes).toHaveBeenCalledExactlyOnceWith('showHashtagButtonInPostForm', true);
@@ -274,10 +270,10 @@ describe('Hataskey custom settings category presentation', () => {
 		expect(mocks.writes).toHaveBeenCalledTimes(1);
 	});
 
-	it('通知とdataへ切替後も同じownerを使用する', async () => {
-		const { category, container } = mountOwner(HataCustomSettings, 'notify');
+	it('dataへ切替後も同じownerを使用する', async () => {
+		const { category, container } = mountOwner(HataCustomSettings, 'post');
 		const modelCount = mocks.models.mock.calls.length;
-		expect(visibleSwitches(container)).toEqual(['showLoginDaysPopup']);
+		expect(visibleSwitches(container)).toEqual(['showHashtagButton']);
 		category.value = 'data';
 		await nextTick();
 		expect(visibleSwitches(container)).toEqual([]);

@@ -65,14 +65,14 @@ function fixture(initial: MiNotification[]) {
 	};
 	const entity = new NotificationEntityService(
 		{ get: (name: string) => name === 'UserEntityService' ? userPacker : name === 'NoteEntityService' ? notePacker : {} } as never,
-		notesRepository as never, usersRepository as never, {} as never, {} as never, {} as never, {} as never, cache as never,
+		notesRepository as never, usersRepository as never, {} as never, {} as never, cache as never,
 	);
 	entity.onModuleInit();
 	const idService = { parseFull: (id: string) => ({ date: 1000 + Number(id.slice(1)), additional: 0n }) };
 	const events = { publishMainStream: vi.fn() };
 	const service = new NotificationService(
 		{ perUserNotificationsMaxCount: 100 } as never, redis as never, usersRepository as never,
-		{} as never, {} as never, entity, idService as never, events as never,
+		entity, idService as never, events as never,
 		{ pushNotification: vi.fn() } as never, cache as never, {} as never,
 	);
 	return {

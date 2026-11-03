@@ -226,7 +226,6 @@ export class FanoutTimelineEndpointService {
 			.leftJoinAndSelect('renote.user', 'renoteUser')
 			.leftJoinAndSelect('note.channel', 'channel');
 
-		await this.queryService.generateChannelVisibilityQuery(query, me);
 		const notes = (await query.getMany()).filter(noteFilter);
 
 		notes.sort((a, b) => idCompare(a.id, b.id));

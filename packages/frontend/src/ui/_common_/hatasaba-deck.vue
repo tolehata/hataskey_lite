@@ -20,9 +20,9 @@
 -->
 
 <template>
-<div :data-hk3="props.hk3 ? 'true' : undefined" :class="[$style.deckWrap, toolbarPos === 'right' ? $style.deckWrapRight : toolbarPos === 'bottom' ? $style.deckWrapBottom : $style.deckWrapTop]" :data-widget-border="prefer.r['simpleUi.widgetBorder']?.value ? 'on' : 'off'" :data-animation="prefer.s.animation ? 'true' : 'false'" @keydown.capture="onDeckKeydown">
+<div :class="[$style.deckWrap, toolbarPos === 'right' ? $style.deckWrapRight : toolbarPos === 'bottom' ? $style.deckWrapBottom : $style.deckWrapTop]" :data-widget-border="prefer.r['simpleUi.widgetBorder']?.value ? 'on' : 'off'" :data-animation="prefer.s.animation ? 'true' : 'false'">
 	<!-- 折り畳み式ツールバー (上部メニューモード時は、開いている時だけ表示) -->
-	<div v-if="!topNavMode || toolbarOpen" :data-hata-collapse-part="props.hk3 ? '' : undefined" :class="$style.toolbarBar">
+	<div v-if="!topNavMode || toolbarOpen" :class="$style.toolbarBar">
 		<button v-if="!topNavMode" :class="[$style.toolbarToggle, { [$style.toolbarToggleOn]: toolbarOpen }]" v-tooltip="toolbarOpen ? copy.hideToolbar : copy.showToolbar" @click="toolbarOpen = !toolbarOpen">
 			<i :class="toolbarOpen ? 'ti ti-chevron-up' : 'ti ti-adjustments-horizontal'"></i>
 		</button>
@@ -81,7 +81,7 @@
 								</button>
 							</div>
 							<!-- 旗鯖fork: チャンネル投稿ボタンは `simpleUi.showLegacyChannelPostButton` (default false) 時のみ表示。
-	既定ではノートリスト最上部の固定投稿ボタンを主導線とし、ここは非表示。 --><button v-if="showLegacyChannelPostButton && activeTabOf(frame).type === 'channel' && activeTabOf(frame).sourceId" class="_button" :class="$style.frameHeadBtn" v-tooltip="copy.postToThisChannel" @click.stop="postToChannel(activeTabOf(frame).sourceId!)"><i class="ti ti-pencil-plus"></i></button><!-- 旗鯖fork: お気に入り/クリップにはリロードボタン。ストリーミングでないため手動更新が要る。 --><button v-if="activeTabOf(frame).type === 'clip' || activeTabOf(frame).type === 'favorites'" class="_button" :class="$style.frameHeadBtn" v-tooltip="copy.reload" @click.stop="reloadPaginated(activeTabOf(frame).id)"><i class="ti ti-refresh"></i></button><button v-if="activeTabOf(frame).type === 'favorites'" v-tooltip="i18n.ts._hata._favoriteFolders.folderList" class="_button" :class="$style.frameHeadBtn" :aria-label="i18n.ts._hata._favoriteFolders.folderList" @click.stop="manageFavoriteFolder(activeTabOf(frame).id, $event)"><i class="ti ti-folders"></i></button><button v-if="activeTabOf(frame).type === 'externalNotifications'" class="_button" :class="$style.frameHeadBtn" v-tooltip="copy.markAsRead" @click.stop="markExtRead(activeTabOf(frame).id)"><i class="ti ti-check"></i></button>
+	既定ではノートリスト最上部の固定投稿ボタンを主導線とし、ここは非表示。 --><button v-if="showLegacyChannelPostButton && activeTabOf(frame).type === 'channel' && activeTabOf(frame).sourceId" class="_button" :class="$style.frameHeadBtn" v-tooltip="copy.postToThisChannel" @click.stop="postToChannel(activeTabOf(frame).sourceId!)"><i class="ti ti-pencil-plus"></i></button><!-- 旗鯖fork: お気に入り/クリップにはリロードボタン。ストリーミングでないため手動更新が要る。 --><button v-if="activeTabOf(frame).type === 'clip' || activeTabOf(frame).type === 'favorites'" class="_button" :class="$style.frameHeadBtn" v-tooltip="copy.reload" @click.stop="reloadPaginated(activeTabOf(frame).id)"><i class="ti ti-refresh"></i></button><button v-if="activeTabOf(frame).type === 'favorites'" v-tooltip="i18n.ts._hata._favoriteFolders.folderList" class="_button" :class="$style.frameHeadBtn" :aria-label="i18n.ts._hata._favoriteFolders.folderList" @click.stop="manageFavoriteFolder(activeTabOf(frame).id, $event)"><i class="ti ti-folders"></i></button>
 							<button v-if="frame.tabs.length > 1" class="_button" :class="$style.frameTabsBtn" v-tooltip="copy.manageTabs" @click.stop="openTabManageMenu(slot, frame, $event)"><i class="ti ti-layout-navbar"></i></button>
 							<button v-if="!locked" class="_button" :class="$style.slotHandle" v-tooltip="copy.moveOrConfigureColumn" @pointerdown="onSlotPointerDown(slot.id, $event)" @click.stop="openSlotMenu(slot, $event)"><i class="ti ti-grip-vertical"></i></button>
 							<button class="_button" :class="$style.frameMenuBtn" @click.stop="openFrameMenu(slot, frame, $event)"><i class="ti ti-dots"></i></button>
@@ -89,9 +89,7 @@
 						<!-- 本体(アクティブタブ) -->
 						<div :class="['frameBody', $style.frameBody]" @touchstart.passive="onFrameTouchStart(frame, $event)" @touchend="onFrameTouchEnd(slot, frame, $event)">
 							<template v-for="tab in frame.tabs" :key="tab.id">
-								<div v-if="tab.type === 'local'" v-show="activeTabOf(frame).id === tab.id" :ref="el => setEmojiVoteEffectRef(tab.id, el)" :class="$style.emojiVoteEffects" aria-hidden="true"></div>
-								<div v-show="activeTabOf(frame).id === tab.id" :class="[$style.tabPane, { [$style.tabPanePostForm]: tab.type === 'postForm', [$style.tabPaneExtNotif]: tab.type === 'externalNotifications', [$style.tabPaneWidgets]: tab.type === 'widgets' }]" :data-active="activeTabOf(frame).id === tab.id ? 'true' : 'false'" :ref="el => setPaneRef(tab.id, el)">
-									<button v-if="tab.type === 'hatady'" type="button" :class="$style.hatadyRecordButton" @click="recordInColumn(tab.id)"><i class="ti ti-book-2" aria-hidden="true"></i>{{ i18n.ts._hata._hatasabaUi._simple.record }}</button>
+								<div v-show="activeTabOf(frame).id === tab.id" :class="[$style.tabPane, { [$style.tabPanePostForm]: tab.type === 'postForm', [$style.tabPaneWidgets]: tab.type === 'widgets' }]" :data-active="activeTabOf(frame).id === tab.id ? 'true' : 'false'" :ref="el => setPaneRef(tab.id, el)">
 									<component :is="resolveColumn(tab)" v-bind="columnProps(tab, frame)" :ref="el => setColRef(tab.id, el)"/>
 								</div>
 							</template>
@@ -122,15 +120,14 @@
 								</button>
 							</div>
 							<!-- 旗鯖fork: チャンネル投稿ボタンは `simpleUi.showLegacyChannelPostButton` (default false) 時のみ表示。
-	既定ではノートリスト最上部の固定投稿ボタンを主導線とし、ここは非表示。 --><button v-if="showLegacyChannelPostButton && activeTabOf(frame).type === 'channel' && activeTabOf(frame).sourceId" class="_button" :class="$style.frameHeadBtn" v-tooltip="copy.postToThisChannel" @click.stop="postToChannel(activeTabOf(frame).sourceId!)"><i class="ti ti-pencil-plus"></i></button><!-- 旗鯖fork: お気に入り/クリップにはリロードボタン。ストリーミングでないため手動更新が要る。 --><button v-if="activeTabOf(frame).type === 'clip' || activeTabOf(frame).type === 'favorites'" class="_button" :class="$style.frameHeadBtn" v-tooltip="copy.reload" @click.stop="reloadPaginated(activeTabOf(frame).id)"><i class="ti ti-refresh"></i></button><button v-if="activeTabOf(frame).type === 'favorites'" v-tooltip="i18n.ts._hata._favoriteFolders.folderList" class="_button" :class="$style.frameHeadBtn" :aria-label="i18n.ts._hata._favoriteFolders.folderList" @click.stop="manageFavoriteFolder(activeTabOf(frame).id, $event)"><i class="ti ti-folders"></i></button><button v-if="activeTabOf(frame).type === 'externalNotifications'" class="_button" :class="$style.frameHeadBtn" v-tooltip="copy.markAsRead" @click.stop="markExtRead(activeTabOf(frame).id)"><i class="ti ti-check"></i></button>
+	既定ではノートリスト最上部の固定投稿ボタンを主導線とし、ここは非表示。 --><button v-if="showLegacyChannelPostButton && activeTabOf(frame).type === 'channel' && activeTabOf(frame).sourceId" class="_button" :class="$style.frameHeadBtn" v-tooltip="copy.postToThisChannel" @click.stop="postToChannel(activeTabOf(frame).sourceId!)"><i class="ti ti-pencil-plus"></i></button><!-- 旗鯖fork: お気に入り/クリップにはリロードボタン。ストリーミングでないため手動更新が要る。 --><button v-if="activeTabOf(frame).type === 'clip' || activeTabOf(frame).type === 'favorites'" class="_button" :class="$style.frameHeadBtn" v-tooltip="copy.reload" @click.stop="reloadPaginated(activeTabOf(frame).id)"><i class="ti ti-refresh"></i></button><button v-if="activeTabOf(frame).type === 'favorites'" v-tooltip="i18n.ts._hata._favoriteFolders.folderList" class="_button" :class="$style.frameHeadBtn" :aria-label="i18n.ts._hata._favoriteFolders.folderList" @click.stop="manageFavoriteFolder(activeTabOf(frame).id, $event)"><i class="ti ti-folders"></i></button>
 							<button v-if="frame.tabs.length > 1" class="_button" :class="$style.frameTabsBtn" v-tooltip="copy.manageTabs" @click.stop="openTabManageMenu(slot, frame, $event)"><i class="ti ti-layout-navbar"></i></button>
 							<button v-if="!locked" class="_button" :class="$style.slotHandle" v-tooltip="copy.moveOrConfigureColumn" @pointerdown="onSlotPointerDown(slot.id, $event)" @click.stop="openSlotMenu(slot, $event)"><i class="ti ti-grip-vertical"></i></button>
 							<button class="_button" :class="$style.frameMenuBtn" @click.stop="openFrameMenu(slot, frame, $event)"><i class="ti ti-dots"></i></button>
 						</div>
 						<div :class="['frameBody', $style.frameBody]" @touchstart.passive="onFrameTouchStart(frame, $event)" @touchend="onFrameTouchEnd(slot, frame, $event)">
 							<template v-for="tab in frame.tabs" :key="tab.id">
-								<div v-if="tab.type === 'local'" v-show="activeTabOf(frame).id === tab.id" :ref="el => setEmojiVoteEffectRef(tab.id, el)" :class="$style.emojiVoteEffects" aria-hidden="true"></div>
-								<div v-show="activeTabOf(frame).id === tab.id" :class="[$style.tabPane, { [$style.tabPanePostForm]: tab.type === 'postForm', [$style.tabPaneExtNotif]: tab.type === 'externalNotifications', [$style.tabPaneWidgets]: tab.type === 'widgets' }]" :data-active="activeTabOf(frame).id === tab.id ? 'true' : 'false'" :ref="el => setPaneRef(tab.id, el)"><button v-if="tab.type === 'hatady'" type="button" :class="$style.hatadyRecordButton" @click="recordInColumn(tab.id)"><i class="ti ti-book-2" aria-hidden="true"></i>{{ i18n.ts._hata._hatasabaUi._simple.record }}</button><component :is="resolveColumn(tab)" v-bind="columnProps(tab, frame)" :ref="el => setColRef(tab.id, el)"/></div>
+								<div v-show="activeTabOf(frame).id === tab.id" :class="[$style.tabPane, { [$style.tabPanePostForm]: tab.type === 'postForm', [$style.tabPaneWidgets]: tab.type === 'widgets' }]" :data-active="activeTabOf(frame).id === tab.id ? 'true' : 'false'" :ref="el => setPaneRef(tab.id, el)"><component :is="resolveColumn(tab)" v-bind="columnProps(tab, frame)" :ref="el => setColRef(tab.id, el)"/></div>
 							</template>
 						</div>
 					</div>
@@ -154,15 +151,14 @@
 								</button>
 							</div>
 							<!-- 旗鯖fork: チャンネル投稿ボタンは `simpleUi.showLegacyChannelPostButton` (default false) 時のみ表示。
-	既定ではノートリスト最上部の固定投稿ボタンを主導線とし、ここは非表示。 --><button v-if="showLegacyChannelPostButton && activeTabOf(frame).type === 'channel' && activeTabOf(frame).sourceId" class="_button" :class="$style.frameHeadBtn" v-tooltip="copy.postToThisChannel" @click.stop="postToChannel(activeTabOf(frame).sourceId!)"><i class="ti ti-pencil-plus"></i></button><!-- 旗鯖fork: お気に入り/クリップにはリロードボタン。ストリーミングでないため手動更新が要る。 --><button v-if="activeTabOf(frame).type === 'clip' || activeTabOf(frame).type === 'favorites'" class="_button" :class="$style.frameHeadBtn" v-tooltip="copy.reload" @click.stop="reloadPaginated(activeTabOf(frame).id)"><i class="ti ti-refresh"></i></button><button v-if="activeTabOf(frame).type === 'favorites'" v-tooltip="i18n.ts._hata._favoriteFolders.folderList" class="_button" :class="$style.frameHeadBtn" :aria-label="i18n.ts._hata._favoriteFolders.folderList" @click.stop="manageFavoriteFolder(activeTabOf(frame).id, $event)"><i class="ti ti-folders"></i></button><button v-if="activeTabOf(frame).type === 'externalNotifications'" class="_button" :class="$style.frameHeadBtn" v-tooltip="copy.markAsRead" @click.stop="markExtRead(activeTabOf(frame).id)"><i class="ti ti-check"></i></button>
+	既定ではノートリスト最上部の固定投稿ボタンを主導線とし、ここは非表示。 --><button v-if="showLegacyChannelPostButton && activeTabOf(frame).type === 'channel' && activeTabOf(frame).sourceId" class="_button" :class="$style.frameHeadBtn" v-tooltip="copy.postToThisChannel" @click.stop="postToChannel(activeTabOf(frame).sourceId!)"><i class="ti ti-pencil-plus"></i></button><!-- 旗鯖fork: お気に入り/クリップにはリロードボタン。ストリーミングでないため手動更新が要る。 --><button v-if="activeTabOf(frame).type === 'clip' || activeTabOf(frame).type === 'favorites'" class="_button" :class="$style.frameHeadBtn" v-tooltip="copy.reload" @click.stop="reloadPaginated(activeTabOf(frame).id)"><i class="ti ti-refresh"></i></button><button v-if="activeTabOf(frame).type === 'favorites'" v-tooltip="i18n.ts._hata._favoriteFolders.folderList" class="_button" :class="$style.frameHeadBtn" :aria-label="i18n.ts._hata._favoriteFolders.folderList" @click.stop="manageFavoriteFolder(activeTabOf(frame).id, $event)"><i class="ti ti-folders"></i></button>
 							<button v-if="frame.tabs.length > 1" class="_button" :class="$style.frameTabsBtn" v-tooltip="copy.manageTabs" @click.stop="openTabManageMenu(slot, frame, $event)"><i class="ti ti-layout-navbar"></i></button>
 							<button v-if="!locked" class="_button" :class="$style.slotHandle" v-tooltip="copy.moveOrConfigureColumn" @pointerdown="onSlotPointerDown(slot.id, $event)" @click.stop="openSlotMenu(slot, $event)"><i class="ti ti-grip-vertical"></i></button>
 							<button class="_button" :class="$style.frameMenuBtn" @click.stop="openFrameMenu(slot, frame, $event)"><i class="ti ti-dots"></i></button>
 						</div>
 						<div :class="['frameBody', $style.frameBody]" @touchstart.passive="onFrameTouchStart(frame, $event)" @touchend="onFrameTouchEnd(slot, frame, $event)">
 							<template v-for="tab in frame.tabs" :key="tab.id">
-								<div v-if="tab.type === 'local'" v-show="activeTabOf(frame).id === tab.id" :ref="el => setEmojiVoteEffectRef(tab.id, el)" :class="$style.emojiVoteEffects" aria-hidden="true"></div>
-								<div v-show="activeTabOf(frame).id === tab.id" :class="[$style.tabPane, { [$style.tabPanePostForm]: tab.type === 'postForm', [$style.tabPaneExtNotif]: tab.type === 'externalNotifications', [$style.tabPaneWidgets]: tab.type === 'widgets' }]" :data-active="activeTabOf(frame).id === tab.id ? 'true' : 'false'" :ref="el => setPaneRef(tab.id, el)"><button v-if="tab.type === 'hatady'" type="button" :class="$style.hatadyRecordButton" @click="recordInColumn(tab.id)"><i class="ti ti-book-2" aria-hidden="true"></i>{{ i18n.ts._hata._hatasabaUi._simple.record }}</button><component :is="resolveColumn(tab)" v-bind="columnProps(tab, frame)" :ref="el => setColRef(tab.id, el)"/></div>
+								<div v-show="activeTabOf(frame).id === tab.id" :class="[$style.tabPane, { [$style.tabPanePostForm]: tab.type === 'postForm', [$style.tabPaneWidgets]: tab.type === 'widgets' }]" :data-active="activeTabOf(frame).id === tab.id ? 'true' : 'false'" :ref="el => setPaneRef(tab.id, el)"><component :is="resolveColumn(tab)" v-bind="columnProps(tab, frame)" :ref="el => setColRef(tab.id, el)"/></div>
 							</template>
 						</div>
 					</div>
@@ -183,17 +179,13 @@
 </template>
 
 <script lang="ts" setup>
-// 旗鯖fork: Hataskey UI 3 のデッキ表示では、見た目と投稿欄を UI3 に揃える。
 const props = withDefaults(defineProps<{
-	hk3?: boolean;
 	active?: boolean;
 }>(), {
-	hk3: false,
 	active: true,
 });
 
 import { computed, ref, shallowReactive, watch, onMounted, onUnmounted, nextTick, defineAsyncComponent, type Component } from 'vue';
-import type { NotificationFilterDetails } from '@/utility/notification-filter.js';
 import * as os from '@/os.js';
 import { mainRouter } from '@/router.js';
 import { misskeyApi, misskeyApiGet } from '@/utility/misskey-api.js';
@@ -202,38 +194,29 @@ import { isHataskeyTimelineAllowed } from '@/utility/hataskey-timeline-availabil
 import { playHataIconMotion } from '@/utility/hata-icon-motion.js';
 import { globalEvents } from '@/events.js';
 import MkStreamingNotesTimeline from '@/components/MkStreamingNotesTimeline.vue';
-import MkExternalTimeline from '@/components/MkExternalTimeline.vue';
 import MkStreamingNotificationsTimeline from '@/components/MkStreamingNotificationsTimeline.vue';
 import MkTrendingTimeline from '@/components/MkTrendingTimeline.vue';
-import MkHatadyTimeline from '@/components/MkHatadyTimeline.vue';
-import { openHatadyRecord } from '@/utility/hatady-record-launcher.js';
 import MkPostForm from '@/components/MkPostForm.vue';
-import Hk3Composer from '@/components/hataskey3/Hk3Composer.vue';
-import Hk3DeckTimeline from '@/components/hataskey3/Hk3DeckTimeline.vue';
 import HatasabaDeckClock from '@/ui/_common_/hatasaba-deck-clock.vue';
 import { tabSwipeEnabled } from '@/utility/hatasaba-device-prefs.js';
-import { hasConfiguredNotificationFilter, migrateNotificationFilterSnapshot, resolveNotificationFilter, resolveNotificationFilterDetails, serializeNotificationFilterDetails } from '@/utility/notification-filter.js';
+import { hasConfiguredNotificationFilter, migrateNotificationFilterSnapshot, resolveNotificationFilter } from '@/utility/notification-filter.js';
 import { deepClone } from '@/utility/clone.js';
 import { deepEqual } from '@/utility/deep-equal.js';
 import { i18n } from '@/i18n.js';
 import { versatileLang } from '@/utility/intl-const.js';
-import { concrntState } from '@/utility/concrnt/runtime.js';
 
 const copy = i18n.ts._hata._hatasabaUi._deck;
 const copyx = i18n.tsx._hata._hatasabaUi._deck;
 const numberFormatter = new Intl.NumberFormat(versatileLang);
 
 const XWidgets = defineAsyncComponent(() => import('./widgets.vue'));
-const WidgetExternalNotifications = defineAsyncComponent(() => import('@/widgets/WidgetExternalNotifications.vue'));
-const MkEarthquakeColumn = defineAsyncComponent(() => import('@/components/MkEarthquakeColumn.vue'));
-const ConcrntTimeline = defineAsyncComponent(() => import('@/components/concrnt/ConcrntTimeline.vue'));
 // 旗鯖fork(新デッキ): クリップ/お気に入りタブ用の Paginator ラッパー。
 const MkDeckPaginatedNotes = defineAsyncComponent(() => import('@/components/MkDeckPaginatedNotes.vue'));
 
 // ===== 型 =====
 type DeckLayout = 'row' | 'grid2' | 'grid3' | 'stack';
 // 旗鯖fork(新デッキ): 'clip' / 'favorites' を追加。clip は sourceId=clipId を要求、favorites は不要。
-type ColumnType = 'home' | 'local' | 'social' | 'global' | 'trending' | 'hatady' | 'ohtl' | 'oltl' | 'ctl' | 'list' | 'antenna' | 'channel' | 'mentions' | 'directs' | 'notifications' | 'externalNotifications' | 'widgets' | 'postForm' | 'earthquake' | 'clip' | 'favorites';
+type ColumnType = 'home' | 'local' | 'social' | 'global' | 'trending' | 'list' | 'antenna' | 'channel' | 'mentions' | 'directs' | 'notifications' | 'widgets' | 'postForm' | 'clip' | 'favorites';
 
 // tab = カラム本体(表示内容)
 type DeckTab = {
@@ -246,7 +229,6 @@ type DeckTab = {
 	tabColor?: string | null; // タブ(クリックして切り替える部分)の色
 	excludeTypes?: string[]; // 通知カラムで除外する通知タイプ(通知フィルタ)
 	notificationFilterKnownTypes?: string[]; // 保存時点で存在した通知タイプ。新種別を勝手にONにしないためのスナップショット
-	notificationFilterDetails?: NotificationFilterDetails;
 	excludeBots?: boolean; // Botフラグ付きアカウントからの通知を除外
 };
 // frame = スロット内の箱。tabs 複数ならタブ表示
@@ -269,7 +251,7 @@ type DeckSlot = {
 type DeckProfile = { id: string; name: string; layout: DeckLayout; slots: DeckSlot[]; };
 
 // 旧形式(マイグレーション元)
-type LegacyColumn = { id: string; type: ColumnType; width: number; height?: number; name?: string; sourceId?: string; withRenotes?: boolean; borderColor?: string | null; fullWidth?: boolean; fullHeight?: boolean; } & Pick<DeckTab, 'excludeTypes' | 'notificationFilterKnownTypes' | 'notificationFilterDetails' | 'excludeBots'>;
+type LegacyColumn = { id: string; type: ColumnType; width: number; height?: number; name?: string; sourceId?: string; withRenotes?: boolean; borderColor?: string | null; fullWidth?: boolean; fullHeight?: boolean; } & Pick<DeckTab, 'excludeTypes' | 'notificationFilterKnownTypes' | 'excludeBots'>;
 type LegacyProfile = { id: string; name: string; layout: DeckLayout; columns: LegacyColumn[]; };
 
 const LAYOUTS: { id: DeckLayout; icon: string; label: string }[] = [
@@ -305,11 +287,6 @@ let prevNavHook: typeof mainRouter.navHook = null;
 onMounted(() => {
 	prevNavHook = mainRouter.navHook;
 	mainRouter.navHook = (path, flag): boolean => {
-		// 旗鯖fork(Hatady): デッキ表示中でも常に全画面で開く。
-		if (path === '/hatady' || path.startsWith('/hatady/')) {
-			os.pageWindow(path, { fullscreen: true });
-			return true;
-		}
 		if (flag === 'forcePage') return false;
 		os.pageWindow(path);
 		return true;
@@ -545,7 +522,6 @@ function legacyColumnToSlot(col: LegacyColumn): DeckSlot {
 				withRenotes: col.withRenotes,
 				excludeTypes: col.excludeTypes,
 				notificationFilterKnownTypes: col.notificationFilterKnownTypes,
-				notificationFilterDetails: col.notificationFilterDetails,
 				excludeBots: col.excludeBots,
 			}],
 		}],
@@ -652,11 +628,6 @@ const visibleSlots = computed<DeckSlot[]>(() => slots.value.map(slot => ({
 })).filter(slot => slot.frames.length > 0));
 const layout = computed<DeckLayout>(() => activeProfile.value?.layout ?? 'row');
 
-const externalHost = computed(() => prefer.s['external.host']);
-const externalToken = computed(() => prefer.s['external.token']);
-const externalReady = computed(() => externalHost.value != null && externalHost.value !== '' && externalToken.value != null);
-const concrntReady = computed(() => concrntState.connection != null && concrntState.settings.enabled);
-
 // ===== commit系 =====
 function commitProfiles(list: DeckProfile[]) { prefer.commit('simpleUi.deckProfilesV2', list); }
 function commitActiveProfile(mutator: (p: DeckProfile) => DeckProfile) {
@@ -672,20 +643,14 @@ const COLUMN_META: Record<ColumnType, { title: string; icon: string }> = {
 	social: { title: copy.columnSocial, icon: 'ti ti-universe' },
 	global: { title: copy.columnGlobal, icon: 'ti ti-world' },
 	trending: { title: copy.columnTrending, icon: 'ti ti-chart-line' },
-	hatady: { title: copy.columnHatady, icon: 'ti ti-book-2' },
-	ohtl: { title: copy.columnExternalHome, icon: 'ti ti-home-link' },
-	oltl: { title: copy.columnExternalLocal, icon: 'ti ti-world-share' },
-	ctl: { title: 'CTL', icon: 'concrnt-icon' },
 	list: { title: copy.columnList, icon: 'ti ti-list' },
 	antenna: { title: copy.columnAntenna, icon: 'ti ti-antenna' },
 	channel: { title: copy.columnChannel, icon: 'ti ti-device-tv' },
 	mentions: { title: copy.columnMentions, icon: 'ti ti-at' },
 	directs: { title: copy.columnDirects, icon: 'ti ti-mail' },
 	notifications: { title: copy.columnNotifications, icon: 'ti ti-bell' },
-	externalNotifications: { title: copy.columnExternalNotifications, icon: 'ti ti-bell-ringing' },
 	widgets: { title: copy.columnWidgets, icon: 'ti ti-apps' },
 	postForm: { title: copy.columnPostForm, icon: 'ti ti-pencil-plus' },
-	earthquake: { title: '地震・津波', icon: 'ti ti-activity' },
 	// 旗鯖fork(新デッキ): クリップ/お気に入り
 	clip: { title: copy.columnClip, icon: 'ti ti-paperclip' },
 	favorites: { title: copy.columnFavorites, icon: 'ti ti-star' },
@@ -703,21 +668,15 @@ const NOTE_SRC: Partial<Record<ColumnType, string>> = {
 	home: 'home', local: 'local', social: 'social', global: 'global', mentions: 'mentions', directs: 'directs',
 };
 function resolveColumn(tab: DeckTab): Component {
-	// Hataskey UI 3 では、標準表示と同じ UI3 のノートで並べる(取得元と引数は共通)。
-	const notesTimeline = props.hk3 ? Hk3DeckTimeline : MkStreamingNotesTimeline;
+	const notesTimeline = MkStreamingNotesTimeline;
 	if (tab.type in NOTE_SRC) return notesTimeline;
 	if (tab.type === 'list' && tab.sourceId) return notesTimeline;
 	if (tab.type === 'antenna' && tab.sourceId) return notesTimeline;
 	if (tab.type === 'channel' && tab.sourceId) return notesTimeline;
-	if ((tab.type === 'ohtl' || tab.type === 'oltl') && externalReady.value) return MkExternalTimeline;
-	if (tab.type === 'externalNotifications' && externalReady.value) return WidgetExternalNotifications;
-	if (tab.type === 'ctl') return ConcrntTimeline;
 	if (tab.type === 'trending') return MkTrendingTimeline;
-	if (tab.type === 'hatady') return MkHatadyTimeline;
 	if (tab.type === 'notifications') return MkStreamingNotificationsTimeline;
-	if (tab.type === 'postForm') return props.hk3 ? Hk3Composer : MkPostForm;
+	if (tab.type === 'postForm') return MkPostForm;
 	if (tab.type === 'widgets') return XWidgets;
-	if (tab.type === 'earthquake') return MkEarthquakeColumn;
 	// 旗鯖fork(新デッキ): クリップ (sourceId=clipId 必須) / お気に入り
 	if (tab.type === 'clip' && tab.sourceId) return MkDeckPaginatedNotes;
 	if (tab.type === 'favorites') return MkDeckPaginatedNotes;
@@ -730,32 +689,23 @@ function buildColumnProps(tab: DeckTab): Record<string, unknown> {
 	if (tab.type === 'list' && tab.sourceId) return { src: 'list', list: tab.sourceId, withRenotes: wr };
 	if (tab.type === 'antenna' && tab.sourceId) return { src: 'antenna', antenna: tab.sourceId, withRenotes: wr };
 	if (tab.type === 'channel' && tab.sourceId) return { src: 'channel', channel: tab.sourceId, withRenotes: wr };
-	if ((tab.type === 'ohtl' || tab.type === 'oltl') && externalReady.value) return { src: tab.type, host: externalHost.value, token: externalToken.value, sound: false, simpleUi: true, hataskeyUi: true };
-	if (tab.type === 'externalNotifications' && externalReady.value) return { widget: { id: `deck-extnotif-${tab.id}`, name: 'externalNotifications', data: {} }, showHeader: false };
-	if (tab.type === 'ctl') return { embedded: true, hataskeyUi: true };
 	if (tab.type === 'trending') return {};
-	if (tab.type === 'hatady') return { variant: props.hk3 ? 'uis' : 'ui' };
 	if (tab.type === 'notifications') {
 		const excludeTypes = resolveNotificationFilter(tab.excludeTypes, tab.notificationFilterKnownTypes).excludeTypes;
-		const details = resolveNotificationFilterDetails(tab.notificationFilterDetails, excludeTypes);
 		return {
 			excludeTypes,
 			excludeBots: tab.excludeBots === true,
-			includeBrands: details.includeBrands,
-			includeHataskApp: details.includeHataskApp,
-			excludeHatadySubtypes: details.excludeHatadySubtypes,
 			showFilterPolicyNotice: hasConfiguredNotificationFilter(tab.excludeTypes, tab.notificationFilterKnownTypes),
 		};
 	}
-	if (tab.type === 'postForm') return props.hk3 ? { deck: true, menuPlacement: 'down', draftId: `uiS:composer:deck:${tab.id}` } : { fixed: true, autofocus: false };
+	if (tab.type === 'postForm') return { fixed: true, autofocus: false };
 	// デッキのウィジェットは操作ボタン行を省き、三点メニュー / タブ右クリックから編集する。
 	if (tab.type === 'widgets') return { deckEmbedded: true };
-	if (tab.type === 'earthquake') return {};
 	// 旗鯖fork(新デッキ): クリップ/お気に入り。favorites は endpoint のみで clipId 不要。
 	if (tab.type === 'clip' && tab.sourceId) return { endpoint: 'clips/notes', clipId: tab.sourceId };
 	if (tab.type === 'favorites') return { endpoint: 'i/favorites' };
 	if (tab.type === 'clip' && !tab.sourceId) return { message: copy.clipNotSelected };
-	return { message: (tab.type === 'ohtl' || tab.type === 'oltl' || tab.type === 'externalNotifications') ? copy.externalAccountNotConnected : copy.cannotDisplayColumn };
+	return { message: copy.cannotDisplayColumn };
 }
 
 // 時計・オンライン人数・RSSティッカーなど、ツールバーだけの更新で親が再描画されても
@@ -770,22 +720,12 @@ function columnProps(tab: DeckTab, frame: DeckFrame): Record<string, unknown> {
 		withRenotes: tab.withRenotes,
 		excludeTypes: tab.excludeTypes,
 		notificationFilterKnownTypes: tab.notificationFilterKnownTypes,
-		notificationFilterDetails: tab.notificationFilterDetails,
 		excludeBots: tab.excludeBots,
-		externalReady: externalReady.value,
-		externalHost: externalHost.value,
-		externalToken: externalToken.value,
 	});
 	const cached = columnPropsCache.get(tab.id);
 	const value = cached?.signature === signature ? cached.value : buildColumnProps(tab);
 	if (cached?.signature !== signature) columnPropsCache.set(tab.id, { signature, value });
-	if (tab.type === 'ctl') return { ...value, active: props.active && activeTabOf(frame).id === tab.id };
-	if (tab.type === 'hatady') return { ...value, active: activeTabOf(frame).id === tab.id };
-	return tab.type === 'local' ? {
-		...value,
-		emojiVoteActive: activeTabOf(frame).id === tab.id,
-		emojiVoteEffectTarget: emojiVoteEffectRefs.get(tab.id) ?? null,
-	} : value;
+	return value;
 }
 const ColumnError = defineAsyncComponent(() => Promise.resolve({
 	props: { message: { type: String, default: '' } },
@@ -798,32 +738,9 @@ function supportsRenoteToggle(tab: DeckTab): boolean { return RENOTE_TOGGLE_TYPE
 // ===== カラム本体ref(外部通知の更新/既読・一括更新用) =====
 const colRefs = new Map<string, any>();
 function setColRef(id: string, el: any) { if (el) colRefs.set(id, el); else colRefs.delete(id); }
-function recordInColumn(tabId: string) {
-	void openHatadyRecord({ variant: props.hk3 ? 'uis' : 'ui', onDone: () => colRefs.get(tabId)?.reloadTimeline?.() });
-}
-function onDeckKeydown(event: KeyboardEvent) {
-	if (!props.active || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.isComposing || !['p', 'n'].includes(event.key.toLowerCase())) return;
-	const target = event.target;
-	if (!(target instanceof HTMLElement) || target.closest('input, textarea, [contenteditable="true"]')) return;
-	const frameId = target.closest<HTMLElement>('[data-deck-frame]')?.dataset.deckFrame;
-	const frame = visibleSlots.value.flatMap(slot => slot.frames).find(item => item.id === frameId);
-	if (!frame) return;
-	const tab = activeTabOf(frame);
-	if (tab.type !== 'hatady' && tab.type !== 'ctl') return;
-	event.preventDefault();
-	event.stopPropagation();
-	if (tab.type === 'ctl') void colRefs.get(tab.id)?.focusComposer?.();
-	else recordInColumn(tab.id);
-}
 
 // 旗鯖fork(#9): タブペイン(スクロール領域)の要素参照。タブクリックで最上部へ戻すのに使う。
 const paneRefs = new Map<string, HTMLElement>();
-const emojiVoteEffectRefs = shallowReactive(new Map<string, HTMLElement>());
-
-function setEmojiVoteEffectRef(id: string, el: unknown) {
-	if (el instanceof HTMLElement) emojiVoteEffectRefs.set(id, el);
-	else emojiVoteEffectRefs.delete(id);
-}
 function setPaneRef(id: string, el: any) { if (el) paneRefs.set(id, el as HTMLElement); else paneRefs.delete(id); }
 
 // 旗鯖fork(#9): スクロールして最上部へ戻せるタブ種別か(投稿フォーム・ウィジェットは対象外)。
@@ -869,17 +786,7 @@ function onFrameTouchEnd(slot: DeckSlot, frame: DeckFrame, ev: TouchEvent) {
 function reloadAll() {
 	globalEvents.emit('reloadTimeline');
 	globalEvents.emit('reloadNotification');
-	for (const slot of slots.value) {
-		for (const frame of slot.frames) {
-			for (const tab of frame.tabs) {
-				if (tab.type === 'ctl' && props.active && activeTabOf(frame).id === tab.id) colRefs.get(tab.id)?.reloadTimeline?.();
-				if (tab.type === 'externalNotifications') colRefs.get(tab.id)?.fetchNotifications?.();
-				if (tab.type === 'ohtl' || tab.type === 'oltl') colRefs.get(tab.id)?.reload?.();
-			}
-		}
-	}
 }
-function markExtRead(id: string) { colRefs.get(id)?.markAllAsRead?.(); }
 // 旗鯖fork(新デッキ): お気に入り/クリップカラム (MkDeckPaginatedNotes) のリロード。
 //   ストリーミングではない paginator ベースの表示なので、カラムヘッダの refresh ボタンと
 //   三点メニューの「再読み込み」から呼ぶ。
@@ -1404,7 +1311,6 @@ function columnTypeMenu(anchor: HTMLElement, onPick: (partial: Partial<DeckTab> 
 		...(isHataskeyTimelineAllowed('social') ? [{ text: COLUMN_META.social.title, icon: 'ti ti-universe', action: () => onPick({ type: 'social' as const }) }] : []),
 		...(isHataskeyTimelineAllowed('global') ? [{ text: COLUMN_META.global.title, icon: 'ti ti-world', action: () => onPick({ type: 'global' as const }) }] : []),
 		{ text: COLUMN_META.trending.title, icon: 'ti ti-chart-line', action: () => onPick({ type: 'trending' }) },
-		{ text: COLUMN_META.hatady.title, icon: 'ti ti-book-2', action: () => onPick({ type: 'hatady' }) },
 		{ type: 'divider' as const },
 		{ text: COLUMN_META.mentions.title, icon: 'ti ti-at', action: () => onPick({ type: 'mentions' }) },
 		{ text: COLUMN_META.directs.title, icon: 'ti ti-mail', action: () => onPick({ type: 'directs' }) },
@@ -1414,16 +1320,8 @@ function columnTypeMenu(anchor: HTMLElement, onPick: (partial: Partial<DeckTab> 
 		{ text: COLUMN_META.channel.title, icon: 'ti ti-device-tv', action: () => pickChannelId(anchor, (id, name) => onPick({ type: 'channel', sourceId: id, name })) },
 		{ text: COLUMN_META.clip.title, icon: 'ti ti-paperclip', action: () => pickClipId(anchor, (id, name) => onPick({ type: 'clip', sourceId: id, name })) },
 		{ text: COLUMN_META.favorites.title, icon: 'ti ti-star', action: () => onPick({ type: 'favorites' }) },
-		...(concrntReady.value ? [{ text: 'CTL（コンカレント）', icon: COLUMN_META.ctl.icon, action: () => onPick({ type: 'ctl' as const }) }] : []),
-		...(externalReady.value ? [
-			{ type: 'divider' as const },
-			{ text: COLUMN_META.ohtl.title, icon: 'ti ti-home-link', action: () => onPick({ type: 'ohtl' as const }) },
-			{ text: COLUMN_META.oltl.title, icon: 'ti ti-world-share', action: () => onPick({ type: 'oltl' as const }) },
-			{ text: COLUMN_META.externalNotifications.title, icon: 'ti ti-bell-ringing', action: () => onPick({ type: 'externalNotifications' as const }) },
-		] : []),
 		{ type: 'divider' as const },
 		{ text: COLUMN_META.notifications.title, icon: 'ti ti-bell', action: () => onPick({ type: 'notifications' }) },
-		{ text: '地震・津波', icon: 'ti ti-activity', action: () => onPick({ type: 'earthquake' }) },
 		{ text: COLUMN_META.widgets.title, icon: 'ti ti-apps', action: () => onPick({ type: 'widgets' }) },
 		{ text: COLUMN_META.postForm.title, icon: 'ti ti-pencil-plus', action: () => onPick({ type: 'postForm' }) },
 	];
@@ -1433,14 +1331,12 @@ async function addColumn(ev: MouseEvent) {
 	// 位置計算が崩れてメニューが見切れる(1行しか出ない)。標準deckと同じく
 	// os.select(中央ダイアログ)で種別を選ばせる。見切れず項目も多くても安全。
 	const anchor = (ev.currentTarget ?? ev.target) as HTMLElement;
-	const ext = externalReady.value;
 	const items = [
 		{ value: 'home', label: COLUMN_META.home.title },
 		{ value: 'local', label: COLUMN_META.local.title },
 		{ value: 'social', label: COLUMN_META.social.title },
 		{ value: 'global', label: COLUMN_META.global.title },
 		{ value: 'trending', label: COLUMN_META.trending.title },
-		{ value: 'hatady', label: COLUMN_META.hatady.title },
 		{ value: 'mentions', label: COLUMN_META.mentions.title },
 		{ value: 'directs', label: COLUMN_META.directs.title },
 		{ value: 'list', label: COLUMN_META.list.title },
@@ -1448,14 +1344,7 @@ async function addColumn(ev: MouseEvent) {
 		{ value: 'channel', label: COLUMN_META.channel.title },
 		{ value: 'clip', label: COLUMN_META.clip.title },
 		{ value: 'favorites', label: COLUMN_META.favorites.title },
-		...(concrntReady.value ? [{ value: 'ctl', label: 'CTL（コンカレント）' }] : []),
-		...(ext ? [
-			{ value: 'ohtl', label: COLUMN_META.ohtl.title },
-			{ value: 'oltl', label: COLUMN_META.oltl.title },
-			{ value: 'externalNotifications', label: COLUMN_META.externalNotifications.title },
-		] : []),
 		{ value: 'notifications', label: COLUMN_META.notifications.title },
-		{ value: 'earthquake', label: '地震・津波' },
 		{ value: 'widgets', label: COLUMN_META.widgets.title },
 		{ value: 'postForm', label: COLUMN_META.postForm.title },
 	];
@@ -1486,16 +1375,13 @@ async function setFrameBorderCustom(slotId: string, frameId: string) {
 // 旗鯖fork(#8): 通知カラムの通知フィルタ。通知ページと同じ MkNotificationSelectWindow で
 // タイプ別の表示/非表示(excludeTypes)を選び、そのタブに保存して即時反映する。
 async function openNotificationFilter(slotId: string, frameId: string, tab: DeckTab) {
-	const initialRawDetails = deepClone(tab.notificationFilterDetails);
-	const initialExcludeTypes = resolveNotificationFilter(tab.excludeTypes, tab.notificationFilterKnownTypes).excludeTypes;
 	const initialFilter = deepClone({
 		excludeTypes: tab.excludeTypes,
 		knownTypes: tab.notificationFilterKnownTypes,
 		excludeBots: tab.excludeBots,
-		filterDetails: serializeNotificationFilterDetails(resolveNotificationFilterDetails(initialRawDetails, initialExcludeTypes), initialRawDetails),
 	});
 	const { dispose } = await os.popupAsyncWithDialog(import('@/components/MkNotificationSelectWindow.vue').then(x => x.default), initialFilter, {
-		done: (res: { excludeTypes: string[]; knownTypes: string[]; excludeBots: boolean; filterDetails: NotificationFilterDetails }) => {
+		done: (res: { excludeTypes: string[]; knownTypes: string[]; excludeBots: boolean }) => {
 			// excludeTypes を更新すると columnProps 経由でプロップが変わり、
 			// MkStreamingNotificationsTimeline 側の computedParams ウォッチャが自動で再読み込みする。
 			mapSlots(ss => ss.map(s => s.id !== slotId ? s : { ...s, frames: s.frames.map(f => f.id !== frameId ? f : { ...f, tabs: f.tabs.map(t => {
@@ -1505,7 +1391,6 @@ async function openNotificationFilter(slotId: string, frameId: string, tab: Deck
 					...(!deepEqual(res.excludeTypes, initialFilter.excludeTypes) ? { excludeTypes: res.excludeTypes } : {}),
 					...(!deepEqual(res.knownTypes, initialFilter.knownTypes) ? { notificationFilterKnownTypes: res.knownTypes } : {}),
 					...(res.excludeBots !== initialFilter.excludeBots ? { excludeBots: res.excludeBots } : {}),
-					...(!deepEqual(res.filterDetails, initialFilter.filterDetails) || deepEqual(t.notificationFilterDetails, initialRawDetails) ? { notificationFilterDetails: res.filterDetails } : {}),
 				};
 			}) }) }));
 		},
@@ -1523,12 +1408,9 @@ function openFrameMenu(slot: DeckSlot, frame: DeckFrame, ev: MouseEvent) {
 		} }) },
 		{ type: 'divider' as const },
 	] : [];
-	// 通知タブ(通常/外部)のときは再読み込み項目を出す
-	const reloadItem = (active.type === 'notifications' || active.type === 'externalNotifications') ? [
-		{ text: copy.reload, icon: 'ti ti-refresh', action: () => {
-			if (active.type === 'externalNotifications') { colRefs.get(active.id)?.fetchNotifications?.(); }
-			else { globalEvents.emit('reloadNotification'); }
-		} },
+	// 通知タブのときは再読み込み項目を出す
+	const reloadItem = (active.type === 'notifications') ? [
+		{ text: copy.reload, icon: 'ti ti-refresh', action: () => { globalEvents.emit('reloadNotification'); } },
 		{ type: 'divider' as const },
 	] : [];
 	// 通知タブのときは、通知ページと同様の通知フィルタ(タイプ別の表示/非表示)を出す
@@ -1556,12 +1438,6 @@ function openFrameMenu(slot: DeckSlot, frame: DeckFrame, ev: MouseEvent) {
 	// 旗鯖fork(新デッキ): お気に入り/クリップカラムのリロードメニュー項目。
 	const paginatedReloadItem = (active.type === 'clip' || active.type === 'favorites') ? [
 		{ text: copy.reload, icon: 'ti ti-refresh', action: () => reloadPaginated(active.id) },
-		{ type: 'divider' as const },
-	] : [];
-	// 旗鯖fork(#34): 地震・津波カラムは「更新」「設定」をこのメニュー(タブ部)に統合する。
-	const earthquakeItem = (active.type === 'earthquake') ? [
-		{ text: '更新', icon: 'ti ti-refresh', action: () => { colRefs.get(active.id)?.reload?.(); } },
-		{ text: '地震ビューアの設定', icon: 'ti ti-settings', action: () => { colRefs.get(active.id)?.openSettings?.(); } },
 		{ type: 'divider' as const },
 	] : [];
 	const colorItem = {
@@ -1598,7 +1474,6 @@ function openFrameMenu(slot: DeckSlot, frame: DeckFrame, ev: MouseEvent) {
 		...channelPostItem,
 		...paginatedReloadItem,
 		...reloadItem,
-		...earthquakeItem,
 		...notifFilterItem,
 		...widgetEditItem,
 		...renoteItem,
@@ -1704,7 +1579,7 @@ async function createProfile() {
 async function duplicateProfile() {
 	const src = activeProfile.value;
 	const id = genId('prof');
-	const clonedSlots: DeckSlot[] = src.slots.map(s => ({ ...s, id: genId('slot'), frames: s.frames.map(f => ({ ...f, id: genId('frame'), tabs: f.tabs.map(t => ({ ...t, id: genId('tab'), notificationFilterDetails: deepClone(t.notificationFilterDetails) })) })) }));
+	const clonedSlots: DeckSlot[] = src.slots.map(s => ({ ...s, id: genId('slot'), frames: s.frames.map(f => ({ ...f, id: genId('frame'), tabs: f.tabs.map(t => ({ ...t, id: genId('tab') })) })) }));
 	commitProfiles([...profiles.value, { id, name: copy.copiedProfileName.replace('{name}', src.name), layout: src.layout, slots: clonedSlots }]);
 	prefer.commit('simpleUi.deckActiveProfileV2', id);
 }
@@ -1922,9 +1797,7 @@ function openProfileMenu(ev: MouseEvent) {
 
 /* frame本体 */
 .frameBody { flex: 1; min-height: 0; position: relative; z-index: 1; }
-.emojiVoteEffects { position: absolute; inset: 0; overflow: hidden; isolation: isolate; pointer-events: none; z-index: 5; }
 .tabPane { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--MI_THEME-fg) 12%, transparent) transparent; }
-.hatadyRecordButton { display:flex; align-items:center; justify-content:center; gap:8px; width:calc(100% - 24px); min-height:44px; margin:12px; border-radius:10px; border:1px solid var(--MI_THEME-divider); background:var(--MI_THEME-panel); color:var(--MI_THEME-fg); font-weight:700; cursor:pointer; }
 .deckWrap[data-animation='true'] .tabPane[data-active='true'] { animation: deckPaneIn .3s cubic-bezier(.2,.8,.2,1) both; }
 
 @keyframes deckPaneIn {
@@ -1946,11 +1819,6 @@ function openProfileMenu(ev: MouseEvent) {
 	> :global(div) { height: 100%; display: flex; flex-direction: column; }
 	:global(textarea) { flex: 1; }
 }
-/* 外部通知カラムはWidgetExternalNotifications流用で、ウィジェット固有の固定高さ(widgetProps.height)が
-   効いてカラム下に空白ができる。デッキではフレームいっぱいに広げるため高さを100%に上書きする。 */
-/* 外部通知カラム(単体)のときだけフレーム高いっぱいに広げる。ウィジェット欄の中の
-   外部通知ウィジェットには効かせない(そちらは widgetProps.height の固定高さを尊重)。 */
-.tabPaneExtNotif :global(.mkw-externalNotifications) { height: 100% !important; }
 /* デッキのウィジェットカラムは、各ウィジェット(._panel)に余白・角丸・影を付けて
    通常のウィジェットビューと同じく境界が分かるようにする。 */
 .tabPaneWidgets {
@@ -2008,107 +1876,4 @@ function openProfileMenu(ev: MouseEvent) {
 }
 .dragGhostIcon { color: var(--ghostColor, var(--MI_THEME-accent)); }
 
-/* ===== Hataskey UI 3 のデッキ: 角のない面を区切り線で並べ、UI3 の色に揃える ===== */
-.deckWrap[data-hk3] {
-	background: transparent;
-	color: var(--hk3-text);
-
-	.deck { padding: 10px; }
-	.layoutRow, .layoutStack { gap: 10px; }
-	.layoutGrid2, .layoutGrid3 { gap: 10px; grid-auto-rows: calc(50% - 5px); }
-
-	.frameRoot {
-		border: 2px solid var(--hk3-divider);
-		border-radius: 0;
-		background: var(--hk3-glass-soft, var(--hk3-bg));
-		box-shadow: none;
-	}
-	.frameColored { border-color: var(--deckColBorder, var(--hk3-divider)); }
-	.frameDragOver { box-shadow: 0 0 0 2px var(--hk3-accent); }
-	// ノート列にはガラスを一度だけ重ね、背景が濁るのを防ぐ。
-	.frameRoot:has(.tabPane[data-active="true"] > :global([data-hk3-deck-timeline])) {
-		background: transparent;
-		border-color: color-mix(in srgb, var(--hk3-text) 15%, transparent);
-		&.frameColored { border-color: var(--deckColBorder, var(--hk3-divider)); }
-	}
-
-	.tabBar {
-		gap: 0;
-		padding: 0;
-		background: var(--hk3-glass-panel, var(--hk3-bg));
-		border-bottom: 2px solid var(--deckColBorder, var(--hk3-divider));
-	}
-	.tabs { gap: 0; }
-	.tab {
-		min-height: 40px;
-		padding: 0 14px;
-		border: 0;
-		border-right: 1px solid var(--hk3-divider);
-		border-radius: 0;
-		color: var(--hk3-text);
-		opacity: .65;
-		&:hover { background: var(--hk3-accent-100); opacity: .9; }
-	}
-	.tabActive {
-		opacity: 1;
-		background: var(--hk3-glass-soft, var(--hk3-bg));
-		box-shadow: inset 0 -3px 0 var(--hk3-accent);
-	}
-	.tabIcon { color: var(--hk3-accent); }
-	.frameHeadBtn, .frameMenuBtn, .frameTabsBtn {
-		width: 40px;
-		height: 40px;
-		border-radius: 0;
-		border-left: 1px solid var(--hk3-divider);
-		color: var(--hk3-text);
-		&:hover { background: var(--hk3-accent-100); }
-	}
-
-	.toolbarBar { padding: 8px 10px 0; }
-	.toolbarToggle, .iconBtn, .profileBtn, .layoutPill, .layoutBtn {
-		border-radius: 0;
-		border-color: var(--hk3-divider);
-		background: var(--hk3-bg);
-		color: var(--hk3-text);
-	}
-	.toolbarToggleOn, .iconBtnOn, .layoutBtnOn { background: var(--hk3-accent); color: var(--hk3-bg); border-color: var(--hk3-accent); }
-	.clock { color: var(--hk3-accent); }
-
-	/* カラム内のノートも UI3 と同じく、角のない行を区切り線で並べる */
-	.tabPane {
-		background: var(--hk3-glass-note, var(--hk3-bg));
-		&:has(> :global([data-hk3-deck-timeline])) {
-			-webkit-backdrop-filter: blur(20px);
-			backdrop-filter: blur(20px);
-		}
-
-		:global(._panel), :global(._gaps) > :global(*), :global([data-scroll-anchor]) { border-radius: 0 !important; }
-		:global(._gaps) { gap: 0 !important; }
-		:global([data-scroll-anchor]) {
-			margin: 0 !important;
-			border-bottom: 1px solid color-mix(in srgb, var(--hk3-text) 15%, transparent);
-			background: transparent !important;
-			box-shadow: none !important;
-		}
-		/* Hataskey UI の吹き出しカードを外し、行そのものをノートにする */
-		:global([data-scroll-anchor] > article) { padding: 0 !important; border-radius: 0 !important; }
-		:global([data-scroll-anchor] > article > ._selectable) {
-			padding: 12px 14px !important;
-			border: 0 !important;
-			border-radius: 0 !important;
-			background: transparent !important;
-			box-shadow: none !important;
-			transition: background 160ms ease;
-		}
-		:global([data-scroll-anchor]:hover > article > ._selectable) { background: var(--hk3-surface) !important; }
-		:global(button) { border-radius: 0; }
-	}
-	/* UI3 の投稿欄は自然な高さのまま上に置き、下へ開くメニュー(田・公開範囲)が切れないよう枠内でスクロールさせる */
-	.tabPanePostForm {
-		overflow: auto;
-		background: transparent;
-		> :global(div) { height: auto; padding: 10px 10px 14px; border-top: 0; }
-		:global(textarea) { flex: none; }
-	}
-}
 </style>

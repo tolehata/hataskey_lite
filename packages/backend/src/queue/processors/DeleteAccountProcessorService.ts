@@ -16,7 +16,6 @@ import { bindThis } from '@/decorators.js';
 import { SearchService } from '@/core/SearchService.js';
 import { PageService } from '@/core/PageService.js';
 import { UserEntityService } from '@/core/entities/UserEntityService.js';
-import { HataigoWithdrawalService } from '@/core/HataigoWithdrawalService.js';
 import { GlobalEventService } from '@/core/GlobalEventService.js';
 import { QueueLoggerService } from '../QueueLoggerService.js';
 import type * as Bull from 'bullmq';
@@ -49,7 +48,6 @@ export class DeleteAccountProcessorService {
 		private queueLoggerService: QueueLoggerService,
 		private searchService: SearchService,
 		private globalEventService: GlobalEventService,
-		private hataigoWithdrawalService: HataigoWithdrawalService,
 	) {
 		this.logger = this.queueLoggerService.logger.createSubLogger('delete-account');
 	}
@@ -60,7 +58,6 @@ export class DeleteAccountProcessorService {
 
 		// Also covers direct/retried jobs and accounts already physically absent.
 		await this.usersRepository.update(job.data.user.id, { isDeleted: true });
-		await this.hataigoWithdrawalService.cleanup(job.data.user.id);
 		const user = await this.usersRepository.findOneBy({ id: job.data.user.id });
 		const isRemote = user ? this.userEntityService.isRemoteUser(user) : false;
 		if (user == null) {

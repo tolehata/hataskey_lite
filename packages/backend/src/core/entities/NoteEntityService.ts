@@ -10,20 +10,16 @@ import { DI } from '@/di-symbols.js';
 import type { Packed } from '@/misc/json-schema.js';
 import { awaitAll } from '@/misc/prelude/await-all.js';
 import type { MiUser } from '@/models/User.js';
-import type { MiUtageSession } from '@/models/UtageSession.js';
-import { utageSnapshot, type UtageParticipation } from '@/misc/utage-revival.js';
 import type { MiNote } from '@/models/Note.js';
 import type { MiChannel } from '@/models/Channel.js';
-import type { UsersRepository, NotesRepository, FollowingsRepository, PollsRepository, PollVotesRepository, NoteReactionsRepository, ChannelsRepository, ChannelMembersRepository, InstancesRepository, MiMeta, EventsRepository, UtageSessionsRepository } from '@/models/_.js';
+import type { UsersRepository, NotesRepository, FollowingsRepository, PollsRepository, PollVotesRepository, NoteReactionsRepository, ChannelsRepository, InstancesRepository, MiMeta, EventsRepository } from '@/models/_.js';
 import { shouldHideNoteByTime } from '@/misc/should-hide-note-by-time.js';
-import { PrivateChannelNoteVisibilityError } from '@/misc/private-channel-note-visibility-error.js';
 import { bindThis } from '@/decorators.js';
 import { DebounceLoader } from '@/misc/loader.js';
 import { IdService } from '@/core/IdService.js';
 import { ReactionsBufferingService } from '@/core/ReactionsBufferingService.js';
 import { RoleService } from '@/core/RoleService.js';
-import { MemoryKVCache } from '@/misc/cache.js';
-import type { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
+import type { OnModuleInit } from '@nestjs/common';
 import type { CustomEmojiService } from '../CustomEmojiService.js';
 import type { ReactionService } from '../ReactionService.js';
 import type { UserEntityService } from './UserEntityService.js';
@@ -33,36 +29,10 @@ export type NoteVisibilityInput = Pick<MiNote,
 	'id' | 'userId' | 'userHost' | 'channelId' | 'visibility' | 'visibleUserIds' | 'mentions' | 'replyUserId'
 > & Partial<Pick<MiNote, 'user' | 'channel' | 'replyId' | 'renoteId' | 'reply' | 'renote'>>;
 
-export type ChannelVisibilityNote = {
-	id: MiNote['id'];
-	userId: MiUser['id'];
-	channelId?: MiChannel['id'] | null;
-	replyId?: MiNote['id'] | null;
-	renoteId?: MiNote['id'] | null;
-	reply?: ChannelVisibilityNote | null;
-	renote?: ChannelVisibilityNote | null;
-};
-
-/**
- * How long a fetched ancestor is reused. The data never changes, so the cache can only err by
- * remembering a deleted ancestor: that hides its parent a little longer, never reveals anything.
- * Long enough to absorb a burst of reaction events, short enough for a deletion to take effect.
- */
-export const CHANNEL_VISIBILITY_NODE_TTL_MS = 1000 * 60 * 5;
-
-/** The immutable part of a note that channel visibility depends on. */
-type ChannelVisibilityNode = {
-	id: MiNote['id'];
-	userId: MiUser['id'];
-	channelId: MiChannel['id'] | null;
-	replyId: MiNote['id'] | null;
-	renoteId: MiNote['id'] | null;
-};
-
-type ChannelVisibilityContext = {
+/** 1回の pack 呼び出し(再帰を含む)で使い回す閲覧者のロール判定。 */
+type ViewerRoleContext = {
 	iAmModerator?: boolean;
 	iAmAdministrator?: boolean;
-	channels?: Map<MiChannel['id'], MiChannel>;
 };
 
 // is-renote.tsとよしなにリンク
@@ -101,7 +71,7 @@ async function nullIfEntityNotFound<T>(promise: Promise<T>): Promise<T | null> {
 }
 
 @Injectable()
-export class NoteEntityService implements OnModuleInit, OnApplicationShutdown {
+export class NoteEntityService implements OnModuleInit {
 	private userEntityService: UserEntityService;
 	private driveFileEntityService: DriveFileEntityService;
 	private customEmojiService: CustomEmojiService;
@@ -110,17 +80,6 @@ export class NoteEntityService implements OnModuleInit, OnApplicationShutdown {
 	private idService: IdService;
 	private noteLoader = new DebounceLoader(this.findNoteOrFail);
 	private roleService: RoleService;
-	private channelVisibilityNodes?: MemoryKVCache<ChannelVisibilityNode>;
-
-	// Created on first use so partially constructed instances (and each test) get their own cache.
-	private get channelVisibilityNodeCache(): MemoryKVCache<ChannelVisibilityNode> {
-		return this.channelVisibilityNodes ??= new MemoryKVCache<ChannelVisibilityNode>(CHANNEL_VISIBILITY_NODE_TTL_MS, 20_000);
-	}
-
-	@bindThis
-	public onApplicationShutdown(): void {
-		this.channelVisibilityNodes?.dispose();
-	}
 
 	constructor(
 		private moduleRef: ModuleRef,
@@ -143,9 +102,6 @@ export class NoteEntityService implements OnModuleInit, OnApplicationShutdown {
 		@Inject(DI.eventsRepository)
 		private eventsRepository: EventsRepository,
 
-		@Inject(DI.utageSessionsRepository)
-		private utageSessionsRepository: UtageSessionsRepository,
-
 		@Inject(DI.pollVotesRepository)
 		private pollVotesRepository: PollVotesRepository,
 
@@ -154,9 +110,6 @@ export class NoteEntityService implements OnModuleInit, OnApplicationShutdown {
 
 		@Inject(DI.channelsRepository)
 		private channelsRepository: ChannelsRepository,
-
-		@Inject(DI.channelMembersRepository)
-		private channelMembersRepository: ChannelMembersRepository,
 
 		@Inject(DI.instancesRepository)
 		private instancesRepository: InstancesRepository,
@@ -178,112 +131,6 @@ export class NoteEntityService implements OnModuleInit, OnApplicationShutdown {
 		this.reactionsBufferingService = this.moduleRef.get('ReactionsBufferingService');
 		this.idService = this.moduleRef.get('IdService');
 		this.roleService = this.moduleRef.get('RoleService');
-	}
-
-	/** プライベート投稿・その投稿を参照する親を、通常の visibility と分けて除外する。 */
-	@bindThis
-	public async filterChannelVisibleNotes<T extends ChannelVisibilityNote>(notes: T[], meId: MiUser['id'] | null): Promise<T[]> {
-		return this.filterChannelVisibleNotesWithContext(notes, meId, {});
-	}
-
-	private async filterChannelVisibleNotesWithContext<T extends ChannelVisibilityNote>(notes: T[], meId: MiUser['id'] | null, context: ChannelVisibilityContext): Promise<T[]> {
-		if (notes.length === 0) return [];
-
-		const nodes = new Map<string, ChannelVisibilityNote>();
-		const parents = new Map<string, Set<string>>();
-		const visitedObjects = new Set<ChannelVisibilityNote>();
-		const fetchedIds = new Set<string>();
-		const pending: ChannelVisibilityNote[] = [...notes];
-		for (;;) {
-			while (pending.length > 0) {
-				const note = pending.pop();
-				if (note == null || visitedObjects.has(note)) continue;
-				visitedObjects.add(note);
-				const previous = nodes.get(note.id);
-				const merged = { ...previous, ...note };
-				// undefined は未取得。先に得ていた ID/子を失わないようにする。
-				if (previous) {
-					for (const key of ['channelId', 'replyId', 'renoteId', 'reply', 'renote'] as const) {
-						if (note[key] === undefined && previous[key] !== undefined) Object.assign(merged, { [key]: previous[key] });
-					}
-				}
-				nodes.set(note.id, merged);
-				for (const [id, child] of [[merged.replyId, merged.reply], [merged.renoteId, merged.renote]] as const) {
-					for (const childId of new Set([id, child?.id])) {
-						if (childId == null) continue;
-						const parentIds = parents.get(childId) ?? new Set<string>();
-						parentIds.add(note.id);
-						parents.set(childId, parentIds);
-					}
-					if (child != null) pending.push(child);
-				}
-			}
-
-			const missingIds = new Set([...parents.keys()].filter(id => !nodes.has(id) && !fetchedIds.has(id)));
-			// 更新イベント等の部分 snapshot も、存命なら参照列を補完する。
-			for (const note of nodes.values()) {
-				if (!fetchedIds.has(note.id) && (note.channelId === undefined || note.replyId === undefined || note.renoteId === undefined)) missingIds.add(note.id);
-			}
-			if (missingIds.size === 0) break;
-			for (const id of missingIds) fetchedIds.add(id);
-			// 投稿者・チャンネル・返信/引用先は作成後に変わらない。DB で得た節は共有して再利用する。
-			const uncachedIds: string[] = [];
-			for (const id of missingIds) {
-				const cached = this.channelVisibilityNodeCache.get(id);
-				if (cached) pending.push({ ...cached });
-				else uncachedIds.push(id);
-			}
-			if (uncachedIds.length > 0) {
-				const fetched = await this.notesRepository.find({
-					where: { id: In(uncachedIds) },
-					select: { id: true, userId: true, channelId: true, replyId: true, renoteId: true },
-				});
-				for (const node of fetched) {
-					this.channelVisibilityNodeCache.set(node.id, { id: node.id, userId: node.userId, channelId: node.channelId, replyId: node.replyId, renoteId: node.renoteId });
-				}
-				pending.push(...fetched);
-			}
-			// DB に無い子は削除済み。削除イベントの root は受信 snapshot を残す。
-		}
-
-		const channelIds = [...new Set([...nodes.values()].flatMap(note => note.channelId == null ? [] : [note.channelId]))];
-		if (channelIds.length === 0) return notes;
-		// JOIN や共有 broadcast 内の channel は古いことがあるため、常に現在の DB を参照する。
-		const channels = await this.channelsRepository.findBy({ id: In(channelIds) });
-		context.channels = new Map(channels.map(channel => [channel.id, channel]));
-		const privateChannels = new Map(channels.filter(channel => channel.isPrivate).map(channel => [channel.id, channel]));
-		if (privateChannels.size === 0) return notes;
-		const isStaff = meId != null && ((context.iAmModerator ??= await this.roleService.isModerator({ id: meId })) || (context.iAmAdministrator ??= await this.roleService.isAdministrator({ id: meId })));
-		if (isStaff) return notes;
-		const membershipIds = meId == null ? [] : [...privateChannels.values()]
-			.filter(channel => channel.userId !== meId && !channel.moderatorUserIds.includes(meId))
-			.map(channel => channel.id);
-		const memberships = meId == null || membershipIds.length === 0 ? [] : await this.channelMembersRepository.findBy({ channelId: In(membershipIds), userId: meId });
-		const memberChannels = new Set(memberships.map(member => member.channelId));
-		const blocked = new Set<string>();
-		for (const note of nodes.values()) {
-			const channel = note.channelId == null ? null : privateChannels.get(note.channelId);
-			if (channel == null) continue;
-			if (meId != null && (note.userId === meId || channel.userId === meId || channel.moderatorUserIds.includes(meId) || memberChannels.has(channel.id))) continue;
-			blocked.add(note.id);
-		}
-		// 逆向きに伝播するので、循環参照・共有された子も一度ずつ処理できる。
-		const blockedQueue = [...blocked];
-		while (blockedQueue.length > 0) {
-			const blockedId = blockedQueue.pop();
-			if (blockedId == null) continue;
-			for (const parentId of parents.get(blockedId) ?? []) {
-				if (blocked.has(parentId)) continue;
-				blocked.add(parentId);
-				blockedQueue.push(parentId);
-			}
-		}
-		return notes.filter(note => !blocked.has(note.id));
-	}
-
-	@bindThis
-	public async isChannelVisibleForMe(note: ChannelVisibilityNote, meId: MiUser['id'] | null): Promise<boolean> {
-		return (await this.filterChannelVisibleNotes([note], meId)).length > 0;
 	}
 
 	@bindThis
@@ -313,10 +160,8 @@ export class NoteEntityService implements OnModuleInit, OnApplicationShutdown {
 		_hint_?: {
 			channelMap?: Map<MiChannel['id'], MiChannel>;
 			iAmModerator?: boolean;
-			channelVisibilityChecked?: boolean;
 		},
 	): Promise<boolean> {
-		if (!_hint_?.channelVisibilityChecked && !await this.isChannelVisibleForMe(packedNote, meId)) return true;
 		if (packedNote.isHidden) return true;
 		if (meId === packedNote.userId) return false;
 
@@ -456,36 +301,6 @@ export class NoteEntityService implements OnModuleInit, OnApplicationShutdown {
 		};
 	}
 
-	// 旗鯖fork: 宴(うたげ)の判定状態を返す。宴ワードを含むローカルノートのみ DB を引く
-	// (全ノートで session を照会すると TL 表示が重くなるため、安価な正規表現で足切りする)。
-	private static readonly UTAGE_REGEX = /宴|うたげ|ぅたげ|utage/i;
-
-	// 旗鯖fork: 1ノートに対して宴の判定をすべきか? を判定する純粋関数(DBを引かない)。
-	private isUtageCandidate(note: MiNote): boolean {
-		if (note.userHost != null) return false; // ローカルノートのみ
-		const t = `${note.text ?? ''} ${note.cw ?? ''}`;
-		return NoteEntityService.UTAGE_REGEX.test(t);
-	}
-
-	@bindThis
-	private async populateUtage(
-		note: MiNote,
-		meId: MiUser['id'] | null,
-		_hint_?: { utageSessionMap?: Map<string, MiUtageSession>; utageViewer?: MiUser | null },
-	) {
-		if (!this.isUtageCandidate(note)) return {};
-		const session = _hint_?.utageSessionMap !== undefined ? _hint_.utageSessionMap.get(note.id) : await this.utageSessionsRepository.findOneBy({ noteId: note.id });
-		if (!session) return {};
-		const snapshot = utageSnapshot(session);
-		if (!meId || !session.revivalStartedAt) return snapshot;
-		const viewer = _hint_?.utageViewer !== undefined ? _hint_.utageViewer : await this.usersRepository.findOneBy({ id: meId });
-		const participation: UtageParticipation = meId === session.userId ? 'author'
-			: session.revivalSupporterIds.includes(meId) ? 'accepted'
-				: session.revivalExcludedUserIds.includes(meId) ? 'existing'
-					: viewer && viewer.host == null && !viewer.isBot && !viewer.isSuspended && !viewer.isDeleted ? 'eligible' : 'ineligible';
-		return { ...snapshot, utageMyParticipation: participation };
-	}
-
 	@bindThis
 	public async populateMyReaction(note: { id: MiNote['id']; reactions: MiNote['reactions']; reactionAndUserPairCache?: MiNote['reactionAndUserPairCache']; }, meId: MiUser['id'], _hint_?: {
 		myReactions: Map<MiNote['id'], string | null>;
@@ -515,7 +330,6 @@ export class NoteEntityService implements OnModuleInit, OnApplicationShutdown {
 
 	@bindThis
 	public async isVisibleForMe(note: NoteVisibilityInput, meId: MiUser['id'] | null): Promise<boolean> {
-		if (!await this.isChannelVisibleForMe(note, meId)) return false;
 		// This code must always be synchronized with the checks in generateVisibilityQuery.
 		if (meId == null && (this.meta.ugcVisibilityForVisitor === 'none'
 			|| (this.meta.ugcVisibilityForVisitor === 'local' && note.userHost != null))) return false;
@@ -604,18 +418,14 @@ export class NoteEntityService implements OnModuleInit, OnApplicationShutdown {
 			detail?: boolean;
 			skipHide?: boolean;
 			withReactionAndUserPairCache?: boolean;
-			// この pack 呼び出しの根で判定した全参照にだけ引き継ぐ。
-			_channelVisibilityChecked?: boolean;
-			_channelVisibilityContext?: ChannelVisibilityContext;
+			// この pack 呼び出しの根で判定したロールを、再帰する全参照に引き継ぐ。
+			_viewerRoleContext?: ViewerRoleContext;
 			_ancestorNoteIds?: Set<MiNote['id']>;
 			_hint_?: {
 				bufferedReactions: Map<MiNote['id'], { deltas: Record<string, number>; pairs: ([MiUser['id'], string])[] }> | null;
 				myReactions: Map<MiNote['id'], string | null>;
 				packedFiles: Map<MiNote['fileIds'][number], Packed<'DriveFile'> | null>;
 				packedUsers: Map<MiUser['id'], Packed<'UserLite'>>;
-				// 旗鯖fork: packMany で集約した宴セッション状態。エントリが無ければセッション未登録。
-				utageSessionMap?: Map<string, MiUtageSession>;
-				utageViewer?: MiUser | null;
 				// 旗鯖fork: packMany で集約したチャンネル本体・閲覧時メンバーシップ・モデレーター判定。
 				channelMap?: Map<MiChannel['id'], MiChannel>;
 				iAmModerator?: boolean;
@@ -630,10 +440,7 @@ export class NoteEntityService implements OnModuleInit, OnApplicationShutdown {
 
 		const meId = me ? me.id : null;
 		const note = typeof src === 'object' ? src : await this.noteLoader.load(src);
-		const visibilityContext = opts._channelVisibilityContext ?? {};
-		if (!opts.skipHide && !opts._channelVisibilityChecked && (await this.filterChannelVisibleNotesWithContext([note], meId, visibilityContext)).length === 0) {
-			throw new PrivateChannelNoteVisibilityError();
-		}
+		const visibilityContext = opts._viewerRoleContext ?? {};
 		const ancestorNoteIds = new Set(opts._ancestorNoteIds);
 		ancestorNoteIds.add(note.id);
 		const host = note.userHost;
@@ -658,7 +465,7 @@ export class NoteEntityService implements OnModuleInit, OnApplicationShutdown {
 
 		// 旗鯖fork: packMany 経由のときは channelMap で 1 回の SELECT に集約する。
 		const channel = note.channelId
-			? visibilityContext.channels?.get(note.channelId) ?? opts._hint_?.channelMap?.get(note.channelId) ?? note.channel ?? await this.channelsRepository.findOneBy({ id: note.channelId })
+			? opts._hint_?.channelMap?.get(note.channelId) ?? note.channel ?? await this.channelsRepository.findOneBy({ id: note.channelId })
 			: null;
 
 		const reactionEmojiNames = Object.keys(reactions)
@@ -702,15 +509,10 @@ export class NoteEntityService implements OnModuleInit, OnApplicationShutdown {
 				color: channel.color,
 				isSensitive: channel.isSensitive,
 				allowRenoteToExternal: channel.allowRenoteToExternal,
-				// 旗鯖fork: プライベートチャンネルはチャンネル外リノート不可。フロントでメニューを抑制するため公開。
-				isPrivate: channel.isPrivate,
 				userId: channel.userId,
 			} : undefined,
 			mentions: note.mentions.length > 0 ? note.mentions : undefined,
 			hasPoll: note.hasPoll || undefined,
-			// 旗鯖fork: 宴(うたげ)の判定状態。宴ノートでなければ undefined。
-			// 公開状態と、認証済み閲覧者だけの参加状態を初期表示に渡す。
-			...await this.populateUtage(note, meId, opts._hint_),
 			uri: note.uri ?? undefined,
 			url: note.url ?? undefined,
 			hasDeliveryTargets: note.deliveryTargets != null,
@@ -740,8 +542,7 @@ export class NoteEntityService implements OnModuleInit, OnApplicationShutdown {
 					detail: true,
 					skipHide: opts.skipHide,
 					withReactionAndUserPairCache: opts.withReactionAndUserPairCache,
-					_channelVisibilityChecked: true,
-					_channelVisibilityContext: visibilityContext,
+					_viewerRoleContext: visibilityContext,
 					_ancestorNoteIds: ancestorNoteIds,
 					_hint_: options?._hint_,
 				})) : undefined,
@@ -751,8 +552,7 @@ export class NoteEntityService implements OnModuleInit, OnApplicationShutdown {
 					detail: true,
 					skipHide: opts.skipHide,
 					withReactionAndUserPairCache: opts.withReactionAndUserPairCache,
-					_channelVisibilityChecked: true,
-					_channelVisibilityContext: visibilityContext,
+					_viewerRoleContext: visibilityContext,
 					_ancestorNoteIds: ancestorNoteIds,
 					_hint_: options?._hint_,
 				})) : undefined,
@@ -776,7 +576,7 @@ export class NoteEntityService implements OnModuleInit, OnApplicationShutdown {
 		this.treatVisibility(packed, meIsAdmin);
 
 		if (!opts.skipHide) {
-			if (await this.shouldHideNote(packed, meId, { ...opts._hint_, channelVisibilityChecked: true })) this.hideNote(packed);
+			if (await this.shouldHideNote(packed, meId, opts._hint_)) this.hideNote(packed);
 		}
 
 		return packed;
@@ -792,9 +592,8 @@ export class NoteEntityService implements OnModuleInit, OnApplicationShutdown {
 		},
 	) {
 		if (sourceNotes.length === 0) return [];
-		const visibilityContext: ChannelVisibilityContext = {};
-		const notes = options?.skipHide ? sourceNotes : await this.filterChannelVisibleNotesWithContext(sourceNotes, me?.id ?? null, visibilityContext);
-		if (notes.length === 0) return [];
+		const visibilityContext: ViewerRoleContext = {};
+		const notes = sourceNotes;
 
 		const bufferedReactions = this.meta.enableReactionsBuffering ? await this.reactionsBufferingService.getMany([...getAppearNoteIds(notes)]) : null;
 
@@ -840,28 +639,10 @@ export class NoteEntityService implements OnModuleInit, OnApplicationShutdown {
 		const packedUsers = await this.userEntityService.packMany(users, me)
 			.then(users => new Map(users.map(u => [u.id, u])));
 
-		// 旗鯖fork: 宴(うたげ)セッションを一括取得して N+1 を解消する。
-		//   - ローカル かつ 宴ワードを含むノートだけ DB を引く(個別 pack と同じ足切り)。
-		//   - 再帰 pack で参照される reply/renote も hint で吸収するため候補に含める。
-		const utageCandidateIds: MiNote['id'][] = [];
-		for (const n of notes) {
-			if (this.isUtageCandidate(n)) utageCandidateIds.push(n.id);
-			if (n.reply && this.isUtageCandidate(n.reply)) utageCandidateIds.push(n.reply.id);
-			if (n.renote && this.isUtageCandidate(n.renote)) utageCandidateIds.push(n.renote.id);
-		}
-		const utageSessionMap = new Map<string, MiUtageSession>();
-		const utageViewer = meId && utageCandidateIds.length ? await this.usersRepository.findOneBy({ id: meId }) : null;
-		if (utageCandidateIds.length > 0) {
-			const sessions = await this.utageSessionsRepository.findBy({ noteId: In(utageCandidateIds) });
-			for (const s of sessions) {
-				utageSessionMap.set(s.noteId, s);
-			}
-		}
-
-		// 旗鯖fork: 表示用チャンネル情報も一括取得する。閲覧判定時の最新情報を優先する。
+		// 旗鯖fork: 表示用チャンネル情報も一括取得する。
 		//   - JOIN 済み(note.channel が non-null)のものは不足分だけ hint に含める。
 		//   - 再帰 pack で参照される reply/renote の channelId も対象にする。
-		const channelMap = visibilityContext.channels ?? new Map<MiChannel['id'], MiChannel>();
+		const channelMap = new Map<MiChannel['id'], MiChannel>();
 		const collectChannel = (n: MiNote) => {
 			if (n.channelId != null && n.channel != null && !channelMap.has(n.channelId)) channelMap.set(n.channelId, n.channel);
 		};
@@ -890,29 +671,18 @@ export class NoteEntityService implements OnModuleInit, OnApplicationShutdown {
 		const iAmModerator = visibilityContext.iAmModerator ?? (me ? await this.roleService.isModerator(me as MiUser) : false);
 		visibilityContext.iAmModerator = iAmModerator;
 
-		const packedNotes = await Promise.all(notes.map(async n => {
-			try {
-				return await this.pack(n, me, {
-					...options,
-					_channelVisibilityChecked: true,
-					_channelVisibilityContext: visibilityContext,
-					_hint_: {
-						bufferedReactions,
-						myReactions: myReactionsMap,
-						packedFiles,
-						packedUsers,
-						utageSessionMap,
-						utageViewer,
-						channelMap,
-						iAmModerator,
-					},
-				});
-			} catch (err) {
-				if (err instanceof PrivateChannelNoteVisibilityError) return null;
-				throw err;
-			}
-		}));
-		return packedNotes.filter((note): note is Packed<'Note'> => note != null);
+		return await Promise.all(notes.map(n => this.pack(n, me, {
+			...options,
+			_viewerRoleContext: visibilityContext,
+			_hint_: {
+				bufferedReactions,
+				myReactions: myReactionsMap,
+				packedFiles,
+				packedUsers,
+				channelMap,
+				iAmModerator,
+			},
+		})));
 	}
 
 	@bindThis

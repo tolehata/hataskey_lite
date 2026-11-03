@@ -99,22 +99,6 @@ export class MiChannel {
 	})
 	public allowRenoteToExternal: boolean;
 
-	// 旗鯖fork: プライベートチャンネル。許可されたメンバー(+作成者/副管理者)のみ閲覧できる。
-	@Index()
-	@Column('boolean', {
-		default: false,
-		comment: 'Whether this channel is private (members-only).',
-	})
-	public isPrivate: boolean;
-
-	// 旗鯖fork: あいことば。プライベートチャンネルにこれを入力すると入室(メンバー化)できる。null なら合言葉入室は不可。
-	@Column('varchar', {
-		length: 128,
-		nullable: true,
-		comment: 'Passphrase to join a private channel (あいことば). null = passphrase join disabled.',
-	})
-	public password: string | null;
-
 	// 旗鯖fork: 副管理者。作成者とともにチャンネル(メンバー含む)を管理できるユーザーID。
 	@Column('varchar', {
 		length: 32,

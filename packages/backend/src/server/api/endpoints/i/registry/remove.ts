@@ -9,7 +9,6 @@ import type { RegistryItemsRepository } from '@/models/_.js';
 import { DI } from '@/di-symbols.js';
 import { RegistryApiService } from '@/core/RegistryApiService.js';
 import { ApiError } from '../../../error.js';
-import { assertHataskNativeRegistryAccess } from './_hatask-planner-access.js';
 
 export const meta = {
 	requireCredential: true,
@@ -41,8 +40,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 	constructor(
 		private registryApiService: RegistryApiService,
 	) {
-		super(meta, paramDef, async (ps, me, accessToken, flashToken) => {
-			assertHataskNativeRegistryAccess(ps.scope, flashToken);
+		super(meta, paramDef, async (ps, me, accessToken) => {
 			await this.registryApiService.remove(me.id, accessToken != null ? accessToken.id : (ps.domain ?? null), ps.scope, ps.key);
 		});
 	}

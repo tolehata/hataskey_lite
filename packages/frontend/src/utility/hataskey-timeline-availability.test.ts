@@ -57,7 +57,7 @@ function normal(saved = 'local') {
 		switchTab: (tab: string) => void;
 	}>('src/ui/simple.vue', ['getInitialTab', 'tab', 'visibleTopTabs', 'tabOrder', 'switchTab'], {
 				prefer: { r: { 'simpleUi.topNav': topNav, 'simpleUi.showTrendingTab': ref(true), 'simpleUi.showHatadyTab': ref(true) } },
-				i18n: { ts: { _hata: { _hataskeyUi3: { tabTrending: 'Trending', tabHatady: 'Hatady' } } } },
+				i18n: { ts: { _timelines: { trending: 'Trending' } } },
 				miLocalStorage: storage, showOHTL: ref(true), showOLTL: ref(true), showCTL: ref(false),
 				isCollectionTimelinePage: ref(false), timelinePickerKind: ref(null), contentEl: ref(null),
 			}, true);
@@ -96,17 +96,6 @@ function deck(concrnt = false) {
 }
 
 describe('Hataskey UI role-based timeline availability', () => {
-	test('CTL is offered in both deck add menus only while Concrnt is connected', async () => {
-		for (const connected of [false, true]) {
-			const state = deck(connected);
-			const menu = state.columnTypeMenu({}, vi.fn()).map(item => item.text);
-			await state.addColumn({ currentTarget: {} });
-			const choices = state.select.mock.calls[0][0].items.map((item: { value: string }) => item.value);
-			expect(menu.includes('CTL（コンカレント）')).toBe(connected);
-			expect(choices.includes('ctl')).toBe(connected);
-		}
-	});
-
 	test.each([[false, false], [true, false], [false, true], [true, true]])('LTL=%s GTL=%s: account policies override server defaults', (ltl, gtl) => {
 		Object.assign(policies, { ltlAvailable: ltl, gtlAvailable: gtl });
 		for (const type of ['local', 'social', 'media']) expect(isHataskeyTimelineAllowed(type)).toBe(ltl);
@@ -118,8 +107,8 @@ describe('Hataskey UI role-based timeline availability', () => {
 		Object.assign(policies, { ltlAvailable: false, gtlAvailable: false });
 		const state = normal(saved);
 		expect(state.tab.value).toBe('following');
-		expect(state.visibleTopTabs.value.map(t => t.id)).toEqual(['following', 'trending', 'hatady']);
-		expect(state.tabOrder.value).toEqual(['following', 'trending', 'hatady', 'ohtl', 'oltl']);
+		expect(state.visibleTopTabs.value.map(t => t.id)).toEqual(['following', 'trending']);
+		expect(state.tabOrder.value).toEqual(['following', 'trending']);
 		state.switchTab(saved);
 		expect(state.tab.value).toBe('following');
 		expect(state.storage.setItem).not.toHaveBeenCalled();
@@ -131,9 +120,9 @@ describe('Hataskey UI role-based timeline availability', () => {
 		expect(state.tab.value).toBe('local');
 		policies.ltlAvailable = false;
 		expect(state.tab.value).toBe('following');
-		expect(state.visibleTopTabs.value.map(t => t.id)).toEqual(['following', 'mixed', 'trending', 'hatady']);
+		expect(state.visibleTopTabs.value.map(t => t.id)).toEqual(['following', 'mixed', 'trending']);
 		policies.ltlAvailable = true;
-		expect(state.visibleTopTabs.value.map(t => t.id)).toEqual(['following', 'local', 'social', 'mixed', 'trending', 'hatady']);
+		expect(state.visibleTopTabs.value.map(t => t.id)).toEqual(['following', 'local', 'social', 'mixed', 'trending']);
 		expect(JSON.stringify(state.topNav.value)).toBe(saved);
 	});
 
@@ -176,7 +165,5 @@ describe('Hataskey UI role-based timeline availability', () => {
 		}
 		expect(menu).toContain('home');
 		expect(choices).toContain('home');
-		expect(menu).toContain('hatady');
-		expect(choices).toContain('hatady');
 	});
 });

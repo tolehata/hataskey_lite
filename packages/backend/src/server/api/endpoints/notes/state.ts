@@ -71,7 +71,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 	) {
 		super(meta, paramDef, async (ps, me, token) => {
 			const note = await this.notesRepository.findOneBy({ id: ps.noteId });
-			if (note == null || !await this.noteEntityService.isChannelVisibleForMe(note, me.id)) {
+			if (note == null) {
 				throw new ApiError(meta.errors.noSuchNote);
 			}
 

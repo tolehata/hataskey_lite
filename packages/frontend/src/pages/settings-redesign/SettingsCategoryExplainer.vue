@@ -32,7 +32,6 @@
 					<div v-for="index in 3" :key="index" :class="$style.feedRow" :data-muted="index === 2"><span :class="$style.rowAvatar"></span><span :class="$style.rowLines"><span :class="$style.bar"></span><span :class="$style.bar"></span></span><i v-if="index === 2" class="ti ti-eye-off" :class="$style.hiddenIcon"></i></div>
 				</div>
 				<div v-else-if="categoryId === 'drive'" :class="$style.upload"><i class="ti ti-cloud" :class="$style.cloud"></i><i class="ti ti-photo" :class="$style.uploadFile"></i></div>
-				<div v-else-if="categoryId === 'apps'" :class="$style.apps"><span v-for="(app, index) in apps" :key="app" :class="$style.app" :style="{ '--app-index': index }"><HataAppLogo :app="app" :size="40" :active="motionEnabled && animationVisible"/></span></div>
 				<div v-else-if="categoryId === 'data'" :class="$style.center"><i class="ti ti-arrow-down" :class="$style.download"></i><span :class="$style.package"><i class="ti ti-package"></i></span><i class="ti ti-arrow-up" :class="$style.export"></i></div>
 				<div v-else-if="categoryId === 'advanced'" :class="$style.sliders"><span v-for="index in 3" :key="index" :class="$style.slider"><span :class="$style.sliderTrack"></span><span :class="$style.sliderKnob" :style="{ '--slider-index': index - 1 }"></span></span></div>
 			</div>
@@ -44,8 +43,6 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
-import type { HataApp } from '@/utility/hata-app-brand.js';
-import HataAppLogo from '@/components/HataAppLogo.vue';
 import { i18n } from '@/i18n.js';
 
 const props = withDefaults(defineProps<{
@@ -54,7 +51,6 @@ const props = withDefaults(defineProps<{
 	compact?: boolean;
 }>(), { compact: false });
 const copy = i18n.ts._hata._settingsBento;
-const apps: readonly HataApp[] = ['hatagoes', 'hatask', 'hatady', 'hatafeed'];
 const captions: Record<string, string> = copy.explainer;
 const caption = computed(() => Object.hasOwn(captions, props.categoryId) ? captions[props.categoryId] : undefined);
 const root = useTemplateRef('root');
@@ -148,7 +144,6 @@ onBeforeUnmount(() => {
 .upload { position: absolute; inset: 0; display: flex; justify-content: center; padding-top: 10px; }
 .cloud { font-size: 44px; color: var(--MI_THEME-fgMuted); }
 .uploadFile { position: absolute; left: 98px; top: 52px; font-size: 24px; animation: up 2.6s cubic-bezier(.22, .9, .24, 1) infinite; }
-.apps { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
 .app { display: inline-flex; animation: pop 4s cubic-bezier(.22, .9, .24, 1) calc(var(--app-index) * .2s) infinite; }
 .package { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 16px; background: var(--MI_THEME-accentedBg); font-size: 30px; }
 .download { color: var(--MI_THEME-fgMuted); font-size: 22px; animation: down 2.4s cubic-bezier(.22, .9, .24, 1) infinite; }

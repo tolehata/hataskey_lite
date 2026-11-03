@@ -61,7 +61,7 @@ const isBeta = version.includes('-beta') || version.includes('-alpha') || versio
 
 function whatIsNewCherryPick() {
 	// modal.value?.close();
-	window.open(`https://github.com/tolehata/hataskey`, '_blank');
+	window.open(`https://github.com/tolehata/hataskey_lite`, '_blank');
 }
 
 const close = async () => {

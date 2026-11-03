@@ -207,7 +207,7 @@ function resultIcon(item: SettingsSearchDescriptor): string {
 	return item.icon?.trim() || (item.categoryId == null ? undefined : categoryIcons[item.categoryId]) || 'ti ti-settings';
 }
 
-const hasSettingsBrand = (value: string): boolean => /Hataskey|Hatask|Hatady|HataFeed/u.test(value);
+const hasSettingsBrand = (value: string): boolean => /Hataskey/u.test(value);
 
 const isMotionEnabled = computed(() => prefer.r.animation?.value !== false && !prefersReducedMotion.value);
 const resultItems = computed<SettingsSearchDescriptor[]>(() => response.value?.results ?? []);

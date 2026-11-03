@@ -12,22 +12,17 @@ import { clear } from '@/utility/idb-proxy.js';
 import { $i } from '@/i.js';
 import { prefer } from '@/preferences.js';
 import { encodePushSubscriptionKey } from '@/utility/encode-push-subscription-key.js';
-import { purgeConcrnt, preserveConcrntPurgeMarkers } from '@/utility/concrnt/runtime.js';
 
 export async function signout() {
 	if (!$i) return;
 
 	waiting();
 
-	const concrntCleanup = purgeConcrnt().catch(() => ({ cleared: false }));
-
 	if (store.s.enablePreferencesAutoCloudBackup) {
 		await cloudBackup();
 	}
 
-	const restoreConcrntMarkers = preserveConcrntPurgeMarkers();
 	localStorage.clear();
-	restoreConcrntMarkers();
 
 	const idbAbortController = new AbortController();
 	const timeout = window.setTimeout(() => idbAbortController.abort(), 5000);
@@ -43,7 +38,6 @@ export async function signout() {
 		await Promise.race([
 			Promise.all([
 				...idbPromises,
-				concrntCleanup,
 				// idb keyval-storeはidb-keyvalライブラリによる別管理
 				clear(),
 			]),

@@ -2,7 +2,7 @@
 _lang_: "Slovenčina"
 headlineMisskey: "Sieť prepojená poznámkami"
 introMisskey: "Vitajte! CherryPick je otvorená a decentralizovaná mikroblogovacia služba.\n\"Poznámkami\" môžete zdieľať svoje myšlienky so všetkými okolo. 📡\nPomocou \"reakcií\" môžete rýchlo vyjadri svoje pocity o každého poznámkach. 👍\nPoďte objavovať svet! 🚀"
-poweredByMisskeyDescription: "{name} je jedným zo serverov využívajúcich open source platformu <b>Hataskey</b> (nazývaných Hataskey inštancia)."
+poweredByMisskeyDescription: "{name} je jedným zo serverov využívajúcich open source platformu <b>Hataskey Lite</b> (nazývaných Hataskey inštancia)."
 monthAndDay: "{day}. {month}."
 search: "Hľadať"
 notifications: "Oznámenia"

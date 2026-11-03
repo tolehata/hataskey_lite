@@ -163,7 +163,7 @@ describe('settings redesign navigation contract', () => {
 	});
 
 	test('Hataskey category navは実在category/popupへ向ける', () => {
-		for (const category of ['glassUi', 'font', 'hatask', 'hatady', 'mascot', 'earthquake', 'general']) {
+		for (const category of ['glassUi', 'general']) {
 			expect(destinationsSource).toContain('category: \'' + category + '\'');
 		}
 		// ⚠️popup を指す記述は「いまの値をすぐ変える」節にしかなく、節ごと外した。
@@ -392,7 +392,7 @@ describe('settings redesign navigation contract', () => {
 		expect(shellSource).toContain('v-else-if="isServiceConnectionSurfaceActive"');
 		expect(shellSource).toContain('<SettingsServiceConnectionSurface');
 		expect(shellSource).toContain('inlineRelated: false');
-		expect(shellSource).toContain('\'/settings/profile\': [\'/settings/avatar-decoration\', \'/settings/note-charm\']');
+		expect(shellSource).toContain('\'/settings/profile\': [\'/settings/avatar-decoration\']');
 		expect(shellSource).toContain('pageOwnedRelatedRoutes[currentPath.value]?.includes(related.route) === true');
 	});
 

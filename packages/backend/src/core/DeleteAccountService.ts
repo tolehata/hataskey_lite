@@ -13,7 +13,6 @@ import { GlobalEventService } from '@/core/GlobalEventService.js';
 import { UserEntityService } from '@/core/entities/UserEntityService.js';
 import { ApRendererService } from '@/core/activitypub/ApRendererService.js';
 import { ModerationLogService } from '@/core/ModerationLogService.js';
-import { HataigoWithdrawalService } from '@/core/HataigoWithdrawalService.js';
 import { SystemAccountService } from '@/core/SystemAccountService.js';
 
 @Injectable()
@@ -34,7 +33,6 @@ export class DeleteAccountService {
 		private globalEventService: GlobalEventService,
 		private moderationLogService: ModerationLogService,
 		private systemAccountService: SystemAccountService,
-		private hataigoWithdrawalService: HataigoWithdrawalService,
 	) {
 	}
 
@@ -97,8 +95,6 @@ export class DeleteAccountService {
 		await this.usersRepository.update(user.id, {
 			isDeleted: true,
 		});
-
-		await this.hataigoWithdrawalService.cleanup(user.id);
 
 		this.globalEventService.publishInternalEvent('userChangeDeletedState', { id: user.id, isDeleted: true });
 	}

@@ -44,7 +44,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					'deleteChatRoom',
 				].includes(log.type)
 			}"
-		>{{ moderationLogLabel(log.type) }}</b>
+		>{{ i18n.ts._moderationLogTypes[log.type] ?? log.type }}</b>
 		<span v-if="registrationChoice">: {{ registrationChoice }}</span>
 		<template v-if="!log.isRedacted">
 			<span v-if="log.type === 'updateUserNote'">: @{{ log.info.userUsername }}{{ log.info.userHost ? '@' + log.info.userHost : '' }}</span>
@@ -143,16 +143,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<div style="flex: 1;">{{ i18n.ts.dateAndTime }}: <MkTime :time="log.createdAt" mode="detail"/></div>
 		</div>
 
-		<template v-if="isRecordModerationLog(log.type)">
-			<div>対象ユーザー：{{ recordInfo.targetName }} @{{ recordInfo.targetUsername }} ({{ recordInfo.targetUserId }})</div>
-			<div>実行者：{{ recordInfo.moderatorName }} @{{ recordInfo.moderatorUsername }} ({{ recordInfo.moderatorId }})</div>
-			<div>実行日時：{{ recordInfo.performedAt }}</div>
-			<div>対象：{{ recordInfo.title }} ({{ recordInfo.targetId }})</div>
-			<div>操作ID：{{ recordInfo.operationId }}</div>
-			<div style="white-space: pre-wrap; overflow-wrap: anywhere;">{{ log.type.startsWith('delete') ? '削除理由' : '対応理由' }}：{{ recordInfo.reason }}</div>
-			<div>警告：{{ recordInfo.warningId ? '本人向けのお知らせに保存' : 'なし' }}</div>
-		</template>
-		<template v-else-if="log.isRedacted">
+		<template v-if="log.isRedacted">
 			<p :class="$style.redactedNotice">{{ i18n.ts._hata._registrationApplications._review.moderationLogRedacted }}</p>
 			<div v-for="target in redactedTargets" :key="target.key">
 				{{ target.label }}: <MkA v-if="target.isUser" :to="`/admin/user/${target.id}`" class="_link">{{ target.id }}</MkA><span v-else>{{ target.id }}</span>
@@ -255,13 +246,10 @@ import JSON5 from 'json5';
 import { computed } from 'vue';
 import { i18n } from '@/i18n.js';
 import MkFolder from '@/components/MkFolder.vue';
-import { isRecordModerationLog, moderationLogLabel } from '@/utility/record-moderation-labels.js';
 
 const props = defineProps<{
 	log: Misskey.entities.ModerationLog;
 }>();
-type RecordLogInfo = Extract<Misskey.entities.ModerationLog, { type: 'deleteHatadyRecord' | 'deleteHataskRecord' | 'warnHatadyUser' | 'warnHataskUser' }>['info'];
-const recordInfo = computed(() => props.log.info as RecordLogInfo);
 
 const registrationChoice = computed(() => {
 	if (props.log.type !== 'voteRegistrationApplication') return null;

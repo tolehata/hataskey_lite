@@ -82,9 +82,9 @@ export async function common(createVue: () => Promise<App<Element>>) {
 		miLocalStorage.setItem('ui', 'simple');
 	}
 
-	// 旗鯖fork: HataSNSCordUI は Hataskey UI 3 に置き換えて廃止した。利用中だった端末は UI3 へ移す。
-	if (miLocalStorage.getItem('ui') === 'hatacording') {
-		miLocalStorage.setItem('ui', 'hataskey3');
+	// 旗鯖fork: HataSNSCordUI と Hataskey UI S(hataskey3) は Lite にないため、利用中だった端末は Hataskey UI へ移す。
+	if (miLocalStorage.getItem('ui') === 'hatacording' || miLocalStorage.getItem('ui') === 'hataskey3') {
+		miLocalStorage.setItem('ui', 'simple');
 	}
 	// 旧UIの端末ローカル設定・通知履歴キャッシュは参照元が無くなったため片付ける。
 	try {
@@ -96,7 +96,7 @@ export async function common(createVue: () => Promise<App<Element>>) {
 	// 旗鯖: デッキUI以外のユーザーをSimple UIに一度だけ強制移行
 	if (!miLocalStorage.getItem('hata_ui_migrated')) {
 		const currentUi = miLocalStorage.getItem('ui');
-		if (currentUi !== 'deck' && currentUi !== 'simple' && currentUi !== 'hataskey3') {
+		if (currentUi !== 'deck' && currentUi !== 'simple') {
 			miLocalStorage.setItem('ui', 'simple');
 		}
 		miLocalStorage.setItem('hata_ui_migrated', '1');
@@ -130,16 +130,6 @@ export async function common(createVue: () => Promise<App<Element>>) {
 		miLocalStorage.setItem('hata_misskeyui_wide_spacing_migrated', '1');
 	}
 
-	// 旗鯖: 天気エフェクトを一度だけ強制OFF。以前デフォルトが誤ってONだったため、
-	// 光過敏症(光感受性てんかん)配慮を最優先して既存ユーザーも一度リセットする。
-	// 一度きり(フラグで保護)なので、その後ユーザーが設定で再度ONにすれば尊重される。
-	if (!miLocalStorage.getItem('hata_weather_default_off_migrated')) {
-		const { prefer: preferWeather } = await import('@/preferences.js');
-		if (preferWeather.s['weatherEffect.enabled']) {
-			preferWeather.commit('weatherEffect.enabled', false);
-		}
-		miLocalStorage.setItem('hata_weather_default_off_migrated', '1');
-	}
 
 	// 旗鯖(#31): 旧「ミュートユーザーのリアクション非表示」(prefer同期)を有効にしていた人は、
 	//   端末ローカルのトグルを自動でONにする(端末ごと)。
@@ -218,29 +208,6 @@ export async function common(createVue: () => Promise<App<Element>>) {
 		miLocalStorage.setItem('hata_sidebar_v3_migrated', '1');
 	}
 
-	// 旗鯖: HataFeed・地震/津波情報をサイドバーの「旗鯖独自」グループに自動追加（既存ユーザー向け・既定で表示）
-	if (!miLocalStorage.getItem('hata_sidebar_v4_migrated')) {
-		const { prefer: preferSb4 } = await import('@/preferences.js');
-		const current = [...(preferSb4.s['simpleUi.sidebar'] ?? [])];
-		const has = (id: string) => current.some(i => i && i.id === id);
-		let changed = false;
-		const insertAfter = (afterId: string, item: any) => {
-			if (has(item.id)) return;
-			let idx = current.findIndex(i => i && i.id === afterId);
-			if (idx < 0) {
-				// 基準が無ければ「もっと」の直前、それも無ければ末尾。
-				const m = current.findIndex(i => i && i.id === 'more');
-				idx = (m >= 0 ? m - 1 : current.length - 1);
-			}
-			current.splice(idx + 1, 0, item);
-			changed = true;
-		};
-		insertAfter('hatask', { id: 'hatafeed', icon: 'ti ti-message-report', label: 'HataFeed', group: 'hata' });
-		insertAfter('hatafeed', { id: 'earthquake', icon: 'ti ti-activity', label: '地震・津波情報', group: 'hata' });
-		if (changed) preferSb4.commit('simpleUi.sidebar', current);
-		miLocalStorage.setItem('hata_sidebar_v4_migrated', '1');
-	}
-
 	// 旗鯖fork: chat (メッセージ) と reload (リロード) をサイドバー項目化 (hata-11.7.x)
 	// かつて ui/simple.vue で chat は動的注入・reload はテンプレート内ハードコード表示していたが、
 	// 「設定 UI で項目が見えない・ON/OFF や並び替えができない」というユーザー要望に対応するため
@@ -267,42 +234,6 @@ export async function common(createVue: () => Promise<App<Element>>) {
 		}
 		if (changed) preferSb5.commit('simpleUi.sidebar', current);
 		miLocalStorage.setItem('hata_sidebar_v5_migrated', '1');
-	}
-
-	// 旗鯖fork(v6): Hatady(学習・読書記録)を hatafeed の直後 (なければ hata グループ末尾/全体末尾) に追加。
-	//   設計指針通り insertAfter 方式 (既存にない id だけ追加)。ユーザーが非表示にしていれば復活させない。
-	if (!miLocalStorage.getItem('hata_sidebar_v6_migrated')) {
-		const { prefer: preferSb6 } = await import('@/preferences.js');
-		const current = [...(preferSb6.s['simpleUi.sidebar'] ?? [])];
-		if (!current.some(i => i && i.id === 'hatady')) {
-			const afterIdx = current.findIndex(i => i && i.id === 'hatafeed');
-			const insertAt = afterIdx >= 0 ? afterIdx + 1 : current.length;
-			current.splice(insertAt, 0, { id: 'hatady', icon: 'ti ti-book-2', label: 'Hatady', group: 'hata' });
-			preferSb6.commit('simpleUi.sidebar', current);
-		}
-		miLocalStorage.setItem('hata_sidebar_v6_migrated', '1');
-	}
-
-	// 旗鯖fork(#36): Haskホームに「HataFeed通知」「地震・津波」タイルを強制追加(既存ユーザー向け)
-	//   registry の hatask scope を直接読み書きする。設定の sectionOrder に新セクションがなければ
-	//   末尾に追加して保存。トグル既定はON(showFeedbackNotif/showEarthquake未定義時は表示)。
-	if (!miLocalStorage.getItem('hata_hask_tiles_v1_migrated')) {
-		try {
-			const HATASK_SCOPE = ['client', 'hatask'];
-			const { misskeyApi: api } = await import('@/utility/misskey-api.js');
-			const cur: any = await api('i/registry/get', { key: 'settings', scope: HATASK_SCOPE }).catch(() => null);
-			if (cur) {
-				let changed = false;
-				if (Array.isArray(cur.sectionOrder)) {
-					if (!cur.sectionOrder.includes('feedbackNotif')) { cur.sectionOrder.push('feedbackNotif'); changed = true; }
-					if (!cur.sectionOrder.includes('earthquake')) { cur.sectionOrder.push('earthquake'); changed = true; }
-				}
-				if (cur.showFeedbackNotif === undefined) { cur.showFeedbackNotif = true; changed = true; }
-				if (cur.showEarthquake === undefined) { cur.showEarthquake = true; changed = true; }
-				if (changed) await api('i/registry/set', { key: 'settings', value: cur, scope: HATASK_SCOPE });
-			}
-		} catch { /* registry未初期化のユーザーは hatask 初回起動時に defaultSectionOrder で補完される */ }
-		miLocalStorage.setItem('hata_hask_tiles_v1_migrated', '1');
 	}
 
 	// 旗鯖fork(v7): 「キャッシュをクリア」を reload の直後へ追加。
@@ -372,36 +303,9 @@ export async function common(createVue: () => Promise<App<Element>>) {
 		console.warn('[hataskey-sound-migration] 設定の取得・保存に失敗したため、次回起動時に再試行します');
 	});
 	const { migrateRetiredPortalMenu } = await import('@/utility/retired-portal-migration.js');
-	const { migrateHatagoesBottomNav } = await import('@/utility/hatagoes-bottom-nav-migration.js');
-	void migrateHatagoesBottomNav(prefer).catch(() => {
-		console.warn('[hatagoes-bottom-nav-migration] 設定の取得・保存に失敗したため、次回起動時に再試行します');
+	void migrateRetiredPortalMenu(prefer, miLocalStorage, $i?.id ?? 'guest').catch(() => {
+		console.warn('[portal-migration] 設定の取得・保存に失敗したため、次回起動時に再試行します');
 	});
-	const { migrateExternalNotificationsSidebar } = await import('@/utility/external-notifications-sidebar-migration.js');
-	const { migrateHatagoesSidebar } = await import('@/utility/hatagoes-sidebar-migration.js');
-	const repairExternalNotificationsSidebar = async () => {
-		try {
-			await migrateExternalNotificationsSidebar(prefer, miLocalStorage, $i?.id ?? 'guest');
-		} catch {
-			console.warn('[external-notifications-sidebar-migration] 設定の取得・保存に失敗したため、次回同期時に再試行します');
-		}
-	};
-	const repairHatagoesSidebar = async () => {
-		try {
-			await migrateHatagoesSidebar(prefer);
-		} catch {
-			console.warn('[hatagoes-sidebar-migration] 設定の取得・保存に失敗したため、次回同期時に再試行します');
-		}
-	};
-	// 保存操作を直列化し、初回修復の進行中に届いた同期更新も取りこぼさない。
-	let pendingSidebarRepair = migrateRetiredPortalMenu(prefer, miLocalStorage, $i?.id ?? 'guest')
-		.catch(() => {
-			console.warn('[portal-migration] 設定の取得・保存に失敗したため、次回起動時に再試行します');
-		})
-		.then(repairExternalNotificationsSidebar)
-		.then(repairHatagoesSidebar);
-	watch([prefer.r.menu, prefer.r['simpleUi.sidebar']], () => {
-		pendingSidebarRepair = pendingSidebarRepair.then(repairExternalNotificationsSidebar).then(repairHatagoesSidebar);
-	}, { deep: true });
 
 	if (instance.swPublickey && ('PushManager' in window) && $i && $i.token && showPushNotificationDialog == null) {
 		const { dispose } = popup(defineAsyncComponent(() => import('@/components/MkPushNotification.vue')), {}, {
@@ -431,13 +335,6 @@ export async function common(createVue: () => Promise<App<Element>>) {
 		} catch (err) { /* empty */ }
 	}
 	//#endregion
-
-	// 旗鯖fork(hata-12.0): 外部アカウント連携から撤去した旗池3丁目・シュリンピアについて、
-	// 設定同期の読込後にログイン情報と端末内キャッシュを削除する。
-	// 廃止ホストは external-api 側でも拒否するため、移行途中に通信が再開することはない。
-	await import('@/utility/external-account-migration.js')
-		.then(({ migrateRetiredExternalAccount }) => migrateRetiredExternalAccount())
-		.catch(err => console.error('[external-account-migration] Failed to purge retired host data:', err));
 
 	//#region Detect language & fetch translations
 	storeBootloaderErrors({ ...i18n.ts._bootErrors, reload: i18n.ts.reload });
@@ -721,7 +618,7 @@ export async function common(createVue: () => Promise<App<Element>>) {
 			'font-size: 20px; font-weight: 700; color: #f00;',
 		);
 		console.log(
-			`%c${i18n.tsx._selfXssPrevention.description3({ link: 'https://github.com/tolehata/hataskey' })}`,
+			`%c${i18n.tsx._selfXssPrevention.description3({ link: 'https://github.com/tolehata/hataskey_lite' })}`,
 			'font-size: 14px;',
 		);
 		console.log(i18n.tsx._selfXssPrevention.description4({ link: 'https://misskey-hub.net/docs/for-users/resources/self-xss/' }));

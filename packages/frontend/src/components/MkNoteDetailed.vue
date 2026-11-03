@@ -10,13 +10,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 	v-if="!muted && !isDeleted"
 	ref="rootEl"
 	v-hotkey="keymap"
-	:data-note-charm-layout="charmLayout ? 'on' : null"
-	:data-note-charm-host="noteCharm ? 'on' : null"
-	:style="noteCharm ? { '--note-charm-size': `${noteCharm.size}px` } : undefined"
 	:class="$style.root"
 	tabindex="0"
 >
-	<MkNoteCharm v-if="noteCharm" :charm="noteCharm" :wind="noteCharmDisplay.wind" :motion="noteCharmDisplay.motion"/>
 	<div v-if="appearNote.reply && appearNote.reply.replyId && !conversationLoaded" style="padding: 16px">
 		<MkButton style="margin: 0 auto;" primary rounded @click="loadConversation">{{ i18n.ts.loadConversation }}</MkButton>
 	</div>
@@ -62,7 +58,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	</div>
 	<template v-if="appearNote.reply && appearNote.reply.replyId"><MkNoteSub v-for="note in conversation" :key="note.id" :class="[$style.replyToMore, { [$style.showReplyTargetNoteInSemiTransparent]: prefer.s.showReplyTargetNoteInSemiTransparent }]" :note="note"/></template>
 	<MkNoteSub v-if="appearNote.replyId" :note="appearNote.reply" :class="[$style.replyTo, { [$style.showReplyTargetNoteInSemiTransparent]: prefer.s.showReplyTargetNoteInSemiTransparent }]"/>
-	<article :class="$style.note" :data-note-charm-frame="noteCharm ? 'on' : null" :style="{ paddingTop: prefer.s.showSubNoteFooterButton && appearNote.reply ? '14px' : '' }" @contextmenu.stop="onContextmenu">
+	<article :class="$style.note" :style="{ paddingTop: prefer.s.showSubNoteFooterButton && appearNote.reply ? '14px' : '' }" @contextmenu.stop="onContextmenu">
 		<header :class="$style.noteHeader">
 			<MkAvatar v-if="!prefer.s.hideAvatarsInNote" :class="$style.noteHeaderAvatar" :user="appearNote.user" indicator link preview/>
 			<div style="display: flex; align-items: center; white-space: nowrap; overflow: hidden;">
@@ -395,11 +391,6 @@ import { haptic, hapticConfirm } from '@/utility/haptic.js';
 import { store } from '@/store.js';
 import detectLanguage from '@/utility/detect-language.js';
 import MkInfo from '@/components/MkInfo.vue';
-import MkNoteCharm from '@/components/MkNoteCharm.vue';
-import { useNoteCharmAvailability } from '@/composables/use-note-charm-context.js';
-import { noteCharmDisplay } from '@/utility/hatasaba-device-prefs.js';
-import type { NoteCharm } from '@/utility/note-charm-physics.js';
-import '@/note-charm.scss';
 import MkNoteHistory from '@/components/MkNoteHistory.vue';
 import MkSwitch from '@/components/MkSwitch.vue';
 
@@ -434,14 +425,6 @@ if (noteViewInterruptors.length > 0) {
 
 const isRenote = Misskey.note.isPureRenote(note);
 const appearNote = getAppearNote(note) ?? note;
-const charmUiAvailable = useNoteCharmAvailability();
-const charmLayout = charmUiAvailable;
-const noteCharm = computed<NoteCharm | null>(() => {
-	if (!charmUiAvailable.value || !noteCharmDisplay.value.show) return null;
-	if ($i && appearNote.user.id === $i.id) return $i.policies.canUseNoteCharm ? $i.noteCharm ?? null : null;
-	if (!noteCharmDisplay.value.showOthers) return null;
-	return appearNote.user.noteCharm ?? null;
-});
 const { $note: $appearNote, subscribe: subscribeManuallyToNoteCapture } = useNoteCapture({
 	note: appearNote,
 	parentNote: note,

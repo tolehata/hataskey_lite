@@ -5,12 +5,10 @@
 
 import { Entity, Column, Index, OneToOne, JoinColumn, PrimaryColumn } from 'typeorm';
 import { id } from './util/id.js';
-import type { NoteCharmSettings } from '@/misc/note-charm.js';
 import { MiDriveFile } from './DriveFile.js';
 
 @Entity('user')
 @Index(['usernameLower', 'host'], { unique: true })
-@Index('IDX_user_hatask_supporter', ['hataskSupporter', 'id'])
 export class MiUser {
 	@PrimaryColumn(id())
 	public id: string;
@@ -157,9 +155,6 @@ export class MiUser {
 		opacity?: number;
 	}[];
 
-	@Column('jsonb', { nullable: true })
-	public noteCharm: NoteCharmSettings | null;
-
 	@Index()
 	@Column('varchar', {
 		length: 128, array: true, default: '{}',
@@ -176,9 +171,6 @@ export class MiUser {
 		comment: 'Whether the User is suspended.',
 	})
 	public isSuspended: boolean;
-
-	@Column('boolean', { default: false })
-	public hataskSupporter: boolean;
 
 	@Column('boolean', {
 		default: false,

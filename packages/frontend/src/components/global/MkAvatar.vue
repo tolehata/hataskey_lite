@@ -36,7 +36,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	</div>
 	<template v-if="showDecoration">
 		<img
-			v-for="decoration in visibleDecorations"
+			v-for="decoration in decorations ?? user.avatarDecorations"
 			data-avatar-decoration
 			:class="[$style.decoration, { [$style.decorationBlink]: 'blink' in decoration && decoration.blink }]"
 			:src="getDecorationUrl(decoration)"
@@ -66,8 +66,6 @@ import { acct, userPage } from '@/filters/user.js';
 import MkUserOnlineIndicator from '@/components/MkUserOnlineIndicator.vue';
 import { prefer } from '@/preferences.js';
 import { scrollToVisibility } from '@/utility/scroll-to-visibility.js';
-import { useAvatarDecorationClock } from '@/composables/use-avatar-decoration-clock.js';
-import { isDecorationWithinPeriod } from '@/utility/avatar-decoration-availability.js';
 
 const { showEl } = scrollToVisibility();
 
@@ -104,8 +102,6 @@ const emit = defineEmits<{
 
 const squareAvatars = ref((!prefer.s.setFederationAvatarShape && prefer.s.squareAvatars) || (prefer.s.setFederationAvatarShape && !props.user.setFederationAvatarShape && prefer.s.squareAvatars) || (prefer.s.setFederationAvatarShape && props.user.setFederationAvatarShape && props.user.isSquareAvatars));
 const showDecoration = (props.forceShowDecoration || prefer.s.showAvatarDecorations) && !props.isFloatingBtn;
-const decorationTime = useAvatarDecorationClock(() => props.decorations ?? props.user.avatarDecorations);
-const visibleDecorations = computed(() => (props.decorations ?? props.user.avatarDecorations).filter(decoration => isDecorationWithinPeriod(decoration, decorationTime.value)));
 
 const bound = computed(() => props.link
 	? { to: userPage(props.user), target: props.target }

@@ -50,7 +50,7 @@ function standardNotificationFixture() {
 	const id = { gen: vi.fn().mockReturnValue('notice'), parseFull: vi.fn().mockReturnValue({ date: 1000, additional: 0n }) };
 	const stream = { publishMainStream: vi.fn() };
 	const push = { pushNotification: vi.fn() };
-	const service = new NotificationService({ perUserNotificationsMaxCount: 50 } as never, redis as never, {} as never, {} as never, {} as never, entity as never, id as never, stream as never, push as never, cache as never, {} as never);
+	const service = new NotificationService({ perUserNotificationsMaxCount: 50 } as never, redis as never, {} as never, entity as never, id as never, stream as never, push as never, cache as never, {} as never);
 	return { service, profile, cache, redis, entity, stream, push };
 }
 

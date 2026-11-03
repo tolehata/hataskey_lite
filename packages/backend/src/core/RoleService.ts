@@ -49,30 +49,8 @@ export type RolePolicies = {
 	canSearchNotes: boolean;
 	canSearchUsers: boolean;
 	canHideAds: boolean;
-	// 旗鯖fork: マスコット機能の上限 (表情数/文言数/キャラクター数)
-	mascotMaxExpressions: number;
-	mascotMaxPhrases: number;
-	mascotMaxCharacters: number;
 	// 旗鯖fork: HataSideStudio に端末ローカル保存できるレイアウトプロファイル数。
 	hataSideStudioProfileLimit: number;
-	// 旗鯖fork: マスコット機能そのものの利用可否(デフォルト不許可。許可ロールでのみ利用可)
-	canUseMascot: boolean;
-	// 旗鯖fork: Hatask感情分析の利用可否(デフォルト不許可。許可ロールでのみ利用可)
-	canUseHatalyze: boolean;
-	// 旗鯖fork: HataFeed(フィードバックセンター)へのアクセス可否(デフォルト不許可。許可ロールでのみ利用可)
-	canAccessHataFeed: boolean;
-	// 旗鯖fork(Hatady): 端末間同期の可否(デフォルト許可。特定ロールで無効化できる)。
-	//   無効の場合、Hatady の表示設定などは端末ローカル扱いになり、設定画面で「無効」と表示される。
-	canUseHatadySync: boolean;
-	// 旗鯖fork(Hatady): 追加できる本の最大数 / 1冊あたりのしおりの最大数(ロールで管理)。
-	hatadyBookLimit: number;
-	hatadyBookmarkLimit: number;
-	// 旗鯖fork(Hatady): 記録できる異なるゲーム作品数。映画にはロール上限を設けない。
-	hatadyGameTitleLimit: number;
-	// 旗鯖fork: プライベートチャンネルを作成できるか(デフォルト不許可。許可ロールでのみ作成可)
-	canMakePrivateChannel: boolean;
-	canRequestRemoteEmoji: boolean;
-	emojiRequestLimit: number;
 	driveCapacityMb: number;
 	maxFileSizeMb: number;
 	alwaysMarkNsfw: boolean;
@@ -84,7 +62,6 @@ export type RolePolicies = {
 	clipLimit: number;
 	favoriteFolderLimit: number;
 	canCreateFavoriteSubfolders: boolean;
-	canUseNoteCharm: boolean;
 	noteEachClipsLimit: number;
 	userListLimit: number;
 	userEachUserListsLimit: number;
@@ -119,20 +96,7 @@ export const DEFAULT_POLICIES: RolePolicies = {
 	canSearchNotes: false,
 	canSearchUsers: true,
 	canHideAds: false,
-	mascotMaxExpressions: 5,
-	mascotMaxPhrases: 10,
-	mascotMaxCharacters: 3,
 	hataSideStudioProfileLimit: 3,
-	canUseMascot: false,
-	canUseHatalyze: false,
-	canAccessHataFeed: false,
-	canUseHatadySync: true,
-	hatadyBookLimit: 100,
-	hatadyBookmarkLimit: 20,
-	hatadyGameTitleLimit: 100,
-	canMakePrivateChannel: false,
-	canRequestRemoteEmoji: false,
-	emojiRequestLimit: 10,
 	driveCapacityMb: 100,
 	maxFileSizeMb: 30,
 	alwaysMarkNsfw: false,
@@ -144,7 +108,6 @@ export const DEFAULT_POLICIES: RolePolicies = {
 	clipLimit: 10,
 	favoriteFolderLimit: 2,
 	canCreateFavoriteSubfolders: false,
-	canUseNoteCharm: false,
 	noteEachClipsLimit: 200,
 	userListLimit: 10,
 	userEachUserListsLimit: 50,
@@ -162,21 +125,12 @@ export const DEFAULT_POLICIES: RolePolicies = {
 		'image/*',
 		'video/*',
 		'audio/*',
-		// file-type は TrueType/OpenType をそれぞれこの MIME タイプで識別する。
-		'font/ttf',
-		'font/otf',
 	],
 	noteDraftLimit: 10,
 	scheduledNoteLimit: 3,
 	watermarkAvailable: true,
 	canSetFederationAvatarShape: true,
 };
-
-export function normalizeHatadyGameTitleLimit(values: readonly unknown[]): number {
-	const finiteValues = values.map(Number).filter(Number.isFinite);
-	const value = finiteValues.length > 0 ? Math.max(...finiteValues) : DEFAULT_POLICIES.hatadyGameTitleLimit;
-	return Math.max(0, Math.min(1000, Math.floor(value)));
-}
 
 export function normalizeFavoriteFolderLimit(values: readonly unknown[]): number {
 	const finiteValues = values.filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
@@ -442,7 +396,6 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 
 		basePolicies.favoriteFolderLimit = normalizeFavoriteFolderLimit([basePolicies.favoriteFolderLimit]);
 		basePolicies.canCreateFavoriteSubfolders = basePolicies.canCreateFavoriteSubfolders === true;
-		basePolicies.canUseNoteCharm = basePolicies.canUseNoteCharm === true;
 		if (userId == null) return basePolicies;
 
 		const roles = await this.getUserRoles(userId);
@@ -485,21 +438,7 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 			canSearchNotes: calc('canSearchNotes', vs => vs.some(v => v === true)),
 			canSearchUsers: calc('canSearchUsers', vs => vs.some(v => v === true)),
 			canHideAds: calc('canHideAds', vs => vs.some(v => v === true)),
-			mascotMaxExpressions: calc('mascotMaxExpressions', vs => Math.max(...vs)),
-			mascotMaxPhrases: calc('mascotMaxPhrases', vs => Math.max(...vs)),
-			mascotMaxCharacters: calc('mascotMaxCharacters', vs => Math.max(...vs)),
 			hataSideStudioProfileLimit: calc('hataSideStudioProfileLimit', vs => Math.max(...vs)),
-			canUseMascot: calc('canUseMascot', vs => vs.some(v => v === true)),
-			canUseHatalyze: calc('canUseHatalyze', vs => vs.some(v => v === true)),
-			canAccessHataFeed: calc('canAccessHataFeed', vs => vs.some(v => v === true)),
-			// 既定 true。いずれかのロールで false にされたら無効(every)。
-			canUseHatadySync: calc('canUseHatadySync', vs => vs.every(v => v === true)),
-			hatadyBookLimit: calc('hatadyBookLimit', vs => Math.max(...vs)),
-			hatadyBookmarkLimit: calc('hatadyBookmarkLimit', vs => Math.max(...vs)),
-			hatadyGameTitleLimit: calc('hatadyGameTitleLimit', normalizeHatadyGameTitleLimit),
-			canMakePrivateChannel: calc('canMakePrivateChannel', vs => vs.some(v => v === true)),
-			canRequestRemoteEmoji: calc('canRequestRemoteEmoji', vs => vs.some(v => v === true)),
-			emojiRequestLimit: calc('emojiRequestLimit', vs => Math.max(...vs)),
 			driveCapacityMb: calc('driveCapacityMb', vs => Math.max(...vs)),
 			maxFileSizeMb: calc('maxFileSizeMb', vs => Math.min(serverMaxFileSizeMb, Math.max(...vs))),
 			alwaysMarkNsfw: calc('alwaysMarkNsfw', vs => vs.some(v => v === true)),
@@ -511,7 +450,6 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 			clipLimit: calc('clipLimit', vs => Math.max(...vs)),
 			favoriteFolderLimit: calc('favoriteFolderLimit', normalizeFavoriteFolderLimit),
 			canCreateFavoriteSubfolders: calc('canCreateFavoriteSubfolders', vs => vs.some(v => v === true)),
-			canUseNoteCharm: calc('canUseNoteCharm', vs => vs.some(v => v === true)),
 			noteEachClipsLimit: calc('noteEachClipsLimit', vs => Math.max(...vs)),
 			userListLimit: calc('userListLimit', vs => Math.max(...vs)),
 			userEachUserListsLimit: calc('userEachUserListsLimit', vs => Math.max(...vs)),
