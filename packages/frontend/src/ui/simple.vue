@@ -863,8 +863,10 @@ watch(() => isHataskeyTimelineAllowed(tab.value), allowed => {
 // ===== prefer連動: 上部タブ =====
 // 旗鯖fork: トレンドタブ (TTL) は専用トグル simpleUi.showTrendingTab で制御し、
 // 有効時は topNav 設定とは独立して最左に差し込む (既存ユーザーの topNav 設定を変更しないため)
+// visible が無い項目は表示扱い。設定画面・下部ナビ・保存時の正規化と同じ判定にそろえる
+// (Hataskey から移行した保存値で、設定上はオンなのにタブが消える不具合があった)。
 const visibleTopTabs = computed(() => {
-	const saved = (prefer.r['simpleUi.topNav'].value as any[]).filter((t: any) => t.visible && t.id !== 'trending' && t.id !== 'hatady' && isHataskeyTimelineAllowed(t.id));
+	const saved = (prefer.r['simpleUi.topNav'].value as any[]).filter((t: any) => t.visible !== false && t.id !== 'trending' && t.id !== 'hatady' && isHataskeyTimelineAllowed(t.id));
 	const tabs = [...saved];
 	if (prefer.r['simpleUi.showTrendingTab'].value) tabs.push({ id: 'trending', icon: 'ti ti-flame', label: i18n.ts._timelines.trending, visible: true });
 	return tabs;

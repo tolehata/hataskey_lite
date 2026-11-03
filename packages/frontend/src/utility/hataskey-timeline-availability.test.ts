@@ -126,6 +126,12 @@ describe('Hataskey UI role-based timeline availability', () => {
 		expect(JSON.stringify(state.topNav.value)).toBe(saved);
 	});
 
+	test('treats saved tabs without visible as shown, like the settings editor and bottom nav', () => {
+		const state = normal();
+		state.topNav.value = [{ id: 'following', visible: true }, { id: 'local' }, { id: 'social', visible: false }, { id: 'mixed' }] as typeof state.topNav.value;
+		expect(state.visibleTopTabs.value.map(t => t.id)).toEqual(['following', 'local', 'mixed', 'trending']);
+	});
+
 	test('deck hides restricted panes/empty frames and restores saved tabs after permission returns', () => {
 		const state = deck();
 		policies.ltlAvailable = false;
