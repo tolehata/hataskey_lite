@@ -27,12 +27,8 @@ vi.mock('@/components/MkHatasabaUi2EditWindow.vue', async () => {
 	};
 });
 
-vi.mock('@/components/MkEarthquakeSettings.vue', async () => ({ default: (await import('vue')).defineComponent({ template: '<button data-popup-stub="earthquake" @click="$emit(\'closed\')">earthquake</button>', emits: ['closed'] }) }));
-vi.mock('@/components/HatadyDisplaySettings.vue', async () => ({ default: (await import('vue')).defineComponent({ template: '<button data-popup-stub="hatady" @click="$emit(\'closed\')">hatady</button>', emits: ['closed'] }) }));
 vi.mock('@/components/MkHataSettingsTransfer.vue', async () => ({ default: (await import('vue')).defineComponent({ template: '<button data-popup-stub="settings-transfer" @click="$emit(\'closed\')">settings-transfer</button>', emits: ['closed'] }) }));
 vi.mock('@/components/MkUISetup.vue', async () => ({ default: (await import('vue')).defineComponent({ template: '<button data-popup-stub="ui-setup" @click="$emit(\'closed\')">ui-setup</button>', emits: ['closed'] }) }));
-vi.mock('@/pages/HataskSettings.vue', async () => ({ default: (await import('vue')).defineComponent({ template: '<button data-popup-stub="hatask" @click="$emit(\'closed\')">hatask</button>', emits: ['closed'] }) }));
-vi.mock('@/pages/MkMascotSettings.vue', async () => ({ default: (await import('vue')).defineComponent({ template: '<button data-popup-stub="mascot" @click="$emit(\'closed\')">mascot</button>', emits: ['closed'] }) }));
 
 type Mounted = { app: App<Element>; container: HTMLDivElement };
 const mounted: Mounted[] = [];
@@ -45,7 +41,7 @@ function contextFixture(): SettingsSearchV2Context {
 	};
 }
 
-function mountBridge(popup: 'hatasaba-ui2' | 'earthquake' | 'ui-setup' | 'settings-transfer' | 'hatask' | 'hatady' | 'mascot', onClosed = vi.fn()) {
+function mountBridge(popup: 'hatasaba-ui2' | 'ui-setup' | 'settings-transfer', onClosed = vi.fn()) {
 	const context = contextFixture();
 	const app = createApp(defineComponent({
 		setup() {
@@ -82,14 +78,14 @@ describe('SettingsPopupBridge', () => {
 		expect(onClosed).toHaveBeenCalledTimes(1);
 	});
 
-	test.each(['earthquake', 'ui-setup', 'settings-transfer', 'hatask', 'hatady', 'mascot'] as const)('%s は既存popup componentへ橋渡しする', async popupKind => {
+	test.each(['ui-setup', 'settings-transfer'] as const)('%s は既存popup componentへ橋渡しする', async popupKind => {
 		const { container } = mountBridge(popupKind);
 		await nextTick();
 		expect(container.querySelector(`[data-popup-stub="${popupKind}"]`)).not.toBeNull();
 	});
 
 	test('motion無効時はlayout wrapperを作らず、popup subtreeのmotionを停止する', async () => {
-		const { container } = mountBridge('earthquake');
+		const { container } = mountBridge('ui-setup');
 		await nextTick();
 		const scope = container.firstElementChild;
 		expect(scope?.getAttribute('data-motion-enabled')).toBe('false');

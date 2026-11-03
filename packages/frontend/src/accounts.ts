@@ -17,7 +17,6 @@ import { prefer } from '@/preferences.js';
 import { store } from '@/store.js';
 import { $i } from '@/i.js';
 import { signout } from '@/signout.js';
-import { purgeConcrnt } from '@/utility/concrnt/runtime.js';
 
 type AccountWithToken = Misskey.entities.MeDetailed & { token: string };
 
@@ -49,7 +48,6 @@ async function addAccount(host: string, user: Misskey.entities.MeDetailed, token
 }
 
 export async function removeAccount(host: string, id: AccountWithToken['id']) {
-	const cleanup = purgeConcrnt(`${host}/${id}`).catch(() => ({ cleared: false }));
 	// Callers selecting a replacement account immediately must not see a revoked token.
 	const tokens = JSON.parse(JSON.stringify(store.s.accountTokens));
 	delete tokens[host + '/' + id];
@@ -59,13 +57,6 @@ export async function removeAccount(host: string, id: AccountWithToken['id']) {
 	store.set('accountInfos', accountInfos);
 
 	prefer.commit('accounts', prefer.s.accounts.filter(x => x[0] !== host || x[1].id !== id));
-	let timeout: ReturnType<typeof setTimeout> | undefined;
-	try {
-		await Promise.race([
-			cleanup,
-			new Promise<void>(resolve => { timeout = globalThis.setTimeout(resolve, 5000); }),
-		]);
-	} finally { globalThis.clearTimeout(timeout); }
 }
 
 const isAccountDeleted = Symbol('isAccountDeleted');

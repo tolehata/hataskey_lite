@@ -62,8 +62,6 @@ import {
 } from '@/models/json-schema/role.js';
 import { packedAdSchema } from '@/models/json-schema/ad.js';
 import { packedReversiGameDetailedSchema, packedReversiGameLiteSchema } from '@/models/json-schema/reversi-game.js';
-import { packedHataigoChatMessageSchema } from '@/models/json-schema/hataigo-chat-message.js';
-import { packedHataigoGameDetailedSchema } from '@/models/json-schema/hataigo-game.js';
 import {
 	packedMetaDetailedOnlySchema,
 	packedMetaDetailedSchema,
@@ -139,8 +137,6 @@ export const refs = {
 	RolePolicies: packedRolePoliciesSchema,
 	ReversiGameLite: packedReversiGameLiteSchema,
 	ReversiGameDetailed: packedReversiGameDetailedSchema,
-	HataigoGameDetailed: packedHataigoGameDetailedSchema,
-	HataigoChatMessage: packedHataigoChatMessageSchema,
 	MetaLite: packedMetaLiteSchema,
 	MetaDetailedOnly: packedMetaDetailedOnlySchema,
 	MetaDetailed: packedMetaDetailedSchema,

@@ -169,16 +169,6 @@ const menuDef = computed<SuperMenuDef[]>(() => [{
 		to: '/settings/mute-block',
 		active: currentPage.value?.route.name === 'mute-block',
 	}, {
-		icon: 'ti ti-user-share',
-		text: i18n.ts._hata._settingsRedesign.nav.externalAccount,
-		to: '/settings/external-account',
-		active: currentPage.value?.route.name === 'external-account',
-	}, {
-		icon: 'concrnt-icon',
-		text: 'コンカレント連携(BETA)',
-		to: '/settings/concrnt',
-		active: currentPage.value?.route.name === 'concrnt-settings',
-	}, {
 		icon: 'ti ti-link',
 		hatakyuAsset: 'computerChat',
 		text: i18n.ts._settings.serviceConnection,

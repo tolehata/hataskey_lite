@@ -23,14 +23,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 			:moveClass="$style.transition_x_move"
 			tag="div"
 		>
-			<div v-for="(notification, i) in displayNotifications" :key="notification.id" :data-scroll-anchor="notification.id" :data-notification-ids="notification.type === 'hataFeed:grouped' ? undefined : JSON.stringify(notificationReadIds(notification))" :class="$style.item">
-				<div v-if="i > 0 && isSeparatorNeeded(displayNotifications[i - 1].createdAt, notification.createdAt)" :class="$style.date" data-notification-date-separator>
+			<div v-for="(notification, i) in displayNotifications" :key="notification.id" :data-scroll-anchor="notification.id" :data-notification-ids="JSON.stringify(notificationReadIds(notification))" :class="$style.item">
+				<div v-if="i > 0 && isSeparatorNeeded(displayNotifications[i - 1].createdAt, notification.createdAt)" :class="$style.date">
 					<span><i class="ti ti-chevron-up"></i> {{ getSeparatorInfo(displayNotifications[i - 1].createdAt, notification.createdAt)?.prevText }}</span>
 					<span style="height: 1em; width: 1px; background: var(--MI_THEME-divider);"></span>
 					<span>{{ getSeparatorInfo(displayNotifications[i - 1].createdAt, notification.createdAt)?.nextText }} <i class="ti ti-chevron-down"></i></span>
 				</div>
-				<MkHataFeedNotificationGroup v-if="notification.type === 'hataFeed:grouped'" :class="$style.content" :group="notification" :withTime="true" @expanded="refreshObservedRows"/>
-				<MkNote v-else-if="['reply', 'quote', 'mention'].includes(notification.type) && 'note' in notification" :class="$style.content" :note="notification.note" :withHardMute="true" :notification="true"/>
+				<MkNote v-if="['reply', 'quote', 'mention'].includes(notification.type) && 'note' in notification" :class="$style.content" :note="notification.note" :withHardMute="true" :notification="true"/>
 				<XNotification v-else :class="$style.content" :notification="notification" :withTime="true" :full="true"/>
 			</div>
 		</component>
@@ -45,12 +44,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 <script lang="ts" setup>
 import { onUnmounted, onMounted, computed, nextTick, ref, useTemplateRef, TransitionGroup, markRaw, watch } from 'vue';
 import * as Misskey from 'cherrypick-js';
-import { notificationTypes, hatadyNotificationSubtypes } from 'cherrypick-js';
+import { notificationTypes } from 'cherrypick-js';
 import { useInterval } from '@@/js/use-interval.js';
 import { useDocumentVisibility } from '@@/js/use-document-visibility.js';
 import { getScrollContainer, scrollToTop } from '@@/js/scroll.js';
 import XNotification from '@/components/MkNotification.vue';
-import MkHataFeedNotificationGroup from '@/components/MkHataFeedNotificationGroup.vue';
 import MkNote from '@/components/MkNote.vue';
 import { useStream } from '@/stream.js';
 import { i18n } from '@/i18n.js';
@@ -60,55 +58,34 @@ import { store } from '@/store.js';
 import { isSeparatorNeeded, getSeparatorInfo } from '@/utility/timeline-date-separate.js';
 import { Paginator } from '@/utility/paginator.js';
 import { globalEvents } from '@/events.js';
-import { groupHataFeedBellNotifications } from '@/utility/hatafeed-bell-group.js';
-import type { BellNotificationForDisplay } from '@/utility/hatafeed-bell-group.js';
 import { $i } from '@/i.js';
 import { miLocalStorage } from '@/local-storage.js';
-import { NOTIFICATION_FILTER_POLICY_NOTICE, NOTIFICATION_FILTER_POLICY_NOTICE_ID } from '@/utility/notification-filter.js';
-import { matchesNotificationView } from '@/utility/notification-brand.js';
-import type { HataNotificationBrand, HataNotificationCategory } from '@/utility/hatasaba-device-prefs.js';
+import { isNotificationFromBot, NOTIFICATION_FILTER_POLICY_NOTICE, NOTIFICATION_FILTER_POLICY_NOTICE_ID } from '@/utility/notification-filter.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { refreshNotificationUnreadState } from '@/utility/notification-unread-sync.js';
 
 const props = defineProps<{
 	excludeTypes?: typeof notificationTypes[number][] | null;
 	excludeBots?: boolean;
-	brand?: HataNotificationBrand;
-	includeBrands?: HataNotificationCategory[] | null;
-	includeHataskApp?: boolean;
-	includeHatadySubtypes?: (typeof hatadyNotificationSubtypes[number])[] | null;
-	excludeHatadySubtypes?: (typeof hatadyNotificationSubtypes[number])[] | null;
 	active?: boolean;
 	notUseGrouped?: boolean;
 	showFilterPolicyNotice?: boolean;
 }>();
 
 const rootEl = useTemplateRef('rootEl');
-const shouldGroupHataFeed = computed(() => prefer.s.useGroupedNotifications && !props.notUseGrouped);
-
-const paginator = shouldGroupHataFeed.value ? markRaw(new Paginator('i/notifications-grouped', {
+const paginator = prefer.s.useGroupedNotifications && !props.notUseGrouped ? markRaw(new Paginator('i/notifications-grouped', {
 	limit: 20,
 	computedParams: computed(() => ({
 		markAsRead: false,
-		brand: props.brand ?? 'all',
-		includeBrands: props.includeBrands ?? undefined,
-		includeHataskApp: props.includeHataskApp,
 		excludeTypes: props.excludeTypes ?? undefined,
 		excludeBots: props.excludeBots || undefined,
-		includeHatadySubtypes: props.includeHatadySubtypes ?? undefined,
-		excludeHatadySubtypes: props.excludeHatadySubtypes ?? undefined,
 	})),
 })) : markRaw(new Paginator('i/notifications', {
 	limit: 20,
 	computedParams: computed(() => ({
 		markAsRead: false,
-		brand: props.brand ?? 'all',
-		includeBrands: props.includeBrands ?? undefined,
-		includeHataskApp: props.includeHataskApp,
 		excludeTypes: props.excludeTypes ?? undefined,
 		excludeBots: props.excludeBots || undefined,
-		includeHatadySubtypes: props.includeHatadySubtypes ?? undefined,
-		excludeHatadySubtypes: props.excludeHatadySubtypes ?? undefined,
 	})),
 }));
 
@@ -122,15 +99,12 @@ function invalidated(notification: Misskey.entities.Notification): boolean {
 
 const displayNotifications = computed(() => {
 	const sourceNotifications = (paginator.items.value as Misskey.entities.Notification[])
-		.filter(notification => !invalidated(notification) && matchesNotificationView(notification, props));
-	const notifications = shouldGroupHataFeed.value
-		? groupHataFeedBellNotifications(sourceNotifications)
-		: sourceNotifications;
-	return filterPolicyNotice.value == null ? notifications : [filterPolicyNotice.value, ...notifications];
+		.filter(notification => !invalidated(notification) && matchesView(notification));
+	return filterPolicyNotice.value == null ? sourceNotifications : [filterPolicyNotice.value, ...sourceNotifications];
 });
 
-function notificationReadIds(notification: BellNotificationForDisplay): string[] {
-	if (notification.type === 'hataFeed:grouped' || notification.id === NOTIFICATION_FILTER_POLICY_NOTICE_ID) return [];
+function notificationReadIds(notification: Misskey.entities.Notification): string[] {
+	if (notification.id === NOTIFICATION_FILTER_POLICY_NOTICE_ID) return [];
 	const ids = 'notificationIds' in notification && Array.isArray(notification.notificationIds) && notification.notificationIds.length > 0
 		? notification.notificationIds : [notification.id];
 	return [...new Set(ids)];
@@ -161,9 +135,7 @@ function rowIds(element: Element): string[] {
 function allowedReadIds(): Set<string> {
 	const allowed = new Set<string>();
 	for (const notification of displayNotifications.value) {
-		if (notification.type === 'hataFeed:grouped') {
-			for (const item of notification.items) allowed.add(item.id);
-		} else for (const id of notificationReadIds(notification)) allowed.add(id);
+		for (const id of notificationReadIds(notification)) allowed.add(id);
 	}
 	return allowed;
 }
@@ -296,8 +268,13 @@ watch(visibility, () => {
 	}
 });
 
+function matchesView(notification: Misskey.entities.Notification): boolean {
+	if (props.excludeTypes?.includes(notification.type as typeof notificationTypes[number])) return false;
+	return !props.excludeBots || !isNotificationFromBot(notification);
+}
+
 function onNotification(notification: Misskey.entities.Notification) {
-	if (matchesNotificationView(notification, props)) {
+	if (matchesView(notification)) {
 		if (isTop() && !isPausingUpdate) {
 			paginator.prepend(notification);
 		} else {
@@ -369,7 +346,7 @@ async function onNotificationChanged(event: { ids: string[] }) {
 			const current = byId.get(id);
 			const wasLoaded = (paginator.items.value as Misskey.entities.Notification[]).some(item => item.id === id)
 				|| paginator.queuedAheadItems.value.some(item => item.id === id);
-			if (current == null || !matchesNotificationView(current, props)) {
+			if (current == null || !matchesView(current)) {
 				rememberRemoval(id);
 				paginator.removeItem(id);
 				if (!pendingListReconcileIds.has(id)) {
@@ -563,12 +540,5 @@ defineExpose({
 	padding: 16px;
 	background: var(--MI_THEME-panel);
 	border-top: solid 0.5px var(--MI_THEME-divider);
-}
-
-:global(html[data-hk3-ui]) .notifications,
-:global(html[data-hk3-ui]) .more {
-	background: var(--hk3-notifications-bg, var(--hk3-glass-soft, var(--MI_THEME-panel)));
-	-webkit-backdrop-filter: var(--hk3-notifications-blur, var(--MI-blur, blur(16px)));
-	backdrop-filter: var(--hk3-notifications-blur, var(--MI-blur, blur(16px)));
 }
 </style>

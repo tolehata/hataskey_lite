@@ -54,7 +54,6 @@ describe('旗鯖デッキの旧設定からV2への移行', () => {
 				name: '通知', sourceId: 'source-1', withRenotes: false,
 				borderColor: '#336699', fullWidth: true, fullHeight: false,
 				excludeBots: true, excludeTypes: ['reaction'], notificationFilterKnownTypes: ['reaction', 'mention'],
-				notificationFilterDetails: { includeBrands: ['hatady'], includeHataskApp: false, excludeHatadySubtypes: ['reaction'], knownHatadySubtypes: ['reaction'] },
 			}, { id: 'local', type: 'local', width: 380 }],
 		}];
 		const original = JSON.stringify(legacy);
@@ -69,7 +68,6 @@ describe('旗鯖デッキの旧設定からV2への移行', () => {
 					tabs: [{
 						id: 'notifications', type: 'notifications', name: '通知', sourceId: 'source-1', withRenotes: false,
 						excludeBots: true, excludeTypes: ['reaction'], notificationFilterKnownTypes: ['reaction', 'mention'],
-						notificationFilterDetails: { includeBrands: ['hatady'], includeHataskApp: false, excludeHatadySubtypes: ['reaction'], knownHatadySubtypes: ['reaction'] },
 					}],
 				}],
 			}, {
@@ -119,52 +117,3 @@ describe('旗鯖デッキの旧設定からV2への移行', () => {
 	});
 });
 
-test('通知詳細の変更だけでもカラムpropsを再計算し、無関係な描画では参照を保つ', () => {
-	const selected = script.statements.filter(statement =>
-		(ts.isFunctionDeclaration(statement) && ['buildColumnProps', 'columnProps'].includes(statement.name?.text ?? '')) ||
-		(ts.isVariableStatement(statement) && statement.declarationList.declarations.some(declaration => ts.isIdentifier(declaration.name) && declaration.name.text === 'columnPropsCache')),
-	).map(statement => statement.getText(script)).join('\n');
-	const code = ts.transpileModule(`${selected}\ncolumnProps;`, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
-	const columnProps = runInNewContext(code, {
-		NOTE_SRC: {},
-		externalReady: { value: false }, externalHost: { value: '' }, externalToken: { value: '' },
-		resolveNotificationFilter: () => ({ excludeTypes: [] }),
-		resolveNotificationFilterDetails: (details: Record<string, unknown>) => ({
-			includeBrands: details.includeBrands ?? null,
-			includeHataskApp: details.includeHataskApp ?? true,
-			excludeHatadySubtypes: details.excludeHatadySubtypes ?? [],
-		}),
-		hasConfiguredNotificationFilter: () => false,
-	}, { timeout: 1000 }) as (tab: Record<string, unknown>, frame: Record<string, unknown>) => Record<string, unknown>;
-	const tab = { id: 'notifications', type: 'notifications', notificationFilterDetails: { includeBrands: ['hatady'], includeHataskApp: false, excludeHatadySubtypes: ['reaction'] } };
-	const frame = { id: 'frame' };
-	const first = columnProps(tab, frame);
-	expect(first).toMatchObject({ includeBrands: ['hatady'], includeHataskApp: false, excludeHatadySubtypes: ['reaction'] });
-	expect(columnProps(tab, frame)).toBe(first);
-	tab.notificationFilterDetails = { includeBrands: ['hataFeed'], includeHataskApp: true, excludeHatadySubtypes: [] };
-	const updated = columnProps(tab, frame);
-	expect(updated).not.toBe(first);
-	expect(updated).toMatchObject({ includeBrands: ['hataFeed'], includeHataskApp: true, excludeHatadySubtypes: [] });
-});
-
-test('プロファイル複製で通知詳細を引き継ぎ、複製元とは独立させる', async () => {
-	const node = script.statements.find(statement => ts.isFunctionDeclaration(statement) && statement.name?.text === 'duplicateProfile');
-	if (!node) throw new Error('Missing profile duplication function');
-	const code = ts.transpileModule(`${node.getText(script)}\nduplicateProfile;`, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
-	const details = { includeBrands: ['hatady'] };
-	const source = { id: 'profile', name: '通知用', layout: 'row', slots: [{ id: 'slot', width: 380, frames: [{ id: 'frame', tabs: [{ id: 'tab', type: 'notifications', notificationFilterDetails: details }] }] }] };
-	const commitProfiles = vi.fn((_profiles: unknown[]) => {});
-	let serial = 0;
-	const duplicateProfile = runInNewContext(code, {
-		activeProfile: { value: source }, profiles: { value: [source] },
-		genId: (prefix: string) => `${prefix}-${++serial}`,
-		deepClone: (value: unknown) => value == null ? value : JSON.parse(JSON.stringify(value)),
-		copy: { copiedProfileName: '{name} copy' }, commitProfiles,
-		prefer: { commit: vi.fn() },
-	}, { timeout: 1000 }) as () => Promise<void>;
-	await duplicateProfile();
-	const clonedProfile = commitProfiles.mock.calls[0][0][1] as typeof source;
-	const cloned = clonedProfile.slots[0].frames[0].tabs[0].notificationFilterDetails;
-	expect(cloned).toEqual(details);
-	expect(cloned).not.toBe(details);
-});

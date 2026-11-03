@@ -6,7 +6,7 @@
 import { Injectable } from '@nestjs/common';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { AchievementService } from '@/core/AchievementService.js';
-import { CLIENT_CLAIMABLE_ACHIEVEMENT_TYPES } from '@/models/UserProfile.js';
+import { ACHIEVEMENT_TYPES } from '@/models/UserProfile.js';
 
 export const meta = {
 	requireCredential: true,
@@ -17,7 +17,7 @@ export const meta = {
 export const paramDef = {
 	type: 'object',
 	properties: {
-		name: { type: 'string', enum: CLIENT_CLAIMABLE_ACHIEVEMENT_TYPES },
+		name: { type: 'string', enum: ACHIEVEMENT_TYPES },
 	},
 	required: ['name'],
 } as const;

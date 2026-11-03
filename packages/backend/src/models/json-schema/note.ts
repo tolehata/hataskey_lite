@@ -219,10 +219,6 @@ export const packedNoteSchema = {
 					type: 'boolean',
 					optional: false, nullable: false,
 				},
-				isPrivate: {
-					type: 'boolean',
-					optional: false, nullable: false,
-				},
 				userId: {
 					type: 'string',
 					optional: false, nullable: true,
@@ -293,27 +289,6 @@ export const packedNoteSchema = {
 			optional: true, nullable: false,
 		},
 
-		utageStatus: {
-			type: 'string',
-			enum: ['running', 'reviving', 'succeeded', 'failed'],
-			optional: true, nullable: false,
-		},
-		utageRevision: { type: 'integer', optional: true, nullable: false },
-		utageExpiresAt: { type: 'string', format: 'date-time', optional: true, nullable: false },
-		utageServerNow: { type: 'string', format: 'date-time', optional: true, nullable: false },
-		utageSuccessMethod: { type: 'string', enum: ['normal', 'revival'], optional: true, nullable: true },
-		utageMyParticipation: {
-			type: 'string', enum: ['eligible', 'accepted', 'existing', 'author', 'ineligible'], optional: true, nullable: false,
-		},
-		utageRevival: {
-			type: 'object', optional: true, nullable: true,
-			properties: {
-				startedAt: { type: 'string', format: 'date-time', optional: false, nullable: false },
-				expiresAt: { type: 'string', format: 'date-time', optional: false, nullable: false },
-				targetCount: { type: 'integer', optional: false, nullable: false },
-				reactionCount: { type: 'integer', optional: false, nullable: false },
-			},
-		},
 
 		myReaction: {
 			type: 'string',

@@ -19,7 +19,6 @@ export const TIPS = [
 	'tl.media',
 	'tl.trending',
 	'tl.external',
-	'note.utage',
 	'abuses',
 ] as const;
 

@@ -14,9 +14,6 @@ import type { Packed } from '@/misc/json-schema.js';
 import type { Promiseable } from '@/misc/prelude/await-all.js';
 import { awaitAll } from '@/misc/prelude/await-all.js';
 import { toArray } from '@/misc/prelude/array.js';
-import { normalizeNoteCharmSettings, packNoteCharms } from '@/misc/note-charm.js';
-import type { PublicNoteCharm } from '@/misc/note-charm.js';
-import { canExposeLocalProfileBadge } from '@/misc/local-profile-badge.js';
 import { USER_ACTIVE_THRESHOLD, USER_ONLINE_THRESHOLD } from '@/const.js';
 import type { MiLocalUser, MiPartialLocalUser, MiPartialRemoteUser, MiRemoteUser, MiUser } from '@/models/User.js';
 import {
@@ -44,7 +41,6 @@ import type {
 	UserProfilesRepository,
 	UserSecurityKeysRepository,
 	UsersRepository,
-	UtageSessionsRepository,
 } from '@/models/_.js';
 import { bindThis } from '@/decorators.js';
 import { RoleService } from '@/core/RoleService.js';
@@ -123,10 +119,6 @@ export class UserEntityService implements OnModuleInit {
 
 		@Inject(DI.usersRepository)
 		private usersRepository: UsersRepository,
-
-		// 旗鯖fork: 宴セッションを集計してプロフに成功回数を出すため注入
-		@Inject(DI.utageSessionsRepository)
-		private utageSessionsRepository: UtageSessionsRepository,
 
 		@Inject(DI.userSecurityKeysRepository)
 		private userSecurityKeysRepository: UserSecurityKeysRepository,
@@ -335,28 +327,6 @@ export class UserEntityService implements OnModuleInit {
 		);
 	}
 
-	/**
-	 * 旗鯖fork: 宴の成功数・阻止数。
-	 *
-	 * ⚠️宴はLTL(ローカルタイムライン)の上で成立するゲームで、LTLは public しか流さない
-	 *   (notes/local-timeline.ts / stream/channels/local-timeline.ts)。
-	 *   ところが以前は home の投稿でもセッションを作っていたため、
-	 *     - LTLに出ない = 誰にも邪魔されず15分を通過して「成功」が積み増しされる
-	 *     - HTLやプロフィールから反応が付くと「阻止」としても数えられる
-	 *   という水増しが起きていた。作成側は public 限定に直したが、
-	 *   ⚠️既に積まれてしまった行が本番に残っているため、集計時にも元ノートの可視性で絞る。
-	 *   (utage_session.note は onDelete: CASCADE なので、内部結合で取りこぼす行は出ない)
-	 */
-	@bindThis
-	private countUtageSessions(actorColumn: 'session.userId' | 'session.interruptedByUserId', userId: MiUser['id'], status: 'succeeded' | 'failed'): Promise<number> {
-		return this.utageSessionsRepository.createQueryBuilder('session')
-			.innerJoin('session.note', 'note')
-			.where(`${actorColumn} = :userId`, { userId })
-			.andWhere('session.status = :status', { status })
-			.andWhere('note.visibility = :visibility', { visibility: 'public' })
-			.getCount();
-	}
-
 	@bindThis
 	public async getHasUnreadAntenna(userId: MiUser['id']): Promise<boolean> {
 		/*
@@ -434,8 +404,6 @@ export class UserEntityService implements OnModuleInit {
 			userRelations?: Map<MiUser['id'], UserRelation>,
 			userMemos?: Map<MiUser['id'], string | null>,
 			pinNotes?: Map<MiUser['id'], MiUserNotePining[]>,
-			noteCharms?: ReadonlyMap<string, PublicNoteCharm | null>,
-			hataskFlowerCompletions?: ReadonlyMap<MiUser['id'], boolean>,
 		},
 	): Promise<Packed<S>> {
 		const opts = Object.assign({
@@ -444,8 +412,6 @@ export class UserEntityService implements OnModuleInit {
 		}, options);
 
 		const user = typeof src === 'object' ? src : await this.usersRepository.findOneByOrFail({ id: src });
-
-		const noteCharms = opts.noteCharms ?? await this.packNoteCharms([user]);
 
 		const isDetailed = opts.schema !== 'UserLite';
 		const meId = me ? me.id : null;
@@ -519,8 +485,16 @@ export class UserEntityService implements OnModuleInit {
 			host: user.host,
 			avatarUrl: (user.avatarId == null ? null : user.avatarUrl) ?? this.getIdenticonUrl(user),
 			avatarBlurhash: (user.avatarId == null ? null : user.avatarBlurhash),
-			noteCharm: noteCharms.get(user.id) ?? null,
-			avatarDecorations: this.avatarDecorationService.packUserDecorations(user, opts.hataskFlowerCompletions),
+			avatarDecorations: user.avatarDecorations.length > 0 ? this.avatarDecorationService.getAll(false, true).then(decorations => user.avatarDecorations.filter(ud => decorations.some(d => d.id === ud.id)).map(ud => ({
+				id: ud.id,
+				angle: ud.angle || undefined,
+				flipH: ud.flipH || undefined,
+				offsetX: ud.offsetX || undefined,
+				offsetY: ud.offsetY || undefined,
+				scale: ud.scale || undefined,
+				opacity: ud.opacity || undefined,
+				url: decorations.find(d => d.id === ud.id)!.url,
+			}))) : [],
 			isLocked: user.isLocked,
 			isBot: user.isBot,
 			isCat: user.isCat,
@@ -576,18 +550,6 @@ export class UserEntityService implements OnModuleInit {
 				followersCount: followersCount ?? 0,
 				followingCount: followingCount ?? 0,
 				notesCount: user.notesCount,
-				// 旗鯖fork: 実績バッジは自鯖ユーザーにだけ返す。
-				// 本人は設定・Hatask同期に必要なため非表示中も値を受け取るが、
-				// 他人には各表示トグルが有効な値だけを返す。ActivityPub renderer はこれらを参照しない。
-				...(canExposeLocalProfileBadge(user.host, isMe, profile!.showUtageSuccessCount) ? {
-					utageSuccessCount: this.countUtageSessions('session.userId', user.id, 'succeeded').catch(() => 0),
-				} : {}),
-				...(canExposeLocalProfileBadge(user.host, isMe, profile!.showUtageInterruptionCount) ? {
-					utageInterruptionCount: this.countUtageSessions('session.interruptedByUserId', user.id, 'failed').catch(() => 0),
-				} : {}),
-				...(canExposeLocalProfileBadge(user.host, isMe, profile!.showHataskFlowerCount) ? {
-					hataskFlowerCount: profile!.hataskFlowerCount,
-				} : {}),
 				pinnedNoteIds: packedPins.map(note => note.id),
 				pinnedNotes: packedPins,
 				pinnedPageId: profile!.pinnedPageId,
@@ -620,13 +582,9 @@ export class UserEntityService implements OnModuleInit {
 			} : {}),
 
 			...(isDetailed && isMe ? {
-				noteCharmSettings: normalizeNoteCharmSettings(user.noteCharm),
 				avatarId: user.avatarId,
 				bannerId: user.bannerId,
 				followedMessage: profile!.followedMessage,
-				showUtageSuccessCount: profile!.showUtageSuccessCount,
-				showUtageInterruptionCount: profile!.showUtageInterruptionCount,
-				showHataskFlowerCount: profile!.showHataskFlowerCount,
 				isModerator: isModerator,
 				isAdmin: isAdmin,
 				injectFeaturedNote: profile!.injectFeaturedNote,
@@ -699,21 +657,6 @@ export class UserEntityService implements OnModuleInit {
 		return await awaitAll(packed);
 	}
 
-	private packNoteCharms(users: MiUser[]) {
-		return packNoteCharms(users, {
-			findConsentedUserIds: async userIds => {
-				const profiles = await this.userProfilesRepository.find({
-					select: { userId: true },
-					where: { userId: In(userIds), hataConsentNoteCharm: true },
-				});
-				return new Set(profiles.map(profile => profile.userId));
-			},
-			getPolicies: userId => this.roleService.getUserPolicies(userId),
-			findFiles: ids => this.driveFilesRepository.findBy({ id: In(ids) }),
-			getPublicUrl: file => this.driveFileEntityService.getPublicUrl(file),
-		});
-	}
-
 	public async packMany<S extends 'MeDetailed' | 'UserDetailedNotMe' | 'UserDetailed' | 'UserLite' = 'UserLite'>(
 		users: (MiUser['id'] | MiUser)[],
 		me?: { id: MiUser['id'] } | null | undefined,
@@ -773,10 +716,6 @@ export class UserEntityService implements OnModuleInit {
 			}
 		}
 
-		const noteCharms = await this.packNoteCharms(_users);
-		// 旗鯖fork: 報酬デコの着用者の図鑑達成を、ページ単位でまとめて判定する。
-		const hataskFlowerCompletions = await this.avatarDecorationService.getHataskFlowerCompletions(_users);
-
 		return Promise.all(
 			_users.map(u => this.pack(
 				u,
@@ -787,8 +726,6 @@ export class UserEntityService implements OnModuleInit {
 					userRelations: userRelations,
 					userMemos: userMemos,
 					pinNotes: pinNotes,
-					hataskFlowerCompletions,
-					noteCharms,
 				},
 			)),
 		);

@@ -8,16 +8,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 	v-if="!hardMuted && muted === false && !hideAsBot"
 	ref="rootEl"
 	v-hotkey="keymap"
-	:data-note-charm-layout="charmLayout ? 'on' : null"
-	:data-note-charm-host="noteCharm ? 'on' : null"
-	:data-note-charm-compact="compactCharm ? 'true' : null"
-	:style="noteCharm ? { '--note-charm-size': `${noteCharm.size}px` } : undefined"
-	:class="[$style.root, { [$style.showActionsOnlyHover]: prefer.s.showNoteActionsOnlyHover, [$style.skipRender]: prefer.s.skipNoteRender && utageState === 'none' && !noteGlassActive && !noteCharm, [$style.utageActive]: utageState !== 'none' && utageOutsideFrame }]"
-	:data-utage-state="utageState !== 'none' ? utageState : null"
-	:data-utage-motion="prefer.s.animation ? null : 'reduced'"
+	:class="[$style.root, { [$style.showActionsOnlyHover]: prefer.s.showNoteActionsOnlyHover, [$style.skipRender]: prefer.s.skipNoteRender && !noteGlassActive }]"
 	tabindex="0"
 >
-	<MkNoteCharm v-if="noteCharm && !renoteCollapsed && !replyCollapsed && (!isRenote || note.renote != null)" :charm="noteCharm" :wind="noteCharmDisplay.wind" :motion="!mock && noteCharmDisplay.motion" :interactive="!mock" :compact="compactCharm"/>
 	<div v-if="pinned" :class="$style.tip"><i class="ti ti-pin"></i> {{ i18n.ts.pinnedNote }}</div>
 	<div v-if="isRenote || (appearNote.reply && prefer.s.collapseReplies)" :class="$style.renote">
 		<div v-if="note.channel" :class="$style.colorBar" :style="{ borderLeftColor: note.channel.color }"></div>
@@ -71,18 +64,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<MkAvatar v-if="!prefer.s.hideAvatarsInNote" :class="$style.collapsedRenoteTargetAvatar" :user="appearNote.user" link preview/>
 		<Mfm :text="getNoteSummary(appearNote)" :plain="true" :nowrap="true" :author="appearNote.user" :nyaize="'respect'" :class="[$style.collapsedRenoteTargetText, { [$style.showReplyTargetNoteInSemiTransparent]: prefer.s.showReplyTargetNoteInSemiTransparent }]" @click="renoteCollapsed ? renoteCollapsed = false : replyCollapsed ? replyCollapsed = false : ''"/>
 	</div>
-	<article v-else ref="utageArticle" :class="$style.article" :data-utage-square="(!utageOutsideFrame && utageState !== 'none') ? utageState : null" :style="{ cursor: expandOnNoteClick ? 'pointer' : '', paddingTop: prefer.s.showSubNoteFooterButton && appearNote.reply && (!renoteCollapsed && !replyCollapsed && ((!notification && (forceShowReplyTargetNote || prefer.s.showReplyTargetNote)) || (notification && prefer.s.showReplyInNotification))) ? '14px' : '' }" @click.stop="noteClick" @dblclick.stop="noteDblClick" @contextmenu.stop="onContextmenu">
-		<Hk3VisibilityRail v-if="ui === 'hataskey3'" :visibility="appearNote.visibility"/>
-		<span v-if="!utageOutsideFrame && (utageState === 'flashing' || utageState === 'failed' || utageState === 'success')" :class="$style.utageSurface" :data-utage-surface="utageState" aria-hidden="true"></span>
-		<!-- 旗鯖fork: C7 宴チュートリアル (自分の宴ノート初回のみ) -->
-		<MkTip v-if="showUtageTip" k="note.utage" style="margin-bottom: 8px;">
-			{{ utageCopy.tipBefore }}<b style="color: var(--MI_THEME-success);">{{ utageCopy.tipSuccess }}</b>{{ utageCopy.tipMiddle }}<b style="color: var(--MI_THEME-error);">{{ utageCopy.tipFailure }}</b>{{ utageCopy.tipAfter }}
-		</MkTip>
-		<div ref="utageBubble" :data-note-charm-frame="noteCharm ? 'on' : null" :data-note-charm-attachment="utageOutsideFrame ? 'frame' : 'root'" :class="[$style.bubbleBody, { [$style.utageFlashing]: utageState === 'flashing' && utageOutsideFrame, [$style.utageReviving]: utageState === 'reviving' && utageOutsideFrame, [$style.utageFailed]: utageState === 'failed' && utageOutsideFrame, [$style.utageSuccess]: utageState === 'success' && utageOutsideFrame }]">
-		<span v-if="utageOutsideFrame && (utageState === 'flashing' || utageState === 'failed' || utageState === 'success')" :class="$style.utageSurface" :data-utage-surface="utageState" aria-hidden="true"></span>
-		<!-- 旗鯖fork: C7 宴 結果バッジ (吹き出し右下隅) -->
-		<div v-if="utageState === 'failed'" :class="[$style.utageBadge, $style.utageBadgeFailed]">{{ utageCopy.failed }}</div>
-		<div v-else-if="utageState === 'success'" :class="[$style.utageBadge, $style.utageBadgeSuccess]">{{ utageCopy.success }}</div>
+	<article v-else :class="$style.article" :style="{ cursor: expandOnNoteClick ? 'pointer' : '', paddingTop: prefer.s.showSubNoteFooterButton && appearNote.reply && (!renoteCollapsed && !replyCollapsed && ((!notification && (forceShowReplyTargetNote || prefer.s.showReplyTargetNote)) || (notification && prefer.s.showReplyInNotification))) ? '14px' : '' }" @click.stop="noteClick" @dblclick.stop="noteDblClick" @contextmenu.stop="onContextmenu">
+		<div :class="$style.bubbleBody">
 		<!-- 旗鯖fork: チャンネル投稿の colorBar (position:absolute; border-left:5px) がアバターの
 		     左辺と重なる問題への対処。channel が付いているときだけ flex コンテナに padding-left を
 		     足して、アバター開始位置を colorBar の帯 (5px) の外にずらす。
@@ -265,7 +248,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<MkA :to="`/notes/${appearNote.id}/reactions`" :class="[$style.reactionOmitted]">{{ i18n.ts.more }}</MkA>
 				</template>
 			</MkReactionsViewer>
-			<MkUtageStatus v-if="utageState !== 'none' && $appearNote.utageRevival" :note="$appearNote"/>
 			<footer :class="$style.footer">
 				<template v-if="prefer.s.showReplyButtonInNoteFooter">
 					<button v-if="!note.isHidden" v-tooltip="i18n.ts.reply" :class="$style.footerButton" class="_button" @click.stop="reply()">
@@ -357,9 +339,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { ref as vueRef } from 'vue';
 
 // 旗鯖fork: C7 宴チュートリアル表示制御 (モジュールスコープ = 全MkNoteインスタンスで共有)。
-// 複数の宴ノートが同時に表示されても、チュートリアルは画面内で1つだけにするため、
-// 最初に表示権を取得したノートのIDをここで保持する。
-const utageTipOwnerId = vueRef<string | null>(null);
 </script>
 
 <script lang="ts" setup>
@@ -401,9 +380,6 @@ import { $i } from '@/i.js';
 import { i18n } from '@/i18n.js';
 import { getAbuseNoteMenu, getCopyNoteLinkMenu, getNoteClipMenu, getNoteMenu, getRenoteMenu, getRenoteOnly, getQuoteMenu } from '@/utility/get-note-menu.js';
 import { noteEvents, useNoteCapture } from '@/composables/use-note-capture.js';
-import { useUtageFailureMotion } from '@/composables/use-utage-failure-motion.js';
-import { useUtageRevivalMotion } from '@/composables/use-utage-revival-motion.js';
-import MkUtageStatus from '@/components/MkUtageStatus.vue';
 import { deepClone } from '@/utility/clone.js';
 import { useTooltip } from '@/composables/use-tooltip.js';
 import { claimAchievement } from '@/utility/achievements.js';
@@ -427,15 +403,7 @@ import { store } from '@/store.js';
 import { scrollToVisibility } from '@/utility/scroll-to-visibility.js';
 import detectLanguage from '@/utility/detect-language.js';
 import MkInfo from '@/components/MkInfo.vue';
-import MkNoteCharm from '@/components/MkNoteCharm.vue';
-import { useNoteCharmAvailability } from '@/composables/use-note-charm-context.js';
-import { useNoteCharmMobileDisplay } from '@/utility/note-charm-device.js';
-import { noteCharmDisplay } from '@/utility/hatasaba-device-prefs.js';
-import type { NoteCharm } from '@/utility/note-charm-physics.js';
-import '@/note-charm.scss';
-import Hk3VisibilityRail from '@/components/hataskey3/Hk3VisibilityRail.vue';
 
-const utageCopy = i18n.ts._hata._utage;
 const { showEl } = scrollToVisibility();
 
 function deliveryTargetsTooltip(targets: Misskey.entities.Note['deliveryTargets']): string {
@@ -452,7 +420,6 @@ const props = withDefaults(defineProps<{
 	note: Misskey.entities.Note;
 	pinned?: boolean;
 	mock?: boolean;
-	charmPreview?: NoteCharm | null;
 	withHardMute?: boolean;
 	notification?: boolean;
 	forceShowReplyTargetNote?: boolean;
@@ -470,13 +437,6 @@ const emit = defineEmits<{
 const inTimeline = inject<boolean>('inTimeline', false);
 const tl_withSensitive = inject<Ref<boolean>>('tl_withSensitive', ref(true));
 const inChannel = inject('inChannel', null);
-// 旗鯖fork: C7 宴明滅機能。LTL表示中かどうか(MkStreamingNotesTimelineからprovide)。
-const inLocalTimeline = inject<Ref<boolean> | null>('inLocalTimeline', null);
-// 旗鯖fork(#1): 吹き出し表示が有効か(MkStreamingNotesTimelineからprovide)。
-// 宴の着色面と復活枠の描画先を、吹き出しON時はbubbleBody、OFF時はarticleから選ぶ。
-// 未提供時(=吹き出し文脈外)はarticleにする。
-const noteBubbleEnabled = inject<Ref<boolean> | null>('noteBubbleEnabled', null);
-const utageOutsideFrame = computed(() => noteBubbleEnabled?.value ?? false);
 // 旗鯖fork: 背景ぼかし(glass)有効時は skipRender(content-visibility:auto)を付けない。
 // glass = 背景ぼかし(noteTimelineGlassBg) または グラスUIベータ(glassUiLocal)。
 const noteTimelineGlassBg = inject<Ref<boolean> | null>('noteTimelineGlassBg', null);
@@ -508,18 +468,6 @@ if (noteViewInterruptors.length > 0) {
 
 const isRenote = Misskey.note.isPureRenote(note);
 const appearNote = getAppearNote(note) ?? note;
-const charmUiAvailable = useNoteCharmAvailability();
-const charmMobileDisplay = useNoteCharmMobileDisplay();
-const charmLayout = computed(() => !charmMobileDisplay.value && (props.mock ? props.charmPreview !== undefined : charmUiAvailable.value));
-const compactCharm = computed(() => props.notification || (ui === 'simple' && prefer.r['simpleUi.noteSpacing'].value === 'compact'));
-const noteCharm = computed<NoteCharm | null>(() => {
-	if (charmMobileDisplay.value) return null;
-	if (props.mock && props.charmPreview !== undefined) return props.charmPreview;
-	if (!charmUiAvailable.value || !noteCharmDisplay.value.show) return null;
-	if ($i && appearNote.user.id === $i.id) return $i.policies.canUseNoteCharm ? $i.noteCharm ?? null : null;
-	if (!noteCharmDisplay.value.showOthers) return null;
-	return appearNote.user.noteCharm ?? null;
-});
 const { $note: $appearNote, subscribe: subscribeManuallyToNoteCapture } = useNoteCapture({
 	note: appearNote,
 	parentNote: note,
@@ -529,85 +477,6 @@ const { $note: $appearNote, subscribe: subscribeManuallyToNoteCapture } = useNot
 const rootEl = useTemplateRef('rootEl');
 const menuButton = useTemplateRef('menuButton');
 
-// =========================================================================
-// 旗鯖fork: C7 宴(うたげ)明滅機能
-// 本文に「宴」「うたげ」「utage」を含むローカルノートをLTLに投稿すると、
-// 投稿から15分間ノート全体が明滅する。15分逃げ切れば「成功」、
-// 途中で他者の反応が来たら失敗し、抽選で復活チャンスが始まる。
-// 判定はサーバー(utage_session)が行い、フロントは $appearNote.utageStatus を購読して
-// 描画するだけ。これによりリロード・別端末でも状態が一貫する(従来のフロント完結実装で
-// 起きていた「成功後の反応をリロードで失敗扱いしてしまう」現象を解消)。
-// なお演出(明滅・バッジ)はLTL表示中のみ。これはLTL限定のゲームであるため。
-// =========================================================================
-const UTAGE_EXPIRE_MS = 6 * 60 * 60 * 1000; // 6時間 (これを過ぎたら演出を出さない)
-// 参加可否もサーバーの判定に合わせ、不可視の語だけの投稿へ案内を出さない。
-const isUtageTarget = computed(() => {
-	if ($appearNote.utageStatus == null) return false;
-	if (appearNote.user.host != null) return false; // ローカルノートのみ
-	if (inLocalTimeline == null || !inLocalTimeline.value) return false; // LTL表示中のみ
-	return true;
-});
-
-// チュートリアル表示条件: 自分が投稿した宴ノートが対象。
-// 複数の宴ノートが同時表示されても画面内で1つだけ出すため、表示権(utageTipOwnerId)を持つ
-// インスタンスのみ表示する。表示済み(閉じた)管理は MkTip の k='note.utage' で行う。
-const isUtageTipCandidate = computed(() => {
-	return isUtageTarget.value && $i != null && appearNote.user.id === $i.id;
-});
-const showUtageTip = computed(() => {
-	return isUtageTipCandidate.value && utageTipOwnerId.value === appearNote.id;
-});
-
-// 投稿からの経過ms (6時間制約の判定用)
-const utageCreatedAt = new Date(appearNote.createdAt).getTime();
-
-// サーバーの判定結果($appearNote.utageStatus)をそのまま反映する。
-// running=明滅, reviving=復活挑戦, succeeded=成功, failed=失敗。セッションが無ければnone。
-const utageState = computed<'none' | 'flashing' | 'reviving' | 'failed' | 'success'>(() => {
-	if (!isUtageTarget.value) return 'none';
-	if ((Date.now() - utageCreatedAt) >= UTAGE_EXPIRE_MS) return 'none'; // 6時間超 → 平常
-	switch ($appearNote.utageStatus) {
-		case 'succeeded': return 'success';
-		case 'failed': return 'failed';
-		case 'running': return 'flashing';
-		case 'reviving': return 'reviving';
-		default: return 'none';
-	}
-});
-
-const utageBubble = useTemplateRef('utageBubble');
-const utageArticle = useTemplateRef('utageArticle');
-useUtageFailureMotion({
-	root: rootEl,
-	article: utageArticle,
-	state: utageState,
-	animationEnabled: prefer.r.animation,
-	failedText: utageCopy.failed,
-});
-
-useUtageRevivalMotion({
-	root: rootEl,
-	frame: computed(() => utageOutsideFrame.value ? utageBubble.value : utageArticle.value),
-	state: utageState,
-	animationEnabled: prefer.r.animation,
-});
-
-onMounted(() => {
-	// チュートリアル表示権の取得: まだ誰も持っていなければ自分が取得 (画面内で1つだけ表示)
-	if (isUtageTipCandidate.value && utageTipOwnerId.value == null) {
-		utageTipOwnerId.value = appearNote.id;
-	}
-});
-
-onUnmounted(() => {
-	// 自分が表示権を持っていたら解放 (他の宴ノートが表示できるように)
-	if (utageTipOwnerId.value === appearNote.id) {
-		utageTipOwnerId.value = null;
-	}
-});
-// =========================================================================
-// C7 宴明滅機能ここまで
-// =========================================================================
 
 const renoteButton = useTemplateRef('renoteButton');
 const renoteTime = useTemplateRef('renoteTime');
@@ -881,8 +750,7 @@ function quote(): void {
 		return;
 	}
 	if (appearNote.channel) {
-		// 旗鯖fork: プライベートチャンネルのノートはチャンネル外へ引用させない
-		if (appearNote.channel.allowRenoteToExternal && !appearNote.channel.isPrivate) {
+		if (appearNote.channel.allowRenoteToExternal) {
 			const { menu } = getQuoteMenu({ note: note, mock: props.mock });
 			os.popupMenu(menu, quoteButton.value);
 		} else {
@@ -1266,12 +1134,6 @@ function emitUpdReaction(emoji: string, delta: number) {
 	}
 }
 
-/* 復活枠と失敗/復活の一時演出がノートの外へ出るため、
-   宴状態では .root の overflow:clip に切られないようにする。 */
-.utageActive {
-	overflow: visible;
-}
-
 .skipRender {
 	// TODO: これが有効だとTransitionGroupでnoteを追加するときに一瞬がくっとなってしまうのをどうにかしたい
 	// Transitionが完了するのを待ってからskipRenderを付与すれば解決しそうだけどパフォーマンス的な影響が不明
@@ -1395,108 +1257,6 @@ function emitUpdReaction(emoji: string, delta: number) {
 	-webkit-tap-highlight-color: transparent;
 }
 
-/* =======================================================================
-   旗鯖fork: C7 宴(うたげ)明滅機能のスタイル
-   ======================================================================= */
-/* 面だけを着色し、文字・アバターの不透明度は変えない。
-   実要素なので失敗/復活演出の computed style snapshot にも反映できる。 */
-.utageFlashing, .utageFailed, .utageSuccess,
-.article[data-utage-square='flashing'],
-.article[data-utage-square='failed'],
-.article[data-utage-square='success'] {
-	isolation: isolate;
-}
-
-.utageFlashing, .utageFailed, .utageSuccess {
-	border-radius: 16px;
-}
-
-.utageSurface {
-	position: absolute;
-	inset: 0;
-	border-radius: inherit;
-	z-index: -1;
-	pointer-events: none;
-}
-
-.utageSurface[data-utage-surface='flashing'] {
-	background: var(--MI_THEME-accent);
-	opacity: 0.07;
-	animation: utageSurfacePulse 2.8s ease-in-out infinite;
-}
-
-@keyframes utageSurfacePulse {
-	0%, 100% { opacity: 0.07; }
-	50% { opacity: 0.21; }
-}
-
-.utageSurface[data-utage-surface='failed'] {
-	background: var(--MI_THEME-error);
-	opacity: 0.15;
-}
-
-.utageSurface[data-utage-surface='success'] {
-	background: var(--MI_THEME-success);
-	opacity: 0.15;
-}
-
-.root[data-utage-motion='reduced'] .utageSurface[data-utage-surface='flashing'] {
-	animation: none;
-	opacity: 0.14;
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.utageSurface[data-utage-surface='flashing'] {
-		animation: none;
-		opacity: 0.14;
-	}
-}
-
-.utageReviving {
-	border-radius: 16px;
-	outline: 2px solid color-mix(in srgb, var(--MI_THEME-warn) 60%, transparent);
-	outline-offset: 2px;
-}
-
-/* 吹き出しOFFでは article の四角い面へ着色する。復活枠は従来どおり残す。 */
-.article[data-utage-square] {
-	position: relative;
-}
-.article[data-utage-square='reviving'] {
-	box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--MI_THEME-warn) 60%, transparent);
-}
-
-/* 結果バッジ (右下隅)。背景に関わらず読めるよう、太字+縁取り(text-shadow)で表現。 */
-.utageBadge {
-	position: absolute;
-	right: 12px;
-	bottom: 8px;
-	z-index: 3;
-	padding: 1px 8px;
-	border-radius: 999px;
-	font-size: 0.82em;
-	font-weight: 900;
-	pointer-events: none;
-	user-select: none;
-	/* 明暗どちらの背景でも文字が浮くよう、白縁取りと暗縁取りを重ねる */
-	text-shadow:
-		0 0 2px var(--MI_THEME-bg),
-		0 0 3px var(--MI_THEME-bg),
-		0 1px 2px rgba(0, 0, 0, 0.5),
-		0 0 4px rgba(255, 255, 255, 0.4);
-}
-
-/* 失敗: 赤文字 */
-.utageBadgeFailed {
-	color: var(--MI_THEME-error);
-}
-
-/* 成功: 緑文字 */
-.utageBadgeSuccess {
-	color: var(--MI_THEME-success);
-}
-/* C7 宴明滅機能ここまで */
-
 .colorBar {
 	position: absolute;
 	top: 0;
@@ -1521,10 +1281,6 @@ function emitUpdReaction(emoji: string, delta: number) {
 	border-radius: 20px;
 	-webkit-mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 90%);
 	mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 90%);
-}
-
-:global(html.hataGlassUi) .article:has(> [data-hk3-visibility-rail]) .bubbleBody .colorBar {
-	left: -2px;
 }
 
 .avatar {
@@ -1892,11 +1648,7 @@ function emitUpdReaction(emoji: string, delta: number) {
      一律で `--htk-glass-card-opacity` が反映される。
      ダーク/ライトで accent tint 濃度を出し分け (18%/8%)。 -->
 <style lang="scss">
-/* 旗鯖fork: Hatady(.hatady-scope 配下)と Hatask(.htk-root 配下)は独自テーマを持ち、
-   <article> を描画する。このグローバルなガラス規則が効くと独自の背景色が崩れるため、
-   :not(:where(.hatady-scope *, .htk-root *)) で両者の <article> を除外する
-   (:where で詳細度は据え置き、既存の本体ノートのカスケードには影響しない)。 */
-html.hataGlassUi article:not(:where(.hatady-scope *, .htk-root *)) {
+html.hataGlassUi article {
 	border-radius: 20px;
 	background: color-mix(in srgb,
 		color-mix(in srgb, var(--MI_THEME-accent) 18%, var(--MI_THEME-panel))
@@ -1908,7 +1660,7 @@ html.hataGlassUi article:not(:where(.hatady-scope *, .htk-root *)) {
 	-webkit-backdrop-filter: var(--MI-blur, blur(22px)) saturate(1.6);
 	backdrop-filter: var(--MI-blur, blur(22px)) saturate(1.6);
 }
-html[data-color-scheme=light].hataGlassUi article:not(:where(.hatady-scope *, .htk-root *)) {
+html[data-color-scheme=light].hataGlassUi article {
 	background: color-mix(in srgb,
 		color-mix(in srgb, var(--MI_THEME-accent) 8%, var(--MI_THEME-panel))
 		var(--htk-glass-card-opacity, 55%),

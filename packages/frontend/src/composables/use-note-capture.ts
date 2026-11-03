@@ -4,7 +4,6 @@
  */
 
 import { inject, onUnmounted, reactive, unref, watch } from 'vue';
-import { applyUtage, pickUtage, type UtageSnapshot, type UtageEvent } from '@/utility/utage.js';
 import type * as Misskey from 'cherrypick-js';
 import { EventEmitter } from 'eventemitter3';
 import { createVisibilityAwareInterval } from '@@/js/interval.js';
@@ -22,8 +21,6 @@ export const noteEvents = new EventEmitter<{
 	[ev: `reacted:${string}`]: (ctx: { userId: Misskey.entities.User['id']; reaction: string; emoji?: { name: string; url: string; }; }) => void;
 	[ev: `unreacted:${string}`]: (ctx: { userId: Misskey.entities.User['id']; reaction: string; emoji?: { name: string; url: string; }; }) => void;
 	[ev: `pollVoted:${string}`]: (ctx: { userId: Misskey.entities.User['id']; choice: string; }) => void;
-	// 旗鯖fork: 宴(うたげ)の判定確定をノート単位で受け取る
-	[ev: `utageStatusUpdated:${string}`]: (ctx: UtageEvent) => void;
 }>();
 
 const fetchEvent = new EventEmitter<{
@@ -165,12 +162,6 @@ function realtimeSubscribe(props: {
 				break;
 			}
 
-			case 'utageStatusUpdated': {
-				// 旗鯖fork: 宴の判定確定 (succeeded/failed) をノート単位で配信
-				noteEvents.emit(`utageStatusUpdated:${id}`, body);
-				break;
-			}
-
 			case 'deleted': {
 				globalEvents.emit('noteDeleted', id);
 				break;
@@ -201,27 +192,15 @@ function realtimeSubscribe(props: {
 	});
 }
 
-export type ReactiveNoteData = UtageSnapshot & {
+export type ReactiveNoteData = {
 	reactions: Misskey.entities.Note['reactions'];
 	reactionCount: Misskey.entities.Note['reactionCount'];
 	reactionEmojis: Misskey.entities.Note['reactionEmojis'];
 	myReaction: Misskey.entities.Note['myReaction'];
 	pollChoices: NonNullable<Misskey.entities.Note['poll']>['choices'];
-	// 旗鯖fork: 宴(うたげ)の判定状態。サーバーの pack 埋め込み(utageStatus)を初期値とし、
-	// utageStatusUpdated イベントで更新する。
 };
 
 const noReaction = Symbol();
-// A note can appear in several columns. Share only an in-flight request;
-// each mounted note owns its subscriptions and applies the returned revision.
-const utageRequests = new Map<string, Promise<Misskey.entities.Note>>();
-function fetchUtage(noteId: string) {
-	const existing = utageRequests.get(noteId);
-	if (existing) return existing;
-	const request = misskeyApi('notes/show', { noteId }).finally(() => { utageRequests.delete(noteId); });
-	utageRequests.set(noteId, request);
-	return request;
-}
 
 export function useNoteCapture(props: {
 	note: Misskey.entities.Note;
@@ -252,38 +231,11 @@ export function useNoteCapture(props: {
 		reactionEmojis: note.reactionEmojis,
 		myReaction: note.myReaction,
 		pollChoices: note.poll?.choices ?? [],
-		...pickUtage(note),
 	});
-
-	let utageDisposed = false;
-	let utageLoading = false;
-	let utageLastFetch = 0;
-	async function refreshUtage(force = false) {
-		if (mock || utageDisposed || utageLoading || window.document.hidden || !['running', 'reviving'].includes($note.utageStatus ?? '')) return;
-		const delay = $note.utageStatus === 'reviving' ? 5000 : 30000;
-		if (!force && Date.now() - utageLastFetch < delay) return;
-		utageLoading = true;
-		utageLastFetch = Date.now();
-		try {
-			const fresh = await fetchUtage(note.id);
-			if (!utageDisposed) { applyUtage($note, fresh, true); applyUtage(note, fresh, true); }
-		} catch { /* Retry on the next visible tick; the server owns the final result. */ }
-		finally { utageLoading = false; }
-	}
-	const utageVisibility = () => { if (!window.document.hidden) void refreshUtage(true); };
-	watch(() => $note.utageStatus, (status, _, cleanup) => {
-		if (mock || (status !== 'running' && status !== 'reviving')) return;
-		const stopTimer = createVisibilityAwareInterval(() => { void refreshUtage(); }, 5000);
-		window.document.addEventListener('visibilitychange', utageVisibility);
-		cleanup(() => { stopTimer(); window.document.removeEventListener('visibilitychange', utageVisibility); });
-	}, { immediate: true });
-	watch(() => [note.utageRevision, note.utageStatus], () => applyUtage($note, note, true));
-	watch(() => $note.myReaction, () => { void refreshUtage(true); });
 
 	noteEvents.on(`reacted:${note.id}`, onReacted);
 	noteEvents.on(`unreacted:${note.id}`, onUnreacted);
 	noteEvents.on(`pollVoted:${note.id}`, onPollVoted);
-	noteEvents.on(`utageStatusUpdated:${note.id}`, onUtageStatusUpdated);
 
 	// 操作がダブっていないかどうかを簡易的に記録するためのMap
 	const reactionUserMap = new Map<Misskey.entities.User['id'], string | typeof noReaction>();
@@ -349,14 +301,6 @@ export function useNoteCapture(props: {
 		$note.pollChoices = choices;
 	}
 
-	// Revision順で更新し、一度確定した結果は覆さない。
-	function onUtageStatusUpdated(ctx: UtageEvent): void {
-		if (applyUtage($note, ctx)) {
-			applyUtage(note, ctx);
-			if ($note.utageStatus === 'reviving' && !$note.utageMyParticipation) void refreshUtage(true);
-		}
-	}
-
 	function subscribe() {
 		if (mock) {
 			// モックモードでは購読しない
@@ -376,11 +320,9 @@ export function useNoteCapture(props: {
 	}
 
 	onUnmounted(() => {
-		utageDisposed = true;
 		noteEvents.off(`reacted:${note.id}`, onReacted);
 		noteEvents.off(`unreacted:${note.id}`, onUnreacted);
 		noteEvents.off(`pollVoted:${note.id}`, onPollVoted);
-		noteEvents.off(`utageStatusUpdated:${note.id}`, onUtageStatusUpdated);
 	});
 
 	// 投稿からある程度経過している(=タイムラインを遡って表示した)ノートは、イベントが発生する可能性が低いためそもそも購読しない

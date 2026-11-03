@@ -13,7 +13,6 @@ export const QUEUE = {
 	INBOX: 'inbox',
 	SYSTEM: 'system',
 	ENDED_POLL_NOTIFICATION: 'endedPollNotification',
-	UTAGE_RESOLVE: 'utageResolve',
 	POST_SCHEDULED_NOTE: 'postScheduledNote',
 	DB: 'db',
 	RELATIONSHIP: 'relationship',

@@ -32,8 +32,6 @@ import { MiBubbleGameRecord } from '@/models/BubbleGameRecord.js';
 import { MiChannel } from '@/models/Channel.js';
 import { MiChannelFavorite } from '@/models/ChannelFavorite.js';
 import { MiChannelFollowing } from '@/models/ChannelFollowing.js';
-import { MiChannelMember } from '@/models/ChannelMember.js';
-import { MiChannelInvitation } from '@/models/ChannelInvitation.js';
 import { MiChatApproval } from '@/models/ChatApproval.js';
 import { MiChatMessage } from '@/models/ChatMessage.js';
 import { MiChatRoom } from '@/models/ChatRoom.js';
@@ -76,8 +74,6 @@ import { MiRelay } from '@/models/Relay.js';
 import { MiRenoteMuting } from '@/models/RenoteMuting.js';
 import { MiRetentionAggregation } from '@/models/RetentionAggregation.js';
 import { MiReversiGame } from '@/models/ReversiGame.js';
-import { MiHataigoGame } from '@/models/HataigoGame.js';
-import { MiHataigoChatMessage } from '@/models/HataigoChatMessage.js';
 import { MiRole } from '@/models/Role.js';
 import { MiRoleAssignment } from '@/models/RoleAssignment.js';
 import { MiSignin } from '@/models/Signin.js';
@@ -103,39 +99,6 @@ import { MiUserSecurityKey } from '@/models/UserSecurityKey.js';
 import { MiWebhook } from '@/models/Webhook.js';
 import { NoteHistory } from '@/models/NoteHistory.js';
 import { MiRegistrationApplication } from '@/models/RegistrationApplication.js';
-import { MiHataskEvent } from '@/models/HataskEvent.js';
-import { MiHataskRsvp } from '@/models/HataskRsvp.js';
-import { MiHataskFlower } from '@/models/HataskFlower.js';
-import { MiHataskRecipe } from '@/models/HataskRecipe.js';
-import { MiHataskCookingRecord } from '@/models/HataskCookingRecord.js';
-import { MiUtageSession } from '@/models/UtageSession.js';
-import { MiFeedbackIssue } from '@/models/FeedbackIssue.js';
-import { MiFeedbackAgree } from '@/models/FeedbackAgree.js';
-import { MiFeedbackComment } from '@/models/FeedbackComment.js';
-import { MiFeedbackCommentReaction } from '@/models/FeedbackCommentReaction.js';
-import { MiFeedbackIssueModerator } from '@/models/FeedbackIssueModerator.js';
-import { MiFeedbackEmojiRequest } from '@/models/FeedbackEmojiRequest.js';
-import { MiFeedbackEmojiChangeRequest } from '@/models/FeedbackEmojiChangeRequest.js';
-import { MiFeedbackNotification } from '@/models/FeedbackNotification.js';
-import { MiFeedbackProject } from '@/models/FeedbackProject.js';
-import { MiEarthquakeNotification } from '@/models/EarthquakeNotification.js';
-import { MiHatadyBook } from '@/models/HatadyBook.js';
-import { MiHatadyLog } from '@/models/HatadyLog.js';
-import { MiHatadyComment } from '@/models/HatadyComment.js';
-import { MiHatadyReaction } from '@/models/HatadyReaction.js';
-import { MiHatadyNotification } from '@/models/HatadyNotification.js';
-import { MiHatadyFollowing } from '@/models/HatadyFollowing.js';
-import { MiHatadyUserProfile } from '@/models/HatadyUserProfile.js';
-import { MiHatadyBookmark } from '@/models/HatadyBookmark.js';
-import { MiHatadyBookMemo } from '@/models/HatadyBookMemo.js';
-import { MiHatadySubject } from '@/models/HatadySubject.js';
-import { MiHatadyGoal } from '@/models/HatadyGoal.js';
-import { MiHatadyMediaWork } from '@/models/HatadyMediaWork.js';
-import { MiHatadyMediaSession } from '@/models/HatadyMediaSession.js';
-import { MiHatadyMediaComment } from '@/models/HatadyMediaComment.js';
-import { MiHatadyMediaReaction } from '@/models/HatadyMediaReaction.js';
-import { MiHatadyModerationReview } from '@/models/HatadyModerationReview.js';
-import { MiHataskEmotionAnalysis } from '@/models/HataskEmotionAnalysis.js';
 import type { QueryDeepPartialEntity } from 'typeorm';
 
 export interface MiRepository<T extends ObjectLiteral> {
@@ -218,8 +181,6 @@ export {
 	MiAuthSession,
 	MiBlocking,
 	MiChannelFollowing,
-	MiChannelMember,
-	MiChannelInvitation,
 	MiChannelFavorite,
 	MiClip,
 	MiClipNote,
@@ -288,42 +249,7 @@ export {
 	MiChatApproval,
 	MiBubbleGameRecord,
 	MiReversiGame,
-	MiHataigoGame,
-	MiHataigoChatMessage,
 	MiRegistrationApplication,
-	MiHataskEvent,
-	MiHataskRsvp,
-	MiHataskFlower,
-	MiHataskRecipe,
-	MiHataskCookingRecord,
-	MiUtageSession,
-	MiFeedbackIssue,
-	MiFeedbackAgree,
-	MiFeedbackComment,
-	MiFeedbackCommentReaction,
-	MiFeedbackIssueModerator,
-	MiFeedbackEmojiRequest,
-	MiFeedbackEmojiChangeRequest,
-	MiFeedbackNotification,
-	MiFeedbackProject,
-	MiEarthquakeNotification,
-	MiHatadyBook,
-	MiHatadyLog,
-	MiHatadyComment,
-	MiHatadyReaction,
-	MiHatadyNotification,
-	MiHatadyFollowing,
-	MiHatadyUserProfile,
-	MiHatadyBookmark,
-	MiHatadyBookMemo,
-	MiHatadySubject,
-	MiHatadyGoal,
-	MiHatadyMediaWork,
-	MiHatadyMediaSession,
-	MiHatadyMediaComment,
-	MiHatadyMediaReaction,
-	MiHatadyModerationReview,
-	MiHataskEmotionAnalysis,
 };
 
 export type AbuseReportResolversRepository = Repository<MiAbuseReportResolver> & MiRepository<MiAbuseReportResolver>;
@@ -341,8 +267,6 @@ export type AvatarDecorationsRepository = Repository<MiAvatarDecoration> & MiRep
 export type AuthSessionsRepository = Repository<MiAuthSession> & MiRepository<MiAuthSession>;
 export type BlockingsRepository = Repository<MiBlocking> & MiRepository<MiBlocking>;
 export type ChannelFollowingsRepository = Repository<MiChannelFollowing> & MiRepository<MiChannelFollowing>;
-export type ChannelMembersRepository = Repository<MiChannelMember> & MiRepository<MiChannelMember>;
-export type ChannelInvitationsRepository = Repository<MiChannelInvitation> & MiRepository<MiChannelInvitation>;
 export type ChannelFavoritesRepository = Repository<MiChannelFavorite> & MiRepository<MiChannelFavorite>;
 export type ClipsRepository = Repository<MiClip> & MiRepository<MiClip>;
 export type ClipNotesRepository = Repository<MiClipNote> & MiRepository<MiClipNote>;
@@ -411,39 +335,5 @@ export type ChatRoomInvitationsRepository = Repository<MiChatRoomInvitation> & M
 export type ChatApprovalsRepository = Repository<MiChatApproval> & MiRepository<MiChatApproval>;
 export type BubbleGameRecordsRepository = Repository<MiBubbleGameRecord> & MiRepository<MiBubbleGameRecord>;
 export type ReversiGamesRepository = Repository<MiReversiGame> & MiRepository<MiReversiGame>;
-export type HataigoChatMessagesRepository = Repository<MiHataigoChatMessage> & MiRepository<MiHataigoChatMessage>;
-export type HataigoGamesRepository = Repository<MiHataigoGame> & MiRepository<MiHataigoGame>;
 export type NoteHistoryRepository = Repository<NoteHistory> & MiRepository<NoteHistory>;
 export type RegistrationApplicationsRepository = Repository<MiRegistrationApplication> & MiRepository<MiRegistrationApplication>;
-export type HataskEventsRepository = Repository<MiHataskEvent> & MiRepository<MiHataskEvent>;
-export type HataskRsvpsRepository = Repository<MiHataskRsvp> & MiRepository<MiHataskRsvp>;
-export type HataskFlowersRepository = Repository<MiHataskFlower> & MiRepository<MiHataskFlower>;
-export type HataskRecipesRepository = Repository<MiHataskRecipe> & MiRepository<MiHataskRecipe>;
-export type HataskCookingRecordsRepository = Repository<MiHataskCookingRecord> & MiRepository<MiHataskCookingRecord>;
-export type UtageSessionsRepository = Repository<MiUtageSession> & MiRepository<MiUtageSession>;
-export type FeedbackIssuesRepository = Repository<MiFeedbackIssue> & MiRepository<MiFeedbackIssue>;
-export type FeedbackAgreesRepository = Repository<MiFeedbackAgree> & MiRepository<MiFeedbackAgree>;
-export type EarthquakeNotificationsRepository = Repository<MiEarthquakeNotification> & MiRepository<MiEarthquakeNotification>;
-export type FeedbackCommentsRepository = Repository<MiFeedbackComment> & MiRepository<MiFeedbackComment>;
-export type FeedbackCommentReactionsRepository = Repository<MiFeedbackCommentReaction> & MiRepository<MiFeedbackCommentReaction>;
-export type FeedbackIssueModeratorsRepository = Repository<MiFeedbackIssueModerator> & MiRepository<MiFeedbackIssueModerator>;
-export type FeedbackEmojiRequestsRepository = Repository<MiFeedbackEmojiRequest> & MiRepository<MiFeedbackEmojiRequest>;
-export type FeedbackEmojiChangeRequestsRepository = Repository<MiFeedbackEmojiChangeRequest> & MiRepository<MiFeedbackEmojiChangeRequest>;
-export type FeedbackNotificationsRepository = Repository<MiFeedbackNotification> & MiRepository<MiFeedbackNotification>;
-export type FeedbackProjectsRepository = Repository<MiFeedbackProject> & MiRepository<MiFeedbackProject>;
-export type HatadyBooksRepository = Repository<MiHatadyBook> & MiRepository<MiHatadyBook>;
-export type HatadyLogsRepository = Repository<MiHatadyLog> & MiRepository<MiHatadyLog>;
-export type HatadyCommentsRepository = Repository<MiHatadyComment> & MiRepository<MiHatadyComment>;
-export type HatadyReactionsRepository = Repository<MiHatadyReaction> & MiRepository<MiHatadyReaction>;
-export type HatadyNotificationsRepository = Repository<MiHatadyNotification> & MiRepository<MiHatadyNotification>;
-export type HatadyFollowingsRepository = Repository<MiHatadyFollowing> & MiRepository<MiHatadyFollowing>;
-export type HatadyUserProfilesRepository = Repository<MiHatadyUserProfile> & MiRepository<MiHatadyUserProfile>;
-export type HatadyBookmarksRepository = Repository<MiHatadyBookmark> & MiRepository<MiHatadyBookmark>;
-export type HatadyBookMemosRepository = Repository<MiHatadyBookMemo> & MiRepository<MiHatadyBookMemo>;
-export type HatadySubjectsRepository = Repository<MiHatadySubject> & MiRepository<MiHatadySubject>;
-export type HatadyGoalsRepository = Repository<MiHatadyGoal> & MiRepository<MiHatadyGoal>;
-export type HatadyMediaWorksRepository = Repository<MiHatadyMediaWork> & MiRepository<MiHatadyMediaWork>;
-export type HatadyMediaSessionsRepository = Repository<MiHatadyMediaSession> & MiRepository<MiHatadyMediaSession>;
-export type HatadyMediaCommentsRepository = Repository<MiHatadyMediaComment> & MiRepository<MiHatadyMediaComment>;
-export type HatadyMediaReactionsRepository = Repository<MiHatadyMediaReaction> & MiRepository<MiHatadyMediaReaction>;
-export type HataskEmotionAnalysesRepository = Repository<MiHataskEmotionAnalysis> & MiRepository<MiHataskEmotionAnalysis>;

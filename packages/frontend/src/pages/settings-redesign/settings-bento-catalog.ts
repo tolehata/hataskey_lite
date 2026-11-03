@@ -7,7 +7,7 @@ import { settingsInventoryKeys } from './settings-preferences-catalog.js';
 import type { SettingsInventoryKey } from './settings-preferences-catalog.js';
 import { i18n } from '@/i18n.js';
 
-export const settingsBentoCategoryIds = ['profile', 'privacy', 'security', 'appearance', 'timeline', 'post', 'notify', 'access', 'mute', 'drive', 'apps', 'data', 'advanced'] as const;
+export const settingsBentoCategoryIds = ['profile', 'privacy', 'security', 'appearance', 'timeline', 'post', 'notify', 'access', 'mute', 'drive', 'data', 'advanced'] as const;
 export type SettingsBentoCategoryId = typeof settingsBentoCategoryIds[number];
 export type SettingsBentoGroupId = 'you' | 'usage' | 'management';
 export const bentoSectionIds = [
@@ -58,8 +58,6 @@ export const bentoSectionIds = [
 	'drive.section1',
 	'drive.section2',
 	'drive.section3',
-	'apps.section0',
-	'apps.section1',
 	'data.section0',
 	'data.section1',
 	'data.section2',
@@ -93,7 +91,6 @@ const categorySpecs: readonly [SettingsBentoCategoryId, SettingsBentoGroupId, st
 	['access', 'usage', 'ti ti-accessible'],
 	['mute', 'management', 'ti ti-ban'],
 	['drive', 'management', 'ti ti-cloud'],
-	['apps', 'management', 'ti ti-apps'],
 	['data', 'management', 'ti ti-database-export'],
 	['advanced', 'management', 'ti ti-adjustments'],
 ];
@@ -105,7 +102,6 @@ export const settingsBentoCategories: readonly SettingsBentoCategory[] = categor
 	get description() { return i18n.ts._hata._settingsBento.categories[id].description; },
 	get groupLabel() { return i18n.ts._hata._settingsBento.groups[groupId]; },
 	get preview() { const copy = i18n.ts._hata._settingsBento.categories[id]; return [copy.preview1, copy.preview2, copy.preview3]; },
-	...(id === 'apps' ? { brand: 'Hataskey' as const } : {}),
 }));
 
 export function parseSettingsBentoCategory(value: unknown): SettingsBentoCategoryId | undefined {
@@ -165,8 +161,6 @@ const bentoSectionIcons: Record<SettingsBentoSectionId, string> = {
 	'drive.section1': 'ti ti-upload',
 	'drive.section2': 'ti ti-photo',
 	'drive.section3': 'ti ti-video',
-	'apps.section0': 'ti ti-apps',
-	'apps.section1': 'ti ti-puzzle',
 	'data.section0': 'ti ti-database-export',
 	'data.section1': 'ti ti-flag',
 	'data.section2': 'ti ti-file-export',
@@ -191,17 +185,14 @@ export const bentoDestinationLinkSections: readonly {
 }[] = [
 	{ sectionId: 'profile.section2', destinationIds: ['account-avatar'], explain: false },
 	{ sectionId: 'security.section3', destinationIds: ['account-stats', 'account-switch', 'account-migration'], explain: true },
-	{ sectionId: 'appearance.section1', destinationIds: ['hataskey-ui-font'], explain: false },
 	{ sectionId: 'appearance.section2', destinationIds: ['hataskey-ui', 'hataskey-ui-s', 'cherrypick-settings'], explain: false },
 	{ sectionId: 'appearance.section3', destinationIds: ['misskey-navbar', 'misskey-statusbar'], explain: false },
 	{ sectionId: 'timeline.section0', destinationIds: ['timeline-display'], explain: false },
 	{ sectionId: 'timeline.section4', destinationIds: ['timeline-hidden-reactions'], explain: false },
 	{ sectionId: 'timeline.section6', destinationIds: ['misskey-deck'], explain: true },
 	{ sectionId: 'drive.section0', destinationIds: ['account-drive-cleaner'], explain: false },
-	{ sectionId: 'apps.section0', destinationIds: ['hata-hatask', 'hata-hatady', 'hata-hatafeed'], explain: true },
-	{ sectionId: 'apps.section1', destinationIds: ['hata-earthquake', 'hata-mascot'], explain: true },
 	{ sectionId: 'data.section1', destinationIds: ['hata-settings-transfer'], explain: false },
-	{ sectionId: 'data.section3', destinationIds: ['account-external', 'account-concrnt', 'account-connect', 'account-apps'], explain: true },
+	{ sectionId: 'data.section3', destinationIds: ['account-connect', 'account-apps'], explain: true },
 	{ sectionId: 'advanced.section2', destinationIds: ['account-plugins', 'display-css'], explain: true },
 ];
 
@@ -253,7 +244,6 @@ export const bentoPreferencePlacements = {
 	'keepScreenOn': 'access.section1',
 	'limitWidthOfReaction': 'timeline.section4',
 	'loadRawImages': 'timeline.section5',
-	'ltlEmojiVoteEnabled': 'timeline.section0',
 	'makeEveryTextElementsSelectable': 'access.section1',
 	'mediaListWithOneImageAppearance': 'timeline.section5',
 	'menuStyle': 'access.section1',
@@ -310,25 +300,12 @@ export const bentoPreferencePlacements = {
 	'useReactionPickerForContextMenu': 'timeline.section4',
 	'useStickyIcons': 'access.section2',
 	'welcomeBackToast': 'advanced.section1',
-	'hataskeyUi3TimelineBackground': 'appearance.section4',
-	'hataskeyUi3SideMenuBackground': 'appearance.section4',
-	'hataskeyUi3RightPaneBackground': 'appearance.section4',
-	'hataskeyUi3GlassDensity': 'appearance.section4',
-	'hataskeyUi3ComposerShortcut1': 'post.section2',
-	'hataskeyUi3ComposerShortcut2': 'post.section2',
-	'hataskeyUi3ComposerEmojiPosition': 'post.section2',
-	'hataskeyUi3ComposerPosition': 'post.section0',
 	'postFormVisibilityBorder.enabled': 'post.section3',
 	'postFormVisibilityBorder.width': 'post.section3',
 	'postFormVisibilityBorder.color.public': 'post.section3',
 	'postFormVisibilityBorder.color.home': 'post.section3',
 	'postFormVisibilityBorder.color.followers': 'post.section3',
 	'postFormVisibilityBorder.color.specified': 'post.section3',
-	'hataskeyUi3RssEnabled': 'appearance.section2',
-	'hataskeyUi3RssFeeds': 'appearance.section2',
-	'hataskeyUi3RssAutoSwitch': 'appearance.section2',
-	'hataskeyUi3RssReadSeconds': 'appearance.section2',
-	'hataskeyUi3RssReadMode': 'appearance.section2',
 	'lang': 'advanced.section0',
 	'overridedDeviceKind': 'appearance.section2',
 	'realtimeMode': 'advanced.section0',
@@ -368,14 +345,8 @@ assertBentoPreferenceInventory(bentoPreferencePlacements);
 const destinationCategories: Readonly<Record<string, SettingsBentoCategoryId>> = {
 	'hataskey-ui': 'appearance',
 	'hataskey-ui-s': 'appearance',
-	'hata-hatask': 'apps',
-	'hata-hatady': 'apps',
-	'hata-hatafeed': 'apps',
-	'hata-earthquake': 'apps',
-	'hata-mascot': 'apps',
 	'hata-settings-transfer': 'data',
 	'display-theme': 'appearance',
-	'hataskey-ui-font': 'appearance',
 	'display-css': 'advanced',
 	'display-emoji': 'post',
 	'display-general': 'appearance',
@@ -401,8 +372,6 @@ const destinationCategories: Readonly<Record<string, SettingsBentoCategoryId>> =
 	'account-drive-cleaner': 'drive',
 	'account-export': 'data',
 	'account-profiles': 'data',
-	'account-external': 'data',
-	'account-concrnt': 'data',
 	'account-connect': 'data',
 	'account-apps': 'data',
 	'account-plugins': 'advanced',

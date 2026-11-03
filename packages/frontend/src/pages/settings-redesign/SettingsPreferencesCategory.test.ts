@@ -113,19 +113,17 @@ describe('category preference rendering', () => {
 		expect(fontCard).toBe(control(host, 'useBoldFont').closest('[data-bento-section]'));
 		expect(fontCard).toBe(control(host, 'useSystemFont').closest('[data-bento-section]'));
 		expect(fontCard?.querySelectorAll('[data-explainer-section="appearance.section1"]')).toHaveLength(1);
-		expect(host.querySelectorAll('[data-special-owner="rss"]')).toHaveLength(1);
-		expect(host.querySelectorAll('[data-special-owner="bottom-nav"]')).toHaveLength(1);
 		expect(control(host, 'setFederationAvatarShape').querySelector('button')?.disabled).toBe(true);
 		props.categoryId = 'timeline'; await nextTick();
-		control(host, 'ltlEmojiVoteEnabled').querySelector('button')?.click(); await nextTick();
-		expect(state.controls.ltlEmojiVoteEnabled.value).toBe(false);
+		control(host, 'collapseRenotes').querySelector('button')?.click(); await nextTick();
+		expect(state.controls.collapseRenotes.value).toBe(false);
 		props.categoryId = 'post'; await nextTick();
 		expect(control(host, 'postFormVisibilityBorder.width').querySelector('button')?.disabled).toBe(true);
 		control(host, 'postFormVisibilityBorder.enabled').querySelector('button')?.click(); await nextTick();
 		expect(state.controls['postFormVisibilityBorder.enabled'].value).toBe(true);
 		expect(control(host, 'postFormVisibilityBorder.width').querySelector('button')?.disabled).toBe(false);
 		props.categoryId = 'timeline'; await nextTick();
-		expect(control(host, 'ltlEmojiVoteEnabled').querySelector('button')?.dataset.modelValue).toBe('false');
+		expect(control(host, 'collapseRenotes').querySelector('button')?.dataset.modelValue).toBe('false');
 		expect(state.modelCreations).toBe(1);
 	});
 

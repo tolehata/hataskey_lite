@@ -10,7 +10,6 @@ import { DI } from '@/di-symbols.js';
 import { Inject } from '@nestjs/common';
 import { NoteEntityService } from '@/core/entities/NoteEntityService.js';
 import { bindThis } from '@/decorators.js';
-import { PrivateChannelNoteVisibilityError } from '@/misc/private-channel-note-visibility-error.js';
 import type { Packed } from '@/misc/json-schema.js';
 import type { GlobalEvents } from '@/core/GlobalEventService.js';
 import type { JsonObject } from '@/misc/json-value.js';
@@ -66,7 +65,7 @@ class AntennaChannel extends Channel {
 			try {
 				note = await this.noteEntityService.pack(data.body.id, user, { detail: true });
 			} catch (error) {
-				if (error instanceof PrivateChannelNoteVisibilityError || error instanceof EntityNotFoundError) return;
+				if (error instanceof EntityNotFoundError) return;
 				throw error;
 			}
 

@@ -452,35 +452,6 @@ defineExpose({ reload, manageFolder });
 .root[data-deck="true"] .notes { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; padding: 8px 8px max(8px, env(safe-area-inset-bottom)); }
 .root[data-deck="true"] .favorite { border-radius: 14px; }
 :global(html.hataGlassUi) .favorite { background: transparent; }
-:global(html[data-hk3-ui]) .favorite {
-	background: var(--hk3-glass-soft, var(--MI_THEME-panel));
-	border-color: color-mix(in srgb, var(--hk3-text, var(--MI_THEME-fg)) 12%, transparent);
-	box-shadow: inset 0 1px 0 rgb(255 255 255 / 6%), 0 6px 20px rgb(0 0 0 / 7%);
-}
-:global(html[data-hk3-ui]) .sidebar,
-:global(html[data-hk3-ui]) .capsule,
-:global(html[data-hk3-ui]) .iconButton,
-:global(html[data-hk3-ui]) .root[data-deck="true"] .controls {
-	background: var(--hk3-glass-soft, var(--MI_THEME-panel));
-}
-:global(html[data-hk3-ui]) .sidebar,
-:global(html[data-hk3-ui]) .capsule,
-:global(html[data-hk3-ui]) .iconButton {
-	border-color: color-mix(in srgb, var(--hk3-text, var(--MI_THEME-fg)) 12%, transparent);
-}
-:global(html[data-hk3-ui]) .noteActions .iconButton { border: 0; background: transparent; }
-:global(html[data-hk3-ui]) :global([data-glass]) .favorite,
-:global(html[data-hk3-ui]) :global([data-glass]) .sidebar,
-:global(html[data-hk3-ui]) :global([data-glass]) .capsule,
-:global(html[data-hk3-ui]) :global([data-glass]) .iconButton,
-:global(html[data-hk3-ui]) :global([data-glass]) .root[data-deck="true"] .controls {
-	-webkit-backdrop-filter: blur(16px);
-	backdrop-filter: blur(16px);
-}
-:global(html[data-hk3-ui]) :global([data-glass]) .noteActions .iconButton {
-	-webkit-backdrop-filter: none;
-	backdrop-filter: none;
-}
 @container (max-width: 760px) {
 	.workspace { grid-template-columns: minmax(0, 1fr); }
 	.sidebar, .children { display: none; }

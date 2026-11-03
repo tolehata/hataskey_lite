@@ -13,8 +13,6 @@
 		</template>
 		<template v-else><MkHataskeyNoticeIcon icon="ti ti-circle-check" :animations="motion"/>{{ item.message }}</template>
 	</div>
-	<MkExternalNotificationToast v-else-if="item.source === 'external'" :notification="item.notification" :sourceHost="item.host" embedded @close="emit('close')"/>
-	<ConcrntNotificationToast v-else-if="item.source === 'concrnt'" :notification="item.notification" embedded @close="emit('close')"/>
 	<MkNotification v-else :notification="item.notification" :contentVisibilityAuto="false" toast/>
 	<button class="_button" :class="$style.close" :aria-label="i18n.ts.close" @click="emit('close')"><i class="ti ti-x" aria-hidden="true"></i></button>
 	<MkNotificationToastRing v-if="!integrated" :target="root" :elapsed="item.elapsed" :duration="getToastDuration(item)" :integrated="false" :motion="motion"/>
@@ -26,8 +24,6 @@ import { onMounted, onUnmounted, ref, watch } from 'vue';
 import type { HataskeyToast } from '@/utility/hataskey-notification-toast.js';
 import { getToastDuration } from '@/utility/hataskey-notification-toast.js';
 import MkNotification from '@/components/MkNotification.vue';
-import MkExternalNotificationToast from '@/components/MkExternalNotificationToast.vue';
-import ConcrntNotificationToast from '@/components/concrnt/ConcrntNotificationToast.vue';
 import MkNotificationToastRing from '@/components/MkNotificationToastRing.vue';
 import MkFavoriteSavedAnimation from '@/components/MkFavoriteSavedAnimation.vue';
 import MkHataskeyNavbarNotice from '@/components/MkHataskeyNavbarNotice.vue';

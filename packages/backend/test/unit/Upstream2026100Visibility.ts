@@ -6,7 +6,7 @@ vi.mock('@/core/entities/DriveFileEntityService.js', () => ({ DriveFileEntitySer
 vi.mock('@/core/MfmService.js', () => ({ MfmService: class {} }));
 vi.mock('@/core/RoleService.js', () => ({ RoleService: class {} }));
 vi.mock('@/core/ReactionsBufferingService.js', () => ({ ReactionsBufferingService: class {} }));
-import { CHANNEL_VISIBILITY_NODE_TTL_MS, NoteEntityService } from '@/core/entities/NoteEntityService.js';
+import { NoteEntityService } from '@/core/entities/NoteEntityService.js';
 import { GlobalEventService } from '@/core/GlobalEventService.js';
 import { NoteStreamingHidingService } from '@/server/api/stream/NoteStreamingHidingService.js';
 import { ChannelChannelService } from '@/server/api/stream/channels/channel.js';
@@ -23,8 +23,6 @@ function fixture(policy = 'all') {
 		roleService: { isAdministrator: vi.fn(async ({ id }) => id === 'admin'), isModerator: vi.fn(async () => false) },
 		idService: { parse: () => ({ date: new Date('2020-01-01') }) },
 		usersRepository: { findOneBy: vi.fn(async () => ({ host: null })), findOneByOrFail: vi.fn(async () => ({ host: null })) },
-		channelsRepository: { findBy: vi.fn(async () => [{ id: 'private', isPrivate: true, userId: 'owner', moderatorUserIds: [] }]) },
-		channelMembersRepository: { findBy: vi.fn(async ({ userId }) => userId === 'member' ? [{ channelId: 'private' }] : []) },
 		followingsRepository: { exists: vi.fn(async () => false), count: vi.fn(async () => 0) },
 		notesRepository: { find: vi.fn(async () => []) },
 		reactionService: { convertLegacyReactions: (r: unknown) => r },
@@ -76,15 +74,6 @@ describe('visitor content visibility', () => {
 		expect(original.reply?.reply?.reply?.text).toBe('body');
 		expect(original.reply?.reply?.renote?.text).toBe('body');
 	});
-	test.each(['reply', 'renote'] as const)('drops the whole outer note for a private %s descendant', async (key) => {
-		const { streaming } = fixture();
-		const original = note({ [key]: note({ id: 'middle', reply: note({ id: 'secret', channelId: 'private' }) }) });
-		const before = structuredClone(original);
-		expect(await streaming.filter(original, 'outsider')).toBeNull();
-		expect(await streaming.filter(original, null)).toBeNull();
-		expect(await streaming.filter(original, 'member')).toBe(original);
-		expect(original).toEqual(before);
-	});
 	test('accepts already-concealed specified notes without requiring removed recipient IDs', async () => {
 		const { streaming } = fixture();
 		const result = await streaming.filter(note({ visibility: 'specified', isHidden: true, visibleUserIds: undefined, text: null }), 'outsider');
@@ -113,24 +102,14 @@ describe('visitor content visibility', () => {
 		expect(result?.renote?.renote?.text).toBeNull();
 		expect(original.renote?.renote?.text).toBe('body');
 	});
-	test('retains private-channel membership and administrator time exceptions', async () => {
+	test('retains administrator time exceptions', async () => {
 		const { service, streaming } = fixture();
-		const privateNote = note({ channelId: 'private' });
-		expect(await service.shouldHideNote(privateNote, 'outsider')).toBe(true);
-		expect(await service.shouldHideNote(privateNote, 'member')).toBe(false);
 		const old = note({ user: { host: null, makeNotesHiddenBefore: 1900000000 } });
 		expect((await streaming.filter(old, 'outsider'))?.isHidden).toBe(true);
 		expect((await streaming.filter(old, 'admin'))?.text).toBe('body');
 		const followers = note({ user: { host: null, makeNotesFollowersOnlyBefore: 1900000000 } });
 		expect(await service.shouldHideNote(followers, 'outsider')).toBe(true);
 		expect(await service.shouldHideNote(followers, 'admin')).toBe(false);
-	});
-	test('partial reactions select channelId and omit inaccessible notes', async () => {
-		const { service } = fixture();
-		service.notesRepository.find.mockResolvedValue([{ id: 'secret', userId: 'author', channelId: 'private', userHost: null, visibility: 'public', reactions: {} }]);
-		expect(await service.fetchDiffs(['secret'], 'outsider')).toEqual([]);
-		expect(service.notesRepository.find.mock.calls[0][0].select.channelId).toBe(true);
-		expect(await service.fetchDiffs(['secret'], 'member')).toEqual([{ id: 'secret', reactions: {}, reactionEmojis: {} }]);
 	});
 	test('anonymous partial reactions respect local and none', async () => {
 		for (const policy of ['local', 'none']) {
@@ -168,36 +147,11 @@ describe('visitor content visibility', () => {
 		expect(query.andWhere).toHaveBeenCalledWith('note.userHost IS NULL');
 		expect(query.andWhere).not.toHaveBeenCalledWith('reaction.userHost IS NULL');
 	});
-	test('deleted note updates use publisher visibility snapshot including private channel', async () => {
+	test('deleted note updates use publisher visibility snapshot', async () => {
 		const { streaming } = fixture('local');
-		const snapshot = { id: 'deleted', userId: 'author', visibility: 'public', visibleUserIds: [], userHost: null, channelId: 'private', replyId: null, renoteId: null, replyUserId: null, mentions: [], body: {} } as any;
-		expect(await streaming.canReceiveUpdates(snapshot, null)).toBe(false);
-		expect(await streaming.canReceiveUpdates(snapshot, 'member')).toBe(true);
-		expect(await streaming.canReceiveUpdates({ ...snapshot, channelId: null, userHost: 'remote.test' }, null)).toBe(false);
-	});
-	test.each(['replyId', 'renoteId'] as const)('deleted public parent retains its private %s in the published snapshot', async (key) => {
-		const { service, streaming } = fixture();
-		const child = { id: 'secret', userId: 'secret-author', channelId: 'private', replyId: null, renoteId: null };
-		service.notesRepository.find.mockImplementation(async ({ where }) => where.id.value.includes(child.id) ? [child] : []);
-		const publisher = Object.create(GlobalEventService.prototype);
-		Object.defineProperty(publisher, 'publish', { value: vi.fn(async () => 1) });
-		const parent = { id: 'deleted', userId: 'author', userHost: null, visibility: 'public', visibleUserIds: [], mentions: [], channelId: null, replyId: null, renoteId: null, replyUserId: null, [key]: child.id };
-		const body = { deletedAt: new Date('2020-01-01') };
-		await publisher.publishNoteStream(parent, 'deleted', body);
-		const [topic, type, snapshot] = publisher.publish.mock.calls[0];
-		expect([topic, type]).toEqual(['noteStream:deleted', 'deleted']);
-		expect(snapshot).toMatchObject({ replyId: parent.replyId, renoteId: parent.renoteId, body });
-		for (const viewer of [null, 'outsider', 'author']) expect(await streaming.canReceiveUpdates(snapshot, viewer)).toBe(false);
-		for (const viewer of ['member', 'admin']) expect(await streaming.canReceiveUpdates(snapshot, viewer)).toBe(true);
-		service.notesRepository.find.mockResolvedValue([]);
-		// Ancestors are cached because they never change; a deleted one is remembered for at most the
-		// cache lifetime, which can only hide the parent longer, never reveal the private child.
-		expect(await streaming.canReceiveUpdates(snapshot, 'outsider')).toBe(false);
-		const now = Date.now();
-		const clock = vi.spyOn(Date, 'now').mockReturnValue(now + CHANNEL_VISIBILITY_NODE_TTL_MS + 1);
-		try {
-			expect(await streaming.canReceiveUpdates(snapshot, 'outsider')).toBe(true);
-		} finally { clock.mockRestore(); }
+		const snapshot = { id: 'deleted', userId: 'author', visibility: 'public', visibleUserIds: [], userHost: null, channelId: null, replyId: null, renoteId: null, replyUserId: null, mentions: [], body: {} } as any;
+		expect(await streaming.canReceiveUpdates(snapshot, null)).toBe(true);
+		expect(await streaming.canReceiveUpdates({ ...snapshot, userHost: 'remote.test' }, null)).toBe(false);
 	});
 	test.each(['userHost', 'channelId', 'replyId', 'renoteId'] as const)('rejects an older update snapshot missing %s', async (key) => {
 		const { streaming } = fixture();
@@ -207,17 +161,15 @@ describe('visitor content visibility', () => {
 	});
 });
 
-test('RSS excludes private channels and aged notes while retaining public-channel notes', async () => {
+test('RSS excludes aged notes while retaining channel notes', async () => {
 	const candidates = [
 		{ id: 'old', channel: null },
-		{ id: 'private', channel: { isPrivate: true } },
-		{ id: 'public-channel', channel: { isPrivate: false } },
+		{ id: 'public-channel', channel: {} },
 		{ id: 'public', channel: null },
 	].map(n => ({ ...n, fileIds: [], text: null, cw: null }));
 	const notesRepository = { find: vi.fn(async () => candidates) };
 	const service = Object.assign(Object.create(FeedService.prototype), {
 		config: { url: 'https://local.test', host: 'local.test' }, notesRepository,
-		noteEntityService: { filterChannelVisibleNotes: async (notes: unknown[]) => notes },
 		userProfilesRepository: { findOneByOrFail: vi.fn(async () => ({})) },
 		userEntityService: { getIdenticonUrl: () => 'https://local.test/avatar.png' },
 		idService: { parse: (id: string) => ({ date: new Date(id === 'old' ? '2020-01-01' : '2025-01-01') }) },

@@ -22,7 +22,7 @@ vi.mock('@/i18n.js', () => ({
 const groups = [
 	{ id: 'you', label: 'あなた', ids: ['profile', 'privacy', 'security'] },
 	{ id: 'usage', label: '使い方', ids: ['appearance', 'timeline', 'post', 'notify', 'access'] },
-	{ id: 'management', label: '管理', ids: ['mute', 'drive', 'apps', 'data', 'advanced'] },
+	{ id: 'management', label: '管理', ids: ['mute', 'drive', 'data', 'advanced'] },
 ];
 const categories = groups.flatMap(group => group.ids.map(id => ({ id, label: `${id} label`, description: `${id} description`, icon: 'ti ti-settings', groupId: group.id, groupLabel: group.label, preview: [`${id} first`, `${id} second`, `${id} third`] })));
 const mounted: Array<{ app: App<Element>; container: HTMLDivElement }> = [];
@@ -119,11 +119,11 @@ function gridPlacement(container: HTMLElement, width: number) {
 }
 
 describe('settings bento navigation', () => {
-	test.each([false, true])('トップは13カテゴリを重複なく元の順序で表示する smartphone=%s', smartphone => {
+	test.each([false, true])('トップは12カテゴリを重複なく元の順序で表示する smartphone=%s', smartphone => {
 		const { container, select } = mountNavigation(smartphone);
 		expect(visibleCategoryIds(container)).toEqual(categories.map(category => category.id));
 		const buttons = [...container.querySelectorAll<HTMLButtonElement>('button')];
-		expect(buttons).toHaveLength(13);
+		expect(buttons).toHaveLength(12);
 		for (const [index, button] of buttons.entries()) {
 			expect(button.type).toBe('button');
 			expect(button.querySelector('strong')?.textContent).toBe(categories[index].label);
@@ -156,7 +156,7 @@ describe('settings bento navigation', () => {
 				current?.click();
 				expect(select).not.toHaveBeenCalled();
 				const all = [...container.querySelectorAll<HTMLButtonElement>('button')].find(button => button.textContent === 'すべてのカテゴリ');
-				if (group.id === 'you') {
+				if (group.ids.length < 5) {
 					expect(all).toBeDefined();
 					all?.click();
 				} else {
@@ -164,7 +164,7 @@ describe('settings bento navigation', () => {
 				}
 			}
 		}
-		expect(overview).toHaveBeenCalledTimes(3);
+		expect(overview).toHaveBeenCalledTimes(7);
 	});
 
 	test('PCは選択後も全カテゴリへ直接移動でき、選択状態を一つだけ示す', async () => {
@@ -181,7 +181,7 @@ describe('settings bento navigation', () => {
 
 	test('スマホの判定変更だけでカテゴリ選択を維持し、ナビの対象範囲を切り替える', async () => {
 		const { container, state } = mountNavigation(true, 'drive');
-		expect(visibleCategoryIds(container)).toEqual(['drive', 'mute', 'apps', 'data', 'advanced']);
+		expect(visibleCategoryIds(container)).toEqual(['drive', 'mute', 'data', 'advanced']);
 		state.smartphone = false;
 		await nextTick();
 		expect(visibleCategoryIds(container)).toEqual(categories.map(category => category.id));
@@ -226,6 +226,7 @@ describe('settings bento navigation', () => {
 	test('配置検査は偶数番目の選択カードの前後にできる旧配置の穴を検出する', () => {
 		const { container } = mountNavigation(false, 'privacy');
 		for (const tile of container.querySelectorAll<HTMLElement>('[data-fill-row="true"]')) tile.dataset.fillRow = 'false';
-		expect(gridPlacement(container, 280).holes).toBe(2);
+		// 12 categories: only the cell beside the tile before the selected card stays empty.
+		expect(gridPlacement(container, 280).holes).toBe(1);
 	});
 });

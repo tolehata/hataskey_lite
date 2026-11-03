@@ -4,7 +4,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-<div ref="timelineCollapseRoot" :class="[$style.root, { [$style.desktopLayout]: isDesktop }]" :style="{ '--simple-announcements-height': `${announcementsHeight}px`, '--note-charm-rail-width': `${CHARM_RAIL_WIDTH}px` }" :data-hata-foldable="isFoldableWide ? 'true' : undefined" :data-note-charm-lane="noteCharmShellAvailable && !isHataGoesPage && isDesktop && !deckActive ? 'on' : undefined">
+<div ref="timelineCollapseRoot" :class="[$style.root, { [$style.desktopLayout]: isDesktop }]" :style="{ '--simple-announcements-height': `${announcementsHeight}px` }" :data-hata-foldable="isFoldableWide ? 'true' : undefined">
 	<!-- PC/タブレット: オリジナル左サイドバー (上部メニューモード時は隠す) -->
 	<nav v-if="isDesktop && !topNavActive" :class="[$style.sidebar, { [$style.sidebarSolid]: !glassEffect, [$style.sidebarWide]: !sidebarFolded && studioProfile.expanded.width === 'wide', [$style.sidebarDeckFolded]: deckActive || sidebarCollapsed }]">
 		<!-- バナーすりガラス背景 -->
@@ -38,14 +38,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 						     グループ/ウィジェットは縮小側の型に存在しないため、CSS崩れではなく構造上表示されない。 -->
 						<template v-if="sidebarFolded">
 							<button v-for="item in studioCollapsedButtons" v-show="studioMenuItemAvailable(item.menuId)" :key="item.id" v-tooltip.right="studioButtonLabel(item)" :class="[$style.sbItem, $style.hssCollapsedItem, { [$style.sbActive]: sidebarItemActive(item.menuId) }]" :data-menu-id="item.menuId" :data-hss-shape="item.shape" :style="studioItemStyle(item)" @click="studioItemClick(item, $event)">
-								<HataAppNavIcon v-if="hataAppForMenuIcon(item.menuId, item.icon)" :app="hataAppForMenuIcon(item.menuId, item.icon)!" :size="item.size === 'small' ? 20 : 22" :monochrome="footerIsDark && item.menuId !== 'hatagoes'" :class="$style.sbIcon"/><i v-else :class="[studioIcon(item), $style.sbIcon]"></i>
+								<i :class="[studioIcon(item), $style.sbIcon]"></i>
 								<template v-if="item.menuId==='notifications' && hasUnreadNotif">
 									<span v-if="showUnreadNotifCount && unreadNotifCount > 0" :class="$style.sbBadge">{{ unreadNotifCount > 99 ? '99+' : unreadNotifCount }}</span>
 									<span v-else :class="$style.sbNotifDot"></span>
 								</template>
 								<span v-if="item.menuId==='announcements' && hasUnreadAnnouncements" :class="$style.sbDot"></span>
 								<span v-if="item.menuId==='chat' && hasUnreadChat" :class="$style.sbNotifDot"></span>
-								<span v-if="item.menuId==='externalNotifications' && extNotifHasUnread" :class="$style.sbExtDot"></span>
+								
 							</button>
 						</template>
 						<template v-else>
@@ -56,22 +56,20 @@ SPDX-License-Identifier: AGPL-3.0-only
 										<template v-for="child in node.children" :key="child.id">
 											<div v-if="child.type === 'button'" v-show="studioMenuItemAvailable(child.menuId)" :class="$style.hssItemSlot" :data-hss-shape="child.shape" :data-hss-size="child.size" :style="studioItemStyle(child)">
 												<form v-if="isStudioSearchButton(child)" :class="[$style.sbItem, $style.hssButton, $style.hssSearchButton]" :data-hss-shape="child.shape" :data-hss-size="child.size" role="search" @submit.prevent="submitStudioSearch">
-													<HataAppNavIcon v-if="hataAppForMenuIcon(child.menuId, child.icon)" :app="hataAppForMenuIcon(child.menuId, child.icon)!" :size="child.size === 'small' ? 20 : 22" :monochrome="footerIsDark && child.menuId !== 'hatagoes'" :class="$style.sbIcon"/><i v-else :class="[studioIcon(child), $style.sbIcon]"></i>
+													<i :class="[studioIcon(child), $style.sbIcon]"></i>
 													<input name="query" type="search" :placeholder="copy.searchPlaceholder" :aria-label="copy.searchQuery" @click.stop>
 													<button type="submit" :aria-label="copy.searchSubmit" @click.stop><i class="ti ti-arrow-right"></i></button>
 												</form>
 								<button v-else v-tooltip.right="!child.showLabel ? studioButtonLabel(child) : null" :class="[$style.sbItem, $style.hssButton, { [$style.sbActive]: sidebarItemActive(child.menuId) }]" :data-hss-shape="child.shape" :data-hss-size="child.size" :data-menu-id="child.menuId" type="button" @click="studioItemClick(child, $event)">
-													<HataAppNavIcon v-if="hataAppForMenuIcon(child.menuId, child.icon)" :app="hataAppForMenuIcon(child.menuId, child.icon)!" :size="child.size === 'small' ? 20 : 22" :monochrome="footerIsDark && child.menuId !== 'hatagoes'" :class="$style.sbIcon"/><i v-else :class="[studioIcon(child), $style.sbIcon]"></i><HataAppWordmark v-if="child.showLabel && hataAppForMenuLabel(child.menuId, studioButtonLabel(child), child.icon)" :app="hataAppForMenuLabel(child.menuId, studioButtonLabel(child), child.icon)!" :class="$style.sbLabel" :onDark="footerIsDark" :inheritColor="sidebarItemActive(child.menuId)"/><span v-else-if="child.showLabel" :class="$style.sbLabel">{{ studioButtonLabel(child) }}</span><span v-if="child.size === 'large'" :class="$style.hssButtonLines"><span v-for="line in studioButtonLines(child.menuId)" :key="line">{{ line }}</span></span>
+													<i :class="[studioIcon(child), $style.sbIcon]"></i><span v-if="child.showLabel" :class="$style.sbLabel">{{ studioButtonLabel(child) }}</span><span v-if="child.size === 'large'" :class="$style.hssButtonLines"><span v-for="line in studioButtonLines(child.menuId)" :key="line">{{ line }}</span></span>
 													<template v-if="child.menuId==='notifications' && hasUnreadNotif"><span v-if="showUnreadNotifCount && unreadNotifCount > 0" :class="$style.sbBadge">{{ unreadNotifCount > 99 ? '99+' : unreadNotifCount }}</span><span v-else :class="$style.sbNotifDot"></span></template>
-													<span v-if="child.menuId==='announcements' && hasUnreadAnnouncements" :class="$style.sbDot"></span><span v-if="child.menuId==='chat' && hasUnreadChat" :class="$style.sbNotifDot"></span><span v-if="child.menuId==='externalNotifications' && extNotifHasUnread" :class="$style.sbExtDot"></span>
+													<span v-if="child.menuId==='announcements' && hasUnreadAnnouncements" :class="$style.sbDot"></span><span v-if="child.menuId==='chat' && hasUnreadChat" :class="$style.sbNotifDot"></span>
 												</button>
 												<div v-if="child.size === 'large' && studioButtonSignals(child.menuId).length" :class="$style.hssButtonSignals"><button v-for="signal in studioButtonSignals(child.menuId)" :key="signal.label" type="button" @click.stop="openStudioButtonSignal(signal)">{{ signal.label }}</button></div>
 											</div>
 											<div v-else :class="$style.hssWidget" :data-hss-kind="child.kind" :data-hss-content="studioWidgetContent(child)" :data-hss-shape="child.shape" :data-hss-size="child.size" :style="studioItemStyle(child)">
 												<div :class="$style.hssWidgetFrame" @wheel="onStudioWidgetWheel(child.kind, $event)">
-													<HataSideStudioFlowers v-if="child.kind === 'hataskFlowers' || child.kind === 'flowers'" :size="child.size"/>
-													<HataSideStudioEarthquake v-else-if="child.kind === 'earthquake'" :size="child.size"/>
-													<component :is="studioWidgetComponent(child)" v-else-if="studioWidgetComponent(child)" :key="studioWidgetRenderKey(child)" :widget="studioWidgetModel(child)" @updateProps="updateStudioWidgetProps(child.id, $event)"/>
+													<component :is="studioWidgetComponent(child)" v-if="studioWidgetComponent(child)" :key="studioWidgetRenderKey(child)" :widget="studioWidgetModel(child)" @updateProps="updateStudioWidgetProps(child.id, $event)"/>
 													<button v-else type="button" :class="$style.hssWidgetFallback" @click="studioWidgetClick(child.kind)"><i :class="studioWidgetIcon(child.kind)"></i><span><b>{{ studioWidgetValue(child.kind) }}</b><small v-if="studioWidgetContent(child) !== 'compact'">{{ studioWidgetLabel(child) }}</small><small v-if="studioWidgetContent(child) === 'detail'">{{ studioWidgetDetail(child.kind) }}</small></span></button>
 												</div>
 											</div>
@@ -80,18 +78,16 @@ SPDX-License-Identifier: AGPL-3.0-only
 								</div>
 								<div v-else-if="node.type === 'button'" v-show="studioMenuItemAvailable(node.menuId)" :class="$style.hssItemSlot" :data-hss-shape="node.shape" :data-hss-size="node.size" :style="studioItemStyle(node)">
 									<form v-if="isStudioSearchButton(node)" :class="[$style.sbItem, $style.hssButton, $style.hssSearchButton]" :data-hss-shape="node.shape" :data-hss-size="node.size" role="search" @submit.prevent="submitStudioSearch">
-										<HataAppNavIcon v-if="hataAppForMenuIcon(node.menuId, node.icon)" :app="hataAppForMenuIcon(node.menuId, node.icon)!" :size="node.size === 'small' ? 20 : 22" :monochrome="footerIsDark && node.menuId !== 'hatagoes'" :class="$style.sbIcon"/><i v-else :class="[studioIcon(node), $style.sbIcon]"></i><input name="query" type="search" :placeholder="copy.searchPlaceholder" :aria-label="copy.searchQuery" @click.stop><button type="submit" :aria-label="copy.searchSubmit" @click.stop><i class="ti ti-arrow-right"></i></button>
+										<i :class="[studioIcon(node), $style.sbIcon]"></i><input name="query" type="search" :placeholder="copy.searchPlaceholder" :aria-label="copy.searchQuery" @click.stop><button type="submit" :aria-label="copy.searchSubmit" @click.stop><i class="ti ti-arrow-right"></i></button>
 									</form>
 									<template v-else>
-										<button v-tooltip.right="!node.showLabel ? studioButtonLabel(node) : null" :class="[$style.sbItem, $style.hssButton, { [$style.sbActive]: sidebarItemActive(node.menuId) }]" :data-hss-shape="node.shape" :data-hss-size="node.size" :data-menu-id="node.menuId" type="button" @click="studioItemClick(node, $event)"><HataAppNavIcon v-if="hataAppForMenuIcon(node.menuId, node.icon)" :app="hataAppForMenuIcon(node.menuId, node.icon)!" :size="node.size === 'small' ? 20 : 22" :monochrome="footerIsDark && node.menuId !== 'hatagoes'" :class="$style.sbIcon"/><i v-else :class="[studioIcon(node), $style.sbIcon]"></i><HataAppWordmark v-if="node.showLabel && hataAppForMenuLabel(node.menuId, studioButtonLabel(node), node.icon)" :app="hataAppForMenuLabel(node.menuId, studioButtonLabel(node), node.icon)!" :class="$style.sbLabel" :onDark="footerIsDark" :inheritColor="sidebarItemActive(node.menuId)"/><span v-else-if="node.showLabel" :class="$style.sbLabel">{{ studioButtonLabel(node) }}</span><span v-if="node.size === 'large'" :class="$style.hssButtonLines"><span v-for="line in studioButtonLines(node.menuId)" :key="line">{{ line }}</span></span><span v-if="node.menuId==='externalNotifications' && extNotifHasUnread" :class="$style.sbExtDot"></span></button>
+										<button v-tooltip.right="!node.showLabel ? studioButtonLabel(node) : null" :class="[$style.sbItem, $style.hssButton, { [$style.sbActive]: sidebarItemActive(node.menuId) }]" :data-hss-shape="node.shape" :data-hss-size="node.size" :data-menu-id="node.menuId" type="button" @click="studioItemClick(node, $event)"><i :class="[studioIcon(node), $style.sbIcon]"></i><span v-if="node.showLabel" :class="$style.sbLabel">{{ studioButtonLabel(node) }}</span><span v-if="node.size === 'large'" :class="$style.hssButtonLines"><span v-for="line in studioButtonLines(node.menuId)" :key="line">{{ line }}</span></span></button>
 										<div v-if="node.size === 'large' && studioButtonSignals(node.menuId).length" :class="$style.hssButtonSignals"><button v-for="signal in studioButtonSignals(node.menuId)" :key="signal.label" type="button" @click.stop="openStudioButtonSignal(signal)">{{ signal.label }}</button></div>
 									</template>
 								</div>
 								<div v-else :class="$style.hssWidget" :data-hss-kind="node.kind" :data-hss-content="studioWidgetContent(node)" :data-hss-shape="node.shape" :data-hss-size="node.size" :style="studioItemStyle(node)">
 									<div :class="$style.hssWidgetFrame" @wheel="onStudioWidgetWheel(node.kind, $event)">
-										<HataSideStudioFlowers v-if="node.kind === 'hataskFlowers' || node.kind === 'flowers'" :size="node.size"/>
-										<HataSideStudioEarthquake v-else-if="node.kind === 'earthquake'" :size="node.size"/>
-										<component :is="studioWidgetComponent(node)" v-else-if="studioWidgetComponent(node)" :key="studioWidgetRenderKey(node)" :widget="studioWidgetModel(node)" @updateProps="updateStudioWidgetProps(node.id, $event)"/>
+										<component :is="studioWidgetComponent(node)" v-if="studioWidgetComponent(node)" :key="studioWidgetRenderKey(node)" :widget="studioWidgetModel(node)" @updateProps="updateStudioWidgetProps(node.id, $event)"/>
 										<button v-else type="button" :class="$style.hssWidgetFallback" @click="studioWidgetClick(node.kind)"><i :class="studioWidgetIcon(node.kind)"></i><span><b>{{ studioWidgetValue(node.kind) }}</b><small v-if="studioWidgetContent(node) !== 'compact'">{{ studioWidgetLabel(node) }}</small><small v-if="studioWidgetContent(node) === 'detail'">{{ studioWidgetDetail(node.kind) }}</small></span></button>
 									</div>
 								</div>
@@ -181,11 +177,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<div :class="$style.topNavScroll" @wheel.prevent="onTopNavWheel">
 					<template v-for="grp in sidebarGroups" :key="grp.key">
 						<button v-for="item in grp.items" :key="item.id" v-tooltip="simpleMenuDisplayLabel(item.id, item.label)" :class="[$style.topNavItem, { [$style.topNavItemActive]: sidebarItemActive(item.id) }]" @click="sidebarItemClick(item.id, $event)">
-							<HataAppNavIcon v-if="hataAppForMenuIcon(item.id, item.icon)" :app="hataAppForMenuIcon(item.id, item.icon)!" :size="20" :monochrome="footerIsDark"/><i v-else :class="item.icon"></i><HataAppWordmark v-if="hataAppForMenuLabel(item.id, simpleMenuDisplayLabel(item.id, item.label), item.icon)" :app="hataAppForMenuLabel(item.id, simpleMenuDisplayLabel(item.id, item.label), item.icon)!" :onDark="footerIsDark" :inheritColor="sidebarItemActive(item.id)"/><span v-else>{{ simpleMenuDisplayLabel(item.id, item.label) }}</span>
+							<i :class="item.icon"></i><span>{{ simpleMenuDisplayLabel(item.id, item.label) }}</span>
 							<span v-if="item.id==='notifications' && hasUnreadNotif" :class="$style.topNavDot"></span>
 							<span v-if="item.id==='announcements' && hasUnreadAnnouncements" :class="$style.topNavDot"></span>
 							<span v-if="item.id==='chat' && hasUnreadChat" :class="$style.topNavDot"></span>
-							<span v-if="item.id==='externalNotifications' && extNotifHasUnread" :class="$style.topNavDotBlue"></span>
 						</button>
 					</template>
 					<!-- 旗鯖fork: かつて「もっと」の右にリロードボタンをハードコード表示していたが、
@@ -200,43 +195,28 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</nav>
 			<!-- Top pill navbar (timeline tabs) - scroll reactive -->
 			<div
-				v-show="nativeNavbarVisible || mobileToastVisible || punchVisible" data-hata-collapse-group
-				:inert="navbarSearchOpen" :data-toast-motion="prefer.r.animation.value" :data-hidden="!pullRefresh.active.value && !navbarLoadingShown && !punchVisible && !showTopBar && !mobileToastVisible && !navbarNewNotes && !emojiVoteInNavbar && !navbarNotificationShowing && !navbarNotificationShrinking"
-				:data-emoji-vote="emojiVoteInNavbar"
-				:data-notification-only="mobileNotificationOnly && !punchVisible"
+				v-show="nativeNavbarVisible || mobileToastVisible" data-hata-collapse-group
+				:inert="navbarSearchOpen" :data-toast-motion="prefer.r.animation.value" :data-hidden="!pullRefresh.active.value && !navbarLoadingShown && !showTopBar && !mobileToastVisible && !navbarNewNotes && !navbarNotificationShowing && !navbarNotificationShrinking"
+				:data-notification-only="mobileNotificationOnly"
 				:class="[$style.topBar, footerIsDark ? $style.topBarDark : $style.topBarLight]"
 			>
-				<div ref="topNavStackEl" :class="$style.topNavStack" :data-navbar-notice="navbarNotificationKind" :data-notification-sizing="navbarNotificationSizing" :data-pull-active="pullRefresh.active.value" :data-pull-phase="pullRefresh.state.value.phase" :data-pull-motion="newNotesMotionEnabled" :style="[emojiVoteNavbarStackStyle, navbarNotificationWidthStyle, pullRefresh.style.value, navbarPullFrameStyle]">
-					<div ref="notificationOutlineEl" :class="$style.topPillFrame" :aria-busy="nativeNavbarVisible && pendingApiRequestsCount > 0" :data-emoji-celebrating="emojiVoteInNavbar && emojiVoteNavbarState.celebrating" :data-emoji-leaving="emojiVoteInNavbar && emojiVoteNavbarState.leaving">
+				<div ref="topNavStackEl" :class="$style.topNavStack" :data-navbar-notice="navbarNotificationKind" :data-notification-sizing="navbarNotificationSizing" :data-pull-active="pullRefresh.active.value" :data-pull-phase="pullRefresh.state.value.phase" :data-pull-motion="newNotesMotionEnabled" :style="[navbarNotificationWidthStyle, pullRefresh.style.value, navbarPullFrameStyle]">
+					<div ref="notificationOutlineEl" :class="$style.topPillFrame" :aria-busy="nativeNavbarVisible && pendingApiRequestsCount > 0">
 						<div v-if="navbarNotificationShowing" ref="notificationBloomEl" :class="$style.notificationBloom" :data-leaving="navbarNotificationLeaving" aria-hidden="true">
 							<MkNotificationToastRing :target="notificationBloomEl" :elapsed="newNotesMotionEnabled ? navbarNotificationElapsed : navbarNotificationDuration" :duration="navbarNotificationDuration" integrated :motion="newNotesMotionEnabled"/>
 						</div>
 						<MkNavbarLoadingRing v-if="nativeNavbarVisible" :target="notificationOutlineEl" :active="pendingApiRequestsCount > 0" :motion="newNotesMotionEnabled" @visibleChange="navbarLoadingVisible = $event"/>
-						<MkLtlEmojiVoteOutline v-if="emojiVoteInNavbar" :target="notificationOutlineEl"/>
-						<div ref="navbarPullPillEl" :class="$style.topPill" :data-notification="navbarNotificationShowing" :data-new-notes="!!navbarNewNotesContent" :data-emoji-vote="emojiVoteInNavbar">
+						<div ref="navbarPullPillEl" :class="$style.topPill" :data-notification="navbarNotificationShowing" :data-new-notes="!!navbarNewNotesContent">
 							<div :class="$style.navbarPullContent" :inert="pullRefresh.state.value.height > 8" :aria-hidden="pullRefresh.state.value.height > 8">
 								<div ref="notificationTargetEl" :class="$style.notificationViewport" :data-mobile="!isDesktop" :style="{ height: `${navbarNotificationShowing ? navbarNotificationHeight : 0}px` }"></div>
-								<div v-show="!mobileNotificationOnly || punchVisible" ref="emojiVoteNavbarNav" :class="$style.topPillNav">
-									<div ref="emojiVoteNavbarTabs" :class="$style.topPillTabs">
+								<div v-show="!mobileNotificationOnly" :class="$style.topPillNav">
+									<div :class="$style.topPillTabs">
 										<template v-for="item in visibleTopTabs" :key="item.id">
 											<button :class="[$style.topTabBtn, { [$style.topTabActive]: !isCollectionTimelinePage && tab === item.id }]" @click="playSimpleNavMotion($event, item.id); switchTab(item.id as TabType)">
 												<i :class="item.icon"></i>
 												<span v-if="!isCollectionTimelinePage && tab === item.id" :class="$style.topTabLabel">{{ simpleMenuDisplayLabel(item.id, item.label) }}</span>
 											</button>
 										</template>
-										<!-- 旗鯖fork: 外部アカウント連携のタブ（外部ホーム・外部ローカル・CTL）を前後の区切り線でまとめる。 -->
-										<div v-if="showOHTL || showOLTL || showCTL" :class="$style.topTabDivider" data-external-tabs-start></div>
-										<button v-if="showOHTL" :class="[$style.topTabBtn, $style.topTabExt, { [$style.topTabActive]: !isCollectionTimelinePage && tab === 'ohtl' }]" @click="playSimpleNavMotion($event, 'timeline:external-home'); switchTab('ohtl')">
-											<i class="ti ti-home"></i>
-											<span v-if="!isCollectionTimelinePage && tab === 'ohtl'" :class="$style.topTabLabel">{{ copy.externalHome }}</span>
-										</button>
-										<button v-if="showOLTL" :class="[$style.topTabBtn, $style.topTabExt, { [$style.topTabActive]: !isCollectionTimelinePage && tab === 'oltl' }]" @click="playSimpleNavMotion($event, 'timeline:external-local'); switchTab('oltl')">
-											<i class="ti ti-planet"></i>
-											<span v-if="!isCollectionTimelinePage && tab === 'oltl'" :class="$style.topTabLabel">{{ copy.externalLocal }}</span>
-										</button>
-										<button v-if="showCTL" type="button" :class="[$style.topTabBtn, $style.topTabExt]" :data-concrnt-active="!isCollectionTimelinePage && isConcrntTab" :aria-pressed="!isCollectionTimelinePage && isConcrntTab" aria-label="CTL（コンカレント）" @click="playSimpleNavMotion($event, 'timeline:concrnt'); switchTab('ctl')">
-											<i class="concrnt-icon" aria-hidden="true"></i><span v-if="!isCollectionTimelinePage && isConcrntTab" :class="$style.topTabLabel">CTL</span>
-										</button>
 										<div :class="$style.topTabDivider"></div>
 										<div :class="[$style.listTabPill, { [$style.listTabPillActive]: isListTimelinePage }]">
 											<button :class="[$style.topTabBtn, $style.listTabMain, { [$style.topTabActive]: isListTimelinePage }]" @click="playSimpleNavMotion($event, 'list'); openPreferredList()">
@@ -262,8 +242,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 										</div>
 									</div>
 								</div>
-								<div ref="punchNavbarTarget" :class="$style.punchNavbarTarget"></div>
-								<div ref="ltlEmojiVoteNavbarTarget" :class="$style.emojiVoteNavbarViewport" :data-active="emojiVoteInNavbar"></div>
 								<div :class="$style.newNotesViewport" :data-active="!!navbarNewNotes" :aria-hidden="!navbarNewNotes" :inert="!navbarNewNotes">
 									<div :class="$style.newNotesContent">
 										<button class="_button" :class="$style.newNotesButton" type="button" :disabled="!navbarNewNotes" :aria-label="navbarNewNotesLabel" @click="showNavbarNewNotes">
@@ -295,30 +273,26 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</div>
 			<!-- Page view header -->
 			<header v-show="isPageView && showPageHeader && !isCollectionTimelinePage && !isSettingsPage" :inert="navbarSearchOpen" data-hata-collapse-group :class="$style.pageHeader">
-				<button :class="$style.pageBackBtn" :style="{ visibility: isHataGoesIntroPage ? 'hidden' : undefined }" @click="goBack"><i class="ti ti-chevron-left"></i></button>
+				<button :class="$style.pageBackBtn" @click="goBack"><i class="ti ti-chevron-left"></i></button>
 				<div :class="$style.pageTitle">{{ pageMetadata?.title ?? '' }}</div>
 				<div style="width: 38px;"></div>
 			</header>
 
 			<div ref="contentEl" :inert="navbarSearchOpen" data-timeline-tab-gestures :class="$style.content" @scroll="onContentScroll" @wheel="onContentWheel">
 				<div v-show="!isPageView && !deckActive" style="height: 100%;">
-					<div v-if="showFixedPostForm" v-show="!isExternalTab && !isHatadyTab && !isConcrntTab" :inert="isExternalTab || isHatadyTab || isConcrntTab" :class="$style.fixedFormHost"><MkPostForm :class="$style.fixedPostForm" class="_panel" fixed :autofocus="false"/></div>
+					<div v-if="showFixedPostForm" :class="$style.fixedFormHost"><MkPostForm :class="$style.fixedPostForm" class="_panel" fixed :autofocus="false"/></div>
 					<Transition :css="newNotesMotionEnabled" :enterActiveClass="$style.timelineEnterActive" :leaveActiveClass="$style.timelineLeaveActive" :enterFromClass="$style.timelineEnterFrom" :enterToClass="$style.timelineEnterTo" :leaveFromClass="$style.timelineLeaveFrom" :leaveToClass="$style.timelineLeaveTo" :mode="newNotesMotionEnabled ? 'out-in' : undefined" @beforeLeave="prepareTimelineLeave">
-						<div :key="tab + String(withRenotes) + String(withSensitive) + String(onlyFiles)" data-hata-collapse-items :class="[$style.timelineContainer, { [$style.timelineContainerWithFixedForm]: showFixedPostForm && !isExternalTab && !isHatadyTab, [$style.timelineContainerConcrntHidden]: isConcrntTab }]" :style="{ '--timeline-slide-direction': timelineSlideDirection }" :data-timeline-motion="newNotesMotionEnabled" :data-glass-bg="timelineGlassBg ? 'on' : undefined" @touchstart.passive="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd" @touchcancel="onTouchCancel">
+						<div :key="tab + String(withRenotes) + String(withSensitive) + String(onlyFiles)" data-hata-collapse-items :class="[$style.timelineContainer, { [$style.timelineContainerWithFixedForm]: showFixedPostForm }]" :style="{ '--timeline-slide-direction': timelineSlideDirection }" :data-timeline-motion="newNotesMotionEnabled" :data-glass-bg="timelineGlassBg ? 'on' : undefined" @touchstart.passive="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd" @touchcancel="onTouchCancel">
 							<KeepAlive>
 								<MkStreamingNotesTimeline v-if="tab === 'mixed'" key="mixed" newNotesNavbarKey="main:mixed" src="global" :withRenotes="withRenotes" :withSensitive="withSensitive" :onlyFiles="onlyFiles" :glassBg="timelineGlassBg"/>
-								<MkStreamingNotesTimeline v-else-if="tab === 'local'" key="local" ref="punchTimeline" :updatesPaused="punchBusy" newNotesNavbarKey="main:local" src="local" :withRenotes="withRenotes" :withSensitive="withSensitive" :onlyFiles="onlyFiles" :glassBg="timelineGlassBg" :emojiVoteActive="normalLtlVoteActive && !punchBusy" :emojiVoteEffectTarget="ltlEmojiVoteEffects" :emojiVoteNavbar="normalLtlVoteActive && nativeNavbarVisible" :emojiVoteNavbarTarget="normalLtlVoteActive && nativeNavbarVisible ? ltlEmojiVoteNavbarTarget : null" @emojiVoteNavbarState="emojiVoteNavbarState = $event"/>
+								<MkStreamingNotesTimeline v-else-if="tab === 'local'" key="local" newNotesNavbarKey="main:local" src="local" :withRenotes="withRenotes" :withSensitive="withSensitive" :onlyFiles="onlyFiles" :glassBg="timelineGlassBg"/>
 								<MkStreamingNotesTimeline v-else-if="tab === 'social'" key="social" newNotesNavbarKey="main:social" src="social" :withRenotes="withRenotes" :withSensitive="withSensitive" :onlyFiles="onlyFiles" :glassBg="timelineGlassBg"/>
 								<MkStreamingNotesTimeline v-else-if="tab === 'following'" key="following" newNotesNavbarKey="main:following" src="home" :withRenotes="withRenotes" :withSensitive="withSensitive" :onlyFiles="onlyFiles" :glassBg="timelineGlassBg"/>
 								<!-- 旗鯖fork: トレンドタイムライン (TTL) -->
 								<MkTrendingTimeline v-else-if="tab === 'trending'" key="trending" newNotesNavbarKey="main:trending" :glassBg="timelineGlassBg"/>
-								<MkHatadyTimeline v-else-if="tab === 'hatady'" ref="hatadyTimeline" key="hatady" variant="ui" :active="!isPageView && !deckActive && isHatadyTab" newNotesNavbarKey="main:hatady"/>
-								<MkExternalTimeline v-else-if="tab === 'ohtl' && externalHost && externalToken" key="ohtl" newNotesNavbarKey="main:ohtl" src="ohtl" :host="externalHost" :token="externalToken" :sound="true" :simpleUi="true" :hataskeyUi="true" :glassBg="timelineGlassBg"/>
-								<MkExternalTimeline v-else-if="tab === 'oltl' && externalHost && externalToken" key="oltl" newNotesNavbarKey="main:oltl" src="oltl" :host="externalHost" :token="externalToken" :sound="true" :simpleUi="true" :hataskeyUi="true" :glassBg="timelineGlassBg"/>
 							</KeepAlive>
 						</div>
 					</Transition>
-					<div v-if="concrntMounted" v-show="isConcrntTab" :class="$style.timelineContainer" @touchstart.passive="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd" @touchcancel="onTouchCancel"><ConcrntTimeline ref="concrntTimeline" embedded hataskeyUi :glassBg="timelineGlassBg" :active="isConcrntTab && !isPageView && !deckActive"/></div>
 				</div>
 				<!-- 旗鯖fork: デッキモード (デスクトップのみ)。背景にヘッダー画像のぼかしを敷く(無効化可) -->
 				<div v-if="deckActive" data-hata-collapse-items :class="$style.deckArea">
@@ -329,12 +303,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</div>
 				<div v-show="isPageView" data-hata-collapse-part :class="[$style.pageContainer, { [$style.collectionPageContainer]: isCollectionTimelinePage }]"><RouterView/></div>
 			</div>
-			<MkLtlPunch :active="normalLtlVoteActive && !!$i" :navbarTarget="punchNavbarTarget" :navbarFrame="notificationOutlineEl" :timelineRoot="punchNoteRoot" :viewportTarget="contentEl" :animationEnabled="prefer.r.animation.value" @busy="punchBusy = $event" @visible="punchVisible = $event"/>
-			<div v-if="normalLtlVoteActive" ref="ltlEmojiVoteEffects" :class="$style.ltlEmojiVoteEffects" :style="ltlEmojiVoteViewport" aria-hidden="true"></div>
 
 			<div v-if="navbarSearchOpen" :class="$style.navbarSearchScrim" data-navbar-search-scrim @pointerdown.stop.prevent @click.stop.prevent="closeNavbarSearch()" @touchmove.prevent @wheel.prevent></div>
 			<!-- 通常TL: ナビバー（モバイルのみ） -->
-			<div v-show="!isDesktop && !isHataskPage && !isHataGoesPage && !isExternalTab && !isChannelDetailPage && (!isPageView || bottomNavHasPage)" data-htk-weather-footer data-hata-collapse-group :data-search-open="navbarSearchOpen" :data-search-motion="newNotesMotionEnabled" :style="{ '--navbar-search-keyboard-inset': `${navbarSearchOpen ? navbarSearchKeyboardInset : 0}px` }" :class="[$style.bottomBar, $style.bottomSearchBar, footerIsDark ? $style.bottomBarDark : $style.bottomBarLight, { [$style.bottomBarHidden]: !navbarSearchOpen && (!showBottomBar || widgetsShowing) }]">
+			<div v-show="!isDesktop && !isChannelDetailPage && (!isPageView || bottomNavHasPage)" data-htk-weather-footer data-hata-collapse-group :data-search-open="navbarSearchOpen" :data-search-motion="newNotesMotionEnabled" :style="{ '--navbar-search-keyboard-inset': `${navbarSearchOpen ? navbarSearchKeyboardInset : 0}px` }" :class="[$style.bottomBar, $style.bottomSearchBar, footerIsDark ? $style.bottomBarDark : $style.bottomBarLight, { [$style.bottomBarHidden]: !navbarSearchOpen && (!showBottomBar || widgetsShowing) }]">
 				<button v-if="!isDesktop" :class="$style.sideBtn" :inert="navbarSearchOpen" @click="playSimpleNavMotion($event, 'layout'); simpleDrawerShowing = true"><i class="ti ti-menu-2"></i></button>
 				<div ref="navbarSearchShell" :class="[$style.navPill, $style.searchPill]" :data-search-open="navbarSearchOpen" :role="navbarSearchOpen ? 'dialog' : undefined" :aria-modal="navbarSearchOpen ? true : undefined" :aria-label="navbarSearchOpen ? i18n.ts.search : undefined" @keydown="onNavbarSearchKeydown">
 					<div :class="$style.navbarSearchBody" :style="{ height: `${navbarSearchOpen ? Math.min(navbarSearchHeight, navbarSearchMaxHeight) : 0}px` }" :inert="!navbarSearchOpen" :aria-hidden="!navbarSearchOpen">
@@ -351,8 +323,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 									<span v-else :class="$style.badge"></span>
 								</template>
 							</button>
-							<button v-else-if="item.id==='hatagoes'" :disabled="navbarSearchOpen" aria-label="HataGoes" :class="[$style.navBtn, { [$style.navActive]: isHataGoesPage }]" @click="playSimpleNavMotion($event, 'hatagoes'); goToHataGoes()"><HataAppNavIcon app="hatagoes" :size="22"/></button>
-							<button v-else-if="item.id==='hatafeed'" :disabled="navbarSearchOpen" :class="[$style.navBtn, { [$style.navActive]: isHataFeedPage }]" @click="playSimpleNavMotion($event, 'hatafeed'); goToHataFeed()"><HataAppNavIcon app="hatafeed" :size="22" :monochrome="footerIsDark"/></button>
 							<button v-else-if="item.id==='widgets'" :disabled="navbarSearchOpen" :class="$style.navBtn" @click="playSimpleNavMotion($event, 'widgets'); widgetsShowing = true"><i class="ti ti-apps"></i></button>
 						</template>
 					</div>
@@ -362,18 +332,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</div>
 
 			<!-- 外部TL: 投稿 & 通知ボタン（モバイルのみ） -->
-			<div v-show="!isDesktop && isExternalTab && !isPageView" data-htk-weather-footer data-hata-collapse-group :class="[$style.bottomBar, footerIsDark ? $style.bottomBarDark : $style.bottomBarLight, { [$style.bottomBarHidden]: !showBottomBar }]">
-				<button v-if="!isDesktop" :class="$style.sideBtn" @click="playSimpleNavMotion($event, 'layout'); simpleDrawerShowing = true"><i class="ti ti-menu-2"></i></button>
-				<div :class="$style.navPill">
-					<!-- 旗鯖fork: 外部通知ボタン (連携ON時のみ)。通知→ノート作成の順で横一列。
-                     新着がある場合は青ドット表示。押下で専用ページへ遷移しバッジ強制解除。 -->
-					<button v-if="isExternalLinked" :class="$style.navBtn" @click="playSimpleNavMotion($event, 'notifications'); goToExternalNotifications()">
-						<i class="ti ti-bell"></i>
-						<span v-if="extNotifHasUnread" :class="$style.extDot"></span>
-					</button>
-					<button :class="$style.navBtn" @click="playSimpleNavMotion($event, 'post'); onExtPostClick()"><i class="ti ti-pencil"></i></button>
-				</div>
-			</div>
 		</div>
 	</div>
 
@@ -409,18 +367,18 @@ SPDX-License-Identifier: AGPL-3.0-only
 									<div :class="$style.hssGroupGrid" :data-hss-columns="node.columns" :style="{ '--hss-columns': String(node.columns) }">
 										<template v-for="child in node.children" :key="child.id">
 											<div v-if="child.type === 'button'" v-show="studioMenuItemAvailable(child.menuId)" :class="$style.hssItemSlot" :data-hss-shape="child.shape" :data-hss-size="child.size" :style="studioItemStyle(child)">
-												<form v-if="isStudioSearchButton(child)" :class="[$style.sbItem, $style.hssButton, $style.hssSearchButton]" :data-hss-shape="child.shape" :data-hss-size="child.size" role="search" @submit.prevent="submitStudioMobileSearch"><HataAppNavIcon v-if="hataAppForMenuIcon(child.menuId, child.icon)" :app="hataAppForMenuIcon(child.menuId, child.icon)!" :size="child.size === 'small' ? 20 : 22" :monochrome="footerIsDark && child.menuId !== 'hatagoes'" :class="$style.sbIcon"/><i v-else :class="[studioIcon(child), $style.sbIcon]"></i><input name="query" type="search" :placeholder="copy.searchPlaceholder" :aria-label="copy.searchQuery" @click.stop><button type="submit" :aria-label="copy.searchSubmit" @click.stop><i class="ti ti-arrow-right"></i></button></form>
-												<button v-else v-tooltip.right="!child.showLabel ? studioButtonLabel(child) : null" :class="[$style.sbItem, $style.hssButton, { [$style.sbActive]: sidebarItemActive(child.menuId) }]" :data-hss-shape="child.shape" :data-hss-size="child.size" :data-menu-id="child.menuId" type="button" @click="studioItemClick(child, $event)"><HataAppNavIcon v-if="hataAppForMenuIcon(child.menuId, child.icon)" :app="hataAppForMenuIcon(child.menuId, child.icon)!" :size="child.size === 'small' ? 20 : 22" :monochrome="footerIsDark && child.menuId !== 'hatagoes'" :class="$style.sbIcon"/><i v-else :class="[studioIcon(child), $style.sbIcon]"></i><HataAppWordmark v-if="child.showLabel && hataAppForMenuLabel(child.menuId, studioButtonLabel(child), child.icon)" :app="hataAppForMenuLabel(child.menuId, studioButtonLabel(child), child.icon)!" :class="$style.sbLabel" :onDark="footerIsDark" :inheritColor="sidebarItemActive(child.menuId)"/><span v-else-if="child.showLabel" :class="$style.sbLabel">{{ studioButtonLabel(child) }}</span><span v-if="child.size === 'large'" :class="$style.hssButtonLines"><span v-for="line in studioButtonLines(child.menuId)" :key="line">{{ line }}</span></span><template v-if="child.menuId==='notifications' && hasUnreadNotif"><span v-if="showUnreadNotifCount && unreadNotifCount > 0" :class="$style.sbBadge">{{ unreadNotifCount > 99 ? '99+' : unreadNotifCount }}</span><span v-else :class="$style.sbNotifDot"></span></template><span v-if="child.menuId==='announcements' && hasUnreadAnnouncements" :class="$style.sbDot"></span><span v-if="child.menuId==='chat' && hasUnreadChat" :class="$style.sbNotifDot"></span><span v-if="child.menuId==='externalNotifications' && extNotifHasUnread" :class="$style.sbExtDot"></span></button>
+												<form v-if="isStudioSearchButton(child)" :class="[$style.sbItem, $style.hssButton, $style.hssSearchButton]" :data-hss-shape="child.shape" :data-hss-size="child.size" role="search" @submit.prevent="submitStudioMobileSearch"><i :class="[studioIcon(child), $style.sbIcon]"></i><input name="query" type="search" :placeholder="copy.searchPlaceholder" :aria-label="copy.searchQuery" @click.stop><button type="submit" :aria-label="copy.searchSubmit" @click.stop><i class="ti ti-arrow-right"></i></button></form>
+												<button v-else v-tooltip.right="!child.showLabel ? studioButtonLabel(child) : null" :class="[$style.sbItem, $style.hssButton, { [$style.sbActive]: sidebarItemActive(child.menuId) }]" :data-hss-shape="child.shape" :data-hss-size="child.size" :data-menu-id="child.menuId" type="button" @click="studioItemClick(child, $event)"><i :class="[studioIcon(child), $style.sbIcon]"></i><span v-if="child.showLabel" :class="$style.sbLabel">{{ studioButtonLabel(child) }}</span><span v-if="child.size === 'large'" :class="$style.hssButtonLines"><span v-for="line in studioButtonLines(child.menuId)" :key="line">{{ line }}</span></span><template v-if="child.menuId==='notifications' && hasUnreadNotif"><span v-if="showUnreadNotifCount && unreadNotifCount > 0" :class="$style.sbBadge">{{ unreadNotifCount > 99 ? '99+' : unreadNotifCount }}</span><span v-else :class="$style.sbNotifDot"></span></template><span v-if="child.menuId==='announcements' && hasUnreadAnnouncements" :class="$style.sbDot"></span><span v-if="child.menuId==='chat' && hasUnreadChat" :class="$style.sbNotifDot"></span></button>
 											</div>
-											<div v-else :class="$style.hssWidget" :data-hss-kind="child.kind" :data-hss-content="studioWidgetContent(child)" :data-hss-shape="child.shape" :data-hss-size="child.size" :style="studioItemStyle(child)"><div :class="$style.hssWidgetFrame" @wheel="onStudioWidgetWheel(child.kind, $event)"><HataSideStudioFlowers v-if="child.kind === 'hataskFlowers' || child.kind === 'flowers'" :size="child.size"/><HataSideStudioEarthquake v-else-if="child.kind === 'earthquake'" :size="child.size"/><component :is="studioWidgetComponent(child)" v-else-if="studioWidgetComponent(child)" :key="studioWidgetRenderKey(child)" :widget="studioWidgetModel(child)" @updateProps="updateStudioWidgetProps(child.id, $event)"/><button v-else type="button" :class="$style.hssWidgetFallback" @click="studioWidgetClick(child.kind)"><i :class="studioWidgetIcon(child.kind)"></i><span><b>{{ studioWidgetValue(child.kind) }}</b><small>{{ studioWidgetLabel(child) }}</small></span></button></div></div>
+											<div v-else :class="$style.hssWidget" :data-hss-kind="child.kind" :data-hss-content="studioWidgetContent(child)" :data-hss-shape="child.shape" :data-hss-size="child.size" :style="studioItemStyle(child)"><div :class="$style.hssWidgetFrame" @wheel="onStudioWidgetWheel(child.kind, $event)"><component :is="studioWidgetComponent(child)" v-if="studioWidgetComponent(child)" :key="studioWidgetRenderKey(child)" :widget="studioWidgetModel(child)" @updateProps="updateStudioWidgetProps(child.id, $event)"/><button v-else type="button" :class="$style.hssWidgetFallback" @click="studioWidgetClick(child.kind)"><i :class="studioWidgetIcon(child.kind)"></i><span><b>{{ studioWidgetValue(child.kind) }}</b><small>{{ studioWidgetLabel(child) }}</small></span></button></div></div>
 										</template>
 									</div>
 								</div>
 								<div v-else-if="node.type === 'button'" v-show="studioMenuItemAvailable(node.menuId)" :class="$style.hssItemSlot" :data-hss-shape="node.shape" :data-hss-size="node.size" :style="studioItemStyle(node)">
-									<form v-if="isStudioSearchButton(node)" :class="[$style.sbItem, $style.hssButton, $style.hssSearchButton]" :data-hss-shape="node.shape" :data-hss-size="node.size" role="search" @submit.prevent="submitStudioMobileSearch"><HataAppNavIcon v-if="hataAppForMenuIcon(node.menuId, node.icon)" :app="hataAppForMenuIcon(node.menuId, node.icon)!" :size="node.size === 'small' ? 20 : 22" :monochrome="footerIsDark && node.menuId !== 'hatagoes'" :class="$style.sbIcon"/><i v-else :class="[studioIcon(node), $style.sbIcon]"></i><input name="query" type="search" :placeholder="copy.searchPlaceholder" :aria-label="copy.searchQuery" @click.stop><button type="submit" :aria-label="copy.searchSubmit" @click.stop><i class="ti ti-arrow-right"></i></button></form>
-									<button v-else v-tooltip.right="!node.showLabel ? studioButtonLabel(node) : null" :class="[$style.sbItem, $style.hssButton, { [$style.sbActive]: sidebarItemActive(node.menuId) }]" :data-hss-shape="node.shape" :data-hss-size="node.size" :data-menu-id="node.menuId" type="button" @click="studioItemClick(node, $event)"><HataAppNavIcon v-if="hataAppForMenuIcon(node.menuId, node.icon)" :app="hataAppForMenuIcon(node.menuId, node.icon)!" :size="node.size === 'small' ? 20 : 22" :monochrome="footerIsDark && node.menuId !== 'hatagoes'" :class="$style.sbIcon"/><i v-else :class="[studioIcon(node), $style.sbIcon]"></i><HataAppWordmark v-if="node.showLabel && hataAppForMenuLabel(node.menuId, studioButtonLabel(node), node.icon)" :app="hataAppForMenuLabel(node.menuId, studioButtonLabel(node), node.icon)!" :class="$style.sbLabel" :onDark="footerIsDark" :inheritColor="sidebarItemActive(node.menuId)"/><span v-else-if="node.showLabel" :class="$style.sbLabel">{{ studioButtonLabel(node) }}</span><span v-if="node.size === 'large'" :class="$style.hssButtonLines"><span v-for="line in studioButtonLines(node.menuId)" :key="line">{{ line }}</span></span><span v-if="node.menuId==='externalNotifications' && extNotifHasUnread" :class="$style.sbExtDot"></span></button>
+									<form v-if="isStudioSearchButton(node)" :class="[$style.sbItem, $style.hssButton, $style.hssSearchButton]" :data-hss-shape="node.shape" :data-hss-size="node.size" role="search" @submit.prevent="submitStudioMobileSearch"><i :class="[studioIcon(node), $style.sbIcon]"></i><input name="query" type="search" :placeholder="copy.searchPlaceholder" :aria-label="copy.searchQuery" @click.stop><button type="submit" :aria-label="copy.searchSubmit" @click.stop><i class="ti ti-arrow-right"></i></button></form>
+									<button v-else v-tooltip.right="!node.showLabel ? studioButtonLabel(node) : null" :class="[$style.sbItem, $style.hssButton, { [$style.sbActive]: sidebarItemActive(node.menuId) }]" :data-hss-shape="node.shape" :data-hss-size="node.size" :data-menu-id="node.menuId" type="button" @click="studioItemClick(node, $event)"><i :class="[studioIcon(node), $style.sbIcon]"></i><span v-if="node.showLabel" :class="$style.sbLabel">{{ studioButtonLabel(node) }}</span><span v-if="node.size === 'large'" :class="$style.hssButtonLines"><span v-for="line in studioButtonLines(node.menuId)" :key="line">{{ line }}</span></span></button>
 								</div>
-								<div v-else :class="$style.hssWidget" :data-hss-kind="node.kind" :data-hss-content="studioWidgetContent(node)" :data-hss-shape="node.shape" :data-hss-size="node.size" :style="studioItemStyle(node)"><div :class="$style.hssWidgetFrame" @wheel="onStudioWidgetWheel(node.kind, $event)"><HataSideStudioFlowers v-if="node.kind === 'hataskFlowers' || node.kind === 'flowers'" :size="node.size"/><HataSideStudioEarthquake v-else-if="node.kind === 'earthquake'" :size="node.size"/><component :is="studioWidgetComponent(node)" v-else-if="studioWidgetComponent(node)" :key="studioWidgetRenderKey(node)" :widget="studioWidgetModel(node)" @updateProps="updateStudioWidgetProps(node.id, $event)"/><button v-else type="button" :class="$style.hssWidgetFallback" @click="studioWidgetClick(node.kind)"><i :class="studioWidgetIcon(node.kind)"></i><span><b>{{ studioWidgetValue(node.kind) }}</b><small>{{ studioWidgetLabel(node) }}</small></span></button></div></div>
+								<div v-else :class="$style.hssWidget" :data-hss-kind="node.kind" :data-hss-content="studioWidgetContent(node)" :data-hss-shape="node.shape" :data-hss-size="node.size" :style="studioItemStyle(node)"><div :class="$style.hssWidgetFrame" @wheel="onStudioWidgetWheel(node.kind, $event)"><component :is="studioWidgetComponent(node)" v-if="studioWidgetComponent(node)" :key="studioWidgetRenderKey(node)" :widget="studioWidgetModel(node)" @updateProps="updateStudioWidgetProps(node.id, $event)"/><button v-else type="button" :class="$style.hssWidgetFallback" @click="studioWidgetClick(node.kind)"><i :class="studioWidgetIcon(node.kind)"></i><span><b>{{ studioWidgetValue(node.kind) }}</b><small>{{ studioWidgetLabel(node) }}</small></span></button></div></div>
 							</template>
 						</div>
 						<div :class="$style.sbDivider"></div>
@@ -465,7 +423,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<!-- PC/タブレット: 右ウィジェットバー -->
 	<!-- 旗鯖fork: 折りたたみ端末の広い面でも、このバーだけPCと同じ構成・同じ表示で常時出す。
 	     ⚠️isDesktop は広げない(下部ナビ等までPC化して「モバイル表示のまま」が崩れるため)。 -->
-	<div v-if="(isDesktop || isFoldableWide) && !deckActive" :inert="navbarSearchOpen" data-note-charm-exclusion data-hata-collapse-part :class="[$style.desktopWidgets, { [$style.desktopWidgetsSolid]: !glassEffect }]" :data-collapsed="rightWidgetsCollapsed" :data-motion="prefer.r.animation.value" :data-widget-border="showWidgetBorder ? 'on' : 'off'">
+	<div v-if="(isDesktop || isFoldableWide) && !deckActive" :inert="navbarSearchOpen" data-hata-collapse-part :class="[$style.desktopWidgets, { [$style.desktopWidgetsSolid]: !glassEffect }]" :data-collapsed="rightWidgetsCollapsed" :data-motion="prefer.r.animation.value" :data-widget-border="showWidgetBorder ? 'on' : 'off'">
 		<div v-if="glassEffect" :class="$style.desktopWidgetsBanner">
 			<img v-if="$i?.bannerUrl" :src="$i.bannerUrl" :class="$style.desktopWidgetsBannerImg"/>
 		</div>
@@ -480,8 +438,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import { ref, computed, provide, onMounted, onUnmounted, nextTick, defineAsyncComponent, watch } from 'vue';
-import { noteCharmDeckActiveKey, useNoteCharmAvailability } from '@/composables/use-note-charm-context.js';
-import { CHARM_RAIL_WIDTH } from '@/utility/note-charm-physics.js';
 import { instanceName } from '@@/js/config.js';
 import XCommon from './_common_/common.vue';
 import MkTimelineNewNotesContent from '@/components/MkTimelineNewNotesContent.vue';
@@ -491,8 +447,6 @@ import { createHataskeyNotificationToasts, getToastDuration, hataskeyNotificatio
 import type { HataskeyNavbarNotice } from '@/utility/hataskey-notification-toast.js';
 import MkNotificationToastRing from '@/components/MkNotificationToastRing.vue';
 import { attachNavbarPullGesture, createNavbarPullRefresh, navbarPullRefreshKey } from '@/utility/navbar-pull-refresh.js';
-import { concrntState } from '@/utility/concrnt/runtime.js';
-import { concrntPagePostContextKey, interceptConcrntPostRequest } from '@/utility/concrnt/post-interceptor.js';
 import { useHataskeyNavbarNotices } from '@/composables/use-hataskey-navbar-notices.js';
 import { attachIOSViewportRecovery } from '@/utility/ios-viewport-recovery.js';
 import MkMobileNavbarSearch from '@/components/MkMobileNavbarSearch.vue';
@@ -503,25 +457,12 @@ import type { TimelineCollectionKind } from '@/utility/hatasaba-navigation.js';
 import type { HataSideButton, HataSideGroup, HataSideWidget, HataSideWidgetKind } from '@/utility/hata-side-studio.js';
 import { globalEvents } from '@/events.js';
 import MkStreamingNotesTimeline from '@/components/MkStreamingNotesTimeline.vue';
-import MkLtlPunch from '@/components/MkLtlPunch.vue';
-import MkLtlEmojiVoteOutline from '@/components/MkLtlEmojiVoteOutline.vue';
 import { SIDEBAR_ICON_OVERRIDES } from '@/utility/sidebar-icon-overrides.js';
-import { normalizeHatagoesSidebar } from '@/utility/hatagoes-sidebar.js';
-import { useHatagoesBarCollapse } from '@/utility/hatagoes-bar-collapse.js';
-import { isHatagoesIntroPath } from '@/utility/hatagoes-navigation.js';
-import HataAppNavIcon from '@/components/HataAppNavIcon.vue';
-import HataAppWordmark from '@/components/HataAppWordmark.vue';
-import { hataAppForMenuIcon, hataAppForMenuLabel } from '@/utility/hata-app-brand.js';
 import { navbarItemDef } from '@/navbar.js';
-import MkExternalTimeline from '@/components/MkExternalTimeline.vue';
-import HataSideStudioEarthquake from '@/components/HataSideStudioEarthquake.vue';
-import HataSideStudioFlowers from '@/components/HataSideStudioFlowers.vue';
 import { getHataSideWidgetDisplayLabel, HATA_SIDE_WIDGET_REGISTRY } from '@/utility/hata-side-studio-widgets.js';
 import { useFoldableScrollAnchor, useFoldableWide } from '@/utility/hata-foldable.js';
 // 旗鯖fork: トレンドタイムライン (TTL)
 import MkTrendingTimeline from '@/components/MkTrendingTimeline.vue';
-import MkHatadyTimeline from '@/components/MkHatadyTimeline.vue';
-import { openHatadyRecord } from '@/utility/hatady-record-launcher.js';
 import { acceptNotificationUnreadState } from '@/utility/notification-unread-state.js';
 import { refreshNotificationUnreadState } from '@/utility/notification-unread-sync.js';
 import { provideMetadataReceiver, provideReactiveMetadata } from '@/page.js';
@@ -534,7 +475,6 @@ import { isHataskeyTimelineAllowed } from '@/utility/hataskey-timeline-availabil
 import { antennasCache, userListsCache } from '@/cache.js';
 import { createTimelineTabGestures } from '@/utility/timeline-tab-gestures.js';
 import { deckIgnoreWidth, glassUiLocal, tabSwipeEnabled, rightWidgetsCollapsed as savedRightWidgetsCollapsed, setRightWidgetsCollapsed } from '@/utility/hatasaba-device-prefs.js';
-import { hatadyTzOffset } from '@/utility/hatady-prefs.js';
 import { prefer } from '@/preferences.js';
 import { cleanupStaleUiElements } from '@/utility/ui-cleanup.js';
 import { clearCache } from '@/utility/clear-cache.js';
@@ -546,7 +486,7 @@ import { store } from '@/store.js';
 import { deepMerge } from '@/utility/merge.js';
 import { i18n } from '@/i18n.js';
 import { versatileLang } from '@/utility/intl-const.js';
-import { openInstanceMenu, showLoginBonusIfNeeded } from '@/ui/_common_/common.js';
+import { openInstanceMenu } from '@/ui/_common_/common.js';
 import { miLocalStorage } from '@/local-storage.js';
 import { getPreferredTimelinePath, getVisibleBottomNav, isAntennaTimelinePath, isListTimelinePath } from '@/utility/hatasaba-navigation.js';
 import {
@@ -559,7 +499,6 @@ const XAnnouncements = defineAsyncComponent(() => import('./_common_/announcemen
 const HatasabaDeck = defineAsyncComponent(() => import('./_common_/hatasaba-deck.vue'));
 // 旗鯖fork: 「タイムライン上部に投稿フォームを表示する」設定で使用
 const MkPostForm = defineAsyncComponent(() => import('@/components/MkPostForm.vue'));
-const ConcrntTimeline = defineAsyncComponent(() => import('@/components/concrnt/ConcrntTimeline.vue'));
 const copy = i18n.ts._hata._hatasabaUi._simple;
 const copyx = i18n.tsx._hata._hatasabaUi._simple;
 const simpleNumberFormatter = new Intl.NumberFormat(versatileLang);
@@ -580,10 +519,6 @@ const SIMPLE_MENU_STORAGE_LABELS: Readonly<Record<string, string>> = {
 	announcements: 'お知らせ',
 	drive: 'ドライブ',
 	favorites: 'お気に入り',
-	hatask: 'Hatask',
-	hatafeed: 'HataFeed',
-	hatady: 'Hatady',
-	earthquake: '地震・津波情報',
 	uiSetup: 'UI切り替え',
 	explore: 'みつける',
 	followRequests: 'フォロー申請',
@@ -591,13 +526,12 @@ const SIMPLE_MENU_STORAGE_LABELS: Readonly<Record<string, string>> = {
 	more: 'もっと',
 	reload: 'リロード',
 	cacheClear: 'キャッシュをクリア',
-	externalNotifications: '外部通知',
 };
 
 function simpleMenuDisplayLabel(id: string, storedLabel?: string): string {
 	const canonical = SIMPLE_MENU_STORAGE_LABELS[id];
 	const fallback = typeof storedLabel === 'string' && storedLabel.length > 0 ? storedLabel : canonical ?? id;
-	if (id === 'earthquake' || canonical == null) return fallback;
+	if (canonical == null) return fallback;
 	if (typeof storedLabel === 'string' && storedLabel.length > 0 && storedLabel !== canonical) return storedLabel;
 	return (copy.menuLabels as Record<string, string>)[id] ?? getHataSideStudioMenuDisplayLabel(id, fallback);
 }
@@ -642,8 +576,6 @@ const widgetsShowing = ref(false);
 // 旗鯖fork: デッキモード (デスクトップのみ)。サイドメニュー下部のトグルで切替。
 const deckMode = prefer.r['simpleUi.deckMode'];
 const deckActive = computed(() => isDesktop.value && deckMode.value && !isPageView.value);
-provide(noteCharmDeckActiveKey, deckActive);
-const noteCharmShellAvailable = useNoteCharmAvailability();
 // 旗鯖fork: デッキを初めて開いた時、チュートリアル(ウィザード)を表示する。
 // watch の登録は isDesktop/isPageView 定義後に行う(下方の onMounted 付近)。
 let deckTutorialShown = false;
@@ -675,10 +607,8 @@ function setDeckMode(v: boolean) {
 
 // 旗鯖fork: 左サイドメニューの手動縮小(折りたたみ)。
 // deckActive(デッキ時の自動折りたたみ)とは独立。どちらかが真なら畳む。
-const isHataGoesPage = computed(() => mainRouter.currentRoute.value.path === '/hatagoes');
-const isHataGoesIntroPage = computed(() => isHatagoesIntroPath(mainRouter.currentRef.value._parsedRoute.fullPath));
-const sidebarCollapsed = useHatagoesBarCollapse(isHataGoesPage, () => prefer.r['simpleUi.sidebarCollapsed'].value, value => prefer.commit('simpleUi.sidebarCollapsed', value));
-const rightWidgetsCollapsed = useHatagoesBarCollapse(isHataGoesPage, () => savedRightWidgetsCollapsed.value, setRightWidgetsCollapsed);
+const sidebarCollapsed = computed({ get: () => prefer.r['simpleUi.sidebarCollapsed'].value, set: value => prefer.commit('simpleUi.sidebarCollapsed', value) });
+const rightWidgetsCollapsed = computed({ get: () => savedRightWidgetsCollapsed.value, set: setRightWidgetsCollapsed });
 // 旗鯖fork(#12): サイドメニューがアイコンのみ(折りたたみ/デッキ)のとき、ホバーでラベルチップを出すための判定。
 const sidebarFolded = computed(() => deckActive.value || sidebarCollapsed.value);
 
@@ -842,49 +772,11 @@ function onContentScroll() {
 	scrollTimer = window.setTimeout(() => { showBottomBar.value = true; showTopBar.value = true; }, 400);
 }
 
-// ===== 外部アカウント =====
-const isExternalLinked = computed(() => prefer.r['external.enabled'].value && prefer.r['external.token'].value != null);
-const externalHost = computed(() => prefer.s['external.host'] || '');
-const externalToken = computed(() => prefer.s['external.token'] || '');
-const showOHTL = computed(() => isExternalLinked.value && prefer.s['external.enableOHTL']);
-const showOLTL = computed(() => isExternalLinked.value && prefer.s['external.enableOLTL']);
-const showCTL = computed(() => concrntState.connection != null && concrntState.settings.enabled);
-// 旗鯖fork: 外部通知の未読有無 (件数ではなくドット表示。件数はWS+ポーリングで二重カウントの恐れがあるため)
-const extNotifHasUnread = ref(false);
-
-// 旗鯖fork: 外部通知専用ページへ遷移。遷移と同時にバッジを強制解除する
-// (ページ側でも既読化するが、UI即時反映のためここでも消す)
-function goToExternalNotifications() {
-	extNotifHasUnread.value = false;
-	mainRouter.push('/my/external-notifications');
-}
-
-function onExtPostClick() { window.dispatchEvent(new CustomEvent('ext-tl-post')); }
-
-// 旗鯖fork: ポーリング/既読イベント由来。detail===0(明示的既読化)の時だけドットを消す。
-// ポーリングで「未読あり」が来てもここではドットを点けない (タブ切替の度に復活するのを防ぐため)。
-// ドットを点けるのは WS リアルタイム受信 (onExtNotifRealtime) のみに一本化する。
-function onExtNotifCount(e:Event) {
-	const v = (e as CustomEvent).detail ?? 0;
-	if (v === 0) {
-		extNotifHasUnread.value = false;
-	}
-}
-
-// 旗鯖fork: WS経由でリアルタイム受信した外部通知で未読ドットを点ける
-// (現在外部通知ページを見ている場合は点けない=既読扱い)
-function onExtNotifRealtime() {
-	if (mainRouter.currentRoute.value.path.startsWith('/my/external-notifications')) return;
-	extNotifHasUnread.value = true;
-}
-
 // ===== ページ判定 =====
 const HOME_ROUTES = new Set(['index', 'timeline']);
 const isPageView = ref(false);
 const isSearchPage = computed(() => { const r = mainRouter.currentRoute.value; return r.name === 'search' || r.path === '/search'; });
 const isNotifPage = computed(() => mainRouter.currentRoute.value.path === '/my/notifications');
-const isHataskPage = computed(() => { const p = mainRouter.currentRoute.value.path; return p === '/hatask' || p === '/hata-docs'; });
-const isHataFeedPage = computed(() => mainRouter.currentRoute.value.path.startsWith('/hatafeed'));
 const isListTimelinePage = computed(() => isListTimelinePath(mainRouter.currentRoute.value.path));
 const isListPage = computed(() => mainRouter.currentRoute.value.path.startsWith('/my/lists') || isListTimelinePage.value);
 const isChannelPage = computed(() => mainRouter.currentRoute.value.path.startsWith('/channels'));
@@ -931,10 +823,7 @@ const activeCollectionId = computed(() => timelinePickerKind.value === 'list' ? 
 const activeListName = computed(() => userListsCache.value.value?.find(item => item.id === activeListId.value)?.name ?? String(pageMetadata.value?.title ?? ''));
 const activeAntennaName = computed(() => antennasCache.value.value?.find(item => item.id === activeAntennaId.value)?.name ?? String(pageMetadata.value?.title ?? ''));
 const timelinePickerItems = computed(() => timelinePickerKind.value === 'list' ? (userListsCache.value.value ?? []) : (antennasCache.value.value ?? []));
-const isExternalTab = computed(() => tab.value === 'ohtl' || tab.value === 'oltl');
-const isConcrntTab = computed(() => tab.value === 'ctl');
-const isHatadyTab = computed(() => tab.value === 'hatady');
-const isHomeTL = computed(() => !isPageView.value && !isSearchPage.value && !isNotifPage.value && !isHataskPage.value);
+const isHomeTL = computed(() => !isPageView.value && !isSearchPage.value && !isNotifPage.value);
 
 const checkIsPageView = () => { isPageView.value = !HOME_ROUTES.has(mainRouter.currentRoute.value.name as string); };
 
@@ -952,22 +841,18 @@ mainRouter.on('change', () => {
 
 // ===== タブ =====
 // 旗鯖fork: 'trending' を追加 (トレンドタイムライン (TTL))
-type TabType = 'following' | 'mixed' | 'local' | 'social' | 'ohtl' | 'oltl' | 'trending' | 'hatady' | 'ctl';
+type TabType = 'following' | 'mixed' | 'local' | 'social' | 'trending';
 
 // 旗鯖fork: 再読み込み時に最後のタブを復元する。
-// ただし外部TL(ohtl/oltl)はトークンが無いと表示できず空タブになるため復元対象から除外し、
 // 復元できない場合は 'following' にフォールバックする。
 function getInitialTab(): TabType {
 	const saved = miLocalStorage.getItem('hatasabaUiLastTab') as TabType | null;
-	const restorable: TabType[] = ['following', 'mixed', 'local', 'social', 'trending', 'hatady'];
+	const restorable: TabType[] = ['following', 'mixed', 'local', 'social', 'trending'];
 	if (saved != null && restorable.includes(saved) && isHataskeyTimelineAllowed(saved)) return saved;
 	return 'following';
 }
 
 const tab = ref<TabType>(getInitialTab());
-const concrntMounted = ref(false);
-const concrntTimeline = ref<{ refreshFromPull: () => Promise<void>; focusComposer: () => Promise<void> } | null>(null);
-watch(isConcrntTab, selected => { if (selected) concrntMounted.value = true; }, { immediate: true });
 const timelineSlideDirection = ref<1 | -1>(1);
 
 // Role changes also retire the active stream; saved tab preferences are retained.
@@ -975,50 +860,17 @@ watch(() => isHataskeyTimelineAllowed(tab.value), allowed => {
 	if (!allowed) tab.value = 'following';
 }, { flush: 'sync' });
 
-const ltlEmojiVoteEffects = ref<HTMLElement | null>(null);
-const punchBusy = ref(false);
-const punchVisible = ref(false);
-const punchNavbarTarget = ref<HTMLElement | null>(null);
-const punchTimeline = ref<InstanceType<typeof MkStreamingNotesTimeline> | null>(null);
-const punchNoteRoot = computed(() => punchTimeline.value?.noteRoot ?? null);
-watch(punchBusy, busy => {
-	if (busy) timelineCollapseEffect.cancel();
-});
-const normalLtlVoteActive = computed(() => tab.value === 'local' && !isPageView.value && !deckActive.value);
-const ltlEmojiVoteViewport = ref({ top: '0px', left: '0px', width: '0px', height: '0px' });
-// watchは登録時にもgetterを評価するので、tab・isPageViewの初期化後に登録する。
-// 上部メニュー・お知らせの高さが変わっても、実際のLTLスクロール領域に合わせる。
-watch([normalLtlVoteActive, contentEl], ([active, content], _old, onCleanup) => {
-	if (!active || !content) return;
-	const update = () => {
-		const contentWidth = Math.max(0, content.clientWidth - (Number.parseFloat(getComputedStyle(content).paddingRight) || 0));
-		const width = Math.min(contentWidth, 800);
-		ltlEmojiVoteViewport.value = {
-			top: `${content.offsetTop}px`, left: `${content.offsetLeft + (contentWidth - width) / 2}px`,
-			width: `${width}px`, height: `${content.clientHeight}px`,
-		};
-	};
-	const observer = new ResizeObserver(update);
-	observer.observe(content);
-	update();
-	onCleanup(() => observer.disconnect());
-}, { flush: 'post' });
-
 // ===== prefer連動: 上部タブ =====
 // 旗鯖fork: トレンドタブ (TTL) は専用トグル simpleUi.showTrendingTab で制御し、
 // 有効時は topNav 設定とは独立して最左に差し込む (既存ユーザーの topNav 設定を変更しないため)
 const visibleTopTabs = computed(() => {
 	const saved = (prefer.r['simpleUi.topNav'].value as any[]).filter((t: any) => t.visible && t.id !== 'trending' && t.id !== 'hatady' && isHataskeyTimelineAllowed(t.id));
 	const tabs = [...saved];
-	if (prefer.r['simpleUi.showTrendingTab'].value) tabs.push({ id: 'trending', icon: 'ti ti-flame', label: i18n.ts._hata._hataskeyUi3.tabTrending, visible: true });
-	if (prefer.r['simpleUi.showHatadyTab'].value) tabs.push({ id: 'hatady', icon: 'ti ti-book-2', label: i18n.ts._hata._hataskeyUi3.tabHatady, visible: true });
+	if (prefer.r['simpleUi.showTrendingTab'].value) tabs.push({ id: 'trending', icon: 'ti ti-flame', label: i18n.ts._timelines.trending, visible: true });
 	return tabs;
 });
 const tabOrder = computed<TabType[]>(() => {
 	const tabs: TabType[] = visibleTopTabs.value.map((t: any) => t.id as TabType);
-	if (showOHTL.value) tabs.push('ohtl');
-	if (showOLTL.value) tabs.push('oltl');
-	if (showCTL.value) tabs.push('ctl');
 	return tabs;
 });
 
@@ -1035,8 +887,6 @@ const bottomNavHasPage = computed(() => {
 	const ids = visibleBottomNav.value.map((t: any) => t.id);
 	return (ids.includes('search') && isSearchPage.value)
         || (ids.includes('notifications') && isNotifPage.value)
-        || (ids.includes('hatagoes') && isHataGoesPage.value)
-        || (ids.includes('hatafeed') && isHataFeedPage.value)
         || isListPage.value || isChannelPage.value || isAntennaPage.value;
 });
 
@@ -1051,15 +901,14 @@ const glassEffect = computed(() => prefer.r['simpleUi.glassEffect'].value);
 const showPageHeader = computed(() => prefer.r['simpleUi.showPageHeader'].value);
 
 // ===== prefer連動: サイドバー =====
-const sidebarOrder = computed(() => normalizeHatagoesSidebar(prefer.r['simpleUi.sidebar'].value));
+const sidebarOrder = computed(() => prefer.r['simpleUi.sidebar'].value as any[]);
 // HataSideStudio は端末ローカル。初回だけ、既存の prefer 側サイドバー順を材料にして
 // 拡大/縮小の両レイアウトを作るため、これまでの利用者の並びを失わない。
 ensureHataSideStudioInitialized(sidebarOrder.value);
 const studioProfile = computed(() => getActiveHataSideProfile(hataSideStudioStore.value));
 const studioPostButtonIcon = computed(() => studioProfile.value.postButton.icon === 'paw' ? 'ti ti-paw' : 'ti ti-pencil');
-const composeLabel = computed(() => !isPageView.value && !deckActive.value ? isConcrntTab.value ? 'コンカレントに投稿' : isHatadyTab.value ? copy.record : copy.note : copy.note);
-const composeIcon = computed(() => !isPageView.value && !deckActive.value ? isConcrntTab.value ? 'concrnt-icon' : isHatadyTab.value ? 'ti ti-book-2' : studioPostButtonIcon.value : studioPostButtonIcon.value);
-const hatadyTimeline = ref<InstanceType<typeof MkHatadyTimeline> | null>(null);
+const composeLabel = computed(() => copy.note);
+const composeIcon = computed(() => studioPostButtonIcon.value);
 const studioPostButtonStyle = computed(() => ({
 	background: gradientCss(studioProfile.value.postButton),
 	color: studioProfile.value.postButton.foreground,
@@ -1104,7 +953,6 @@ function studioIcon(item: HataSideButton): string {
 }
 
 function studioMenuItemAvailable(menuId: string): boolean {
-	if (menuId === 'externalNotifications') return isExternalLinked.value;
 	const definition = (navbarItemDef as unknown as Record<string, { show?: boolean } | undefined>)[menuId];
 	return definition?.show !== false;
 }
@@ -1219,7 +1067,7 @@ function studioNotificationLines(notification: Record<string, unknown>): string[
 }
 
 async function loadStudioLargePreview(menuId: string, force = false): Promise<void> {
-	const supported = new Set(['notifications', 'announcements', 'chat', 'channels', 'hatask', 'hatady', 'hatafeed']);
+	const supported = new Set(['notifications', 'announcements', 'chat', 'channels']);
 	if (!supported.has(menuId)) return;
 	// 公開APIのお知らせ以外は認証必須。保存済みprofileをログアウト状態で復元してもAPIを空打ちしない。
 	if ($i == null && menuId !== 'announcements') return;
@@ -1287,68 +1135,6 @@ async function loadStudioLargePreview(menuId: string, force = false): Promise<vo
 				} else {
 					setStudioLargePreview(menuId, { lines: [copy.noFollowedChannels], targetPath: '/channels' });
 				}
-			} else if (menuId === 'hatask') {
-				const data = studioRecord(await api('i/registry/get-all', { scope: ['client', 'hatask'] }));
-				const events = studioRecords(data.events);
-				const todos = studioRecords(data.todos);
-				const meals = studioRecords(data.meals);
-				const moods = studioRecords(data.moods);
-				const now = Date.now();
-				const today = studioDateKey();
-				const nextEvent = events
-					.map(event => ({ event, at: new Date(`${event.date}T${event.timeStart || '23:59'}`).getTime() }))
-					.filter(entry => Number.isFinite(entry.at) && entry.at >= now)
-					.toSorted((a, b) => a.at - b.at)[0]?.event;
-				const pending = todos.filter(todo => todo.done !== true && todo.archivedAt == null);
-				const mealToday = meals.filter(meal => meal.date === today).length;
-				const moodToday = moods.filter(mood => mood.date === today).length;
-				setStudioLargePreview(menuId, {
-					lines: [nextEvent ? copyx.nextEvent({ date: simpleShortDateFormatter.format(new Date(`${nextEvent.date}T00:00:00`)), title: studioPlainText(nextEvent.title) }) : copy.noUpcomingEvents, copyx.pendingTodo({ count: simpleNumberFormatter.format(pending.length) }), copyx.todayRecords({ meals: simpleNumberFormatter.format(mealToday), moods: simpleNumberFormatter.format(moodToday) })],
-					signals: [nextEvent ? copy.scheduleAvailable : copy.noSchedule, copyx.todoSignal({ count: simpleNumberFormatter.format(pending.length) }), copyx.mealSignal({ count: simpleNumberFormatter.format(mealToday) }), copyx.moodSignal({ count: simpleNumberFormatter.format(moodToday) })],
-					targetPath: '/hatask',
-				});
-			} else if (menuId === 'hatady') {
-				const [statsRaw, booksRaw, logsRaw] = await Promise.all([
-					api('hata/hatady/stats', { tzOffset: hatadyTzOffset() }),
-					api('hata/hatady/books', { limit: 20 }),
-					api('hata/hatady/logs', { limit: 20 }),
-				]);
-				const stats = studioRecord(statsRaw);
-				const bookRows = studioRecords(booksRaw);
-				const book = bookRows.find(item => item?.status === 'reading') ?? bookRows[0];
-				const today = studioDateKey();
-				const todayLogs = studioRecords(logsRaw).filter(log => studioDateKey(new Date(String(log.studiedAt))) === today);
-				const todayMinutes = todayLogs.reduce((sum, log) => sum + Number(log.durationMinutes ?? 0), 0);
-				setStudioLargePreview(menuId, {
-					lines: [copyx.weekStudyStreak({ duration: studioMinutesLabel(Number(stats?.weeklyMinutes ?? 0)), days: simpleNumberFormatter.format(Number(stats?.streakDays ?? 0)) }), book ? copyx.readingBook({ title: studioPlainText(book.title) }) : copy.noReadingBook, todayLogs[0] ? copyx.todayStudy({ title: studioPlainText(todayLogs[0].title), duration: studioMinutesLabel(todayMinutes) }) : copy.noStudyToday],
-					signals: [copyx.studySignal({ duration: studioMinutesLabel(Number(stats?.weeklyMinutes ?? 0)) }), book ? copyx.readingSignal({ title: studioPlainText(book.title) }) : copy.readingUnregistered],
-					targetPath: '/hatady',
-				});
-			} else if (menuId === 'hatafeed') {
-				const availability = studioRecord(await api('hata/feedback/available', {}));
-				if (availability.available !== true) return;
-				const staff = availability.isStaff === true;
-				if (staff) {
-					const [pending, issues] = await Promise.all([
-						api('hata/feedback/emoji-requests', { status: 'pending', limit: 100 }),
-						api('hata/feedback/issues', { includeClosed: false, limit: 100 }),
-					]);
-					const pendingCount = studioRecords(pending).length;
-					const issueCount = studioRecords(issues).length;
-					setStudioLargePreview(menuId, { lines: [copyx.emojiPending({ count: studioCountLabel(pendingCount) }), copyx.openIssues({ count: studioCountLabel(issueCount) })], signals: [copyx.reviewSignal({ count: studioCountLabel(pendingCount) }), copyx.issueSignal({ count: studioCountLabel(issueCount) })], targetPath: '/hatafeed' });
-				} else {
-					const [requests, issues, quota] = await Promise.all([
-						api('hata/feedback/emoji-requests', { mine: true, limit: 100 }),
-						api('hata/feedback/issues', { createdById: $i?.id ?? null, includeClosed: false, limit: 100 }),
-						api('hata/feedback/emoji-quota', {}),
-					]);
-					const requestCount = studioRecords(requests).length;
-					const issueCount = studioRecords(issues).length;
-					const quotaData = studioRecord(quota);
-					const remaining = Number(quotaData.remaining ?? 0);
-					const limit = Number(quotaData.limit ?? 0);
-					setStudioLargePreview(menuId, { lines: [copyx.emojiRequests({ count: studioCountLabel(requestCount) }), copyx.myIssues({ count: studioCountLabel(issueCount) }), copyx.monthlyQuota({ remaining: simpleNumberFormatter.format(remaining), limit: simpleNumberFormatter.format(limit) })], signals: [copyx.requestSignal({ count: studioCountLabel(requestCount) }), copyx.issueSignal({ count: studioCountLabel(issueCount) }), copyx.remainingSignal({ remaining: simpleNumberFormatter.format(remaining), limit: simpleNumberFormatter.format(limit) })], targetPath: '/hatafeed' });
-				}
 			}
 			studioLargeLoadedAt.set(menuId, Date.now());
 		} catch {
@@ -1365,9 +1151,6 @@ async function loadStudioLargePreview(menuId: string, force = false): Promise<vo
 
 function studioButtonDetail(menuId: string): string {
 	if (menuId === 'notifications') return unreadNotifCount.value > 0 ? copyx.unreadCount({ count: simpleNumberFormatter.format(unreadNotifCount.value) }) : copy.noUnread;
-	if (menuId === 'hatask') return copy.hataskDetail;
-	if (menuId === 'hatady') return copy.hatadyDetail;
-	if (menuId === 'hatafeed') return ($i?.isAdmin || $i?.isModerator) ? copy.hatafeedStaffDetail : copy.hatafeedUserDetail;
 	if (menuId === 'announcements') return copy.announcementsDetail;
 	if (menuId === 'chat') return copy.chatDetail;
 	if (menuId === 'channels') return copy.channelsDetail;
@@ -1380,15 +1163,8 @@ function studioButtonLines(menuId: string): string[] {
 
 function studioButtonSignals(menuId: string): StudioButtonSignal[] {
 	const loaded = studioLargePreviews.value[menuId]?.signals;
-	if (menuId === 'hatask') {
-		const labels = loaded ?? [copy.schedule, copy.todo, copy.meal, copy.mood];
-		const tabs = ['cal', 'todo', 'meal', 'mood'];
-		return labels.map((label, index) => ({ label, targetPath: `/hatask?tab=${tabs[index] ?? 'home'}` }));
-	}
 	const targetPath = studioLargePreviews.value[menuId]?.targetPath ?? ({
 		notifications: '/my/notifications',
-		hatady: '/hatady',
-		hatafeed: '/hatafeed',
 		announcements: '/announcements',
 		chat: '/chat',
 		channels: '/channels',
@@ -1396,8 +1172,6 @@ function studioButtonSignals(menuId: string): StudioButtonSignal[] {
 	if (!targetPath) return [];
 	if (loaded) return loaded.map(label => ({ label, targetPath }));
 	if (menuId === 'notifications') return [{ label: unreadNotifCount.value > 0 ? copyx.unreadCount({ count: simpleNumberFormatter.format(unreadNotifCount.value) }) : copy.noUnreadShort, targetPath }];
-	if (menuId === 'hatady') return [copy.study, copy.reading].map(label => ({ label, targetPath }));
-	if (menuId === 'hatafeed') return (($i?.isAdmin || $i?.isModerator) ? [copy.emojiReview, copy.issue] : [copy.emojiRequest, copy.issue]).map(label => ({ label, targetPath }));
 	if (menuId === 'announcements') return [{ label: copy.latestAnnouncement, targetPath }];
 	if (menuId === 'chat') return [{ label: copy.recentChat, targetPath }];
 	if (menuId === 'channels') return [{ label: copy.followedUpdates, targetPath }];
@@ -1424,13 +1198,11 @@ function submitStudioMobileSearch(event: Event): void {
 }
 
 function studioWidgetIcon(kind: HataSideWidgetKind): string {
-	return kind === 'clock' ? 'ti ti-clock' : kind === 'flowers' ? 'ti ti-flower' : kind === 'notifications' ? 'ti ti-bell' : 'ti ti-speakerphone';
+	return kind === 'clock' ? 'ti ti-clock' : kind === 'notifications' ? 'ti ti-bell' : 'ti ti-speakerphone';
 }
 
 function studioWidgetNativeName(widget: HataSideWidget): string | null {
-	// v2開発版の旧名だけを実コンポーネント名へ移す。お知らせには対応するnative widgetが
-	// まだ無いため、無関係なRSS等へすり替えず従来の要約表示を維持する。
-	if (widget.kind === 'flowers') return 'hataskFlowers';
+	// お知らせには対応するnative widgetがまだ無いため、無関係なRSS等へすり替えず従来の要約表示を維持する。
 	if (widget.kind === 'announcements') return null;
 	return widget.kind;
 }
@@ -1507,21 +1279,18 @@ function onStudioWidgetWheel(kind: HataSideWidgetKind, event: WheelEvent): void 
 
 function studioWidgetValue(kind: HataSideWidgetKind): string {
 	if (kind === 'clock') return simpleClockFormatter.format(studioNow.value);
-	if (kind === 'flowers') return copyx.flowersCount({ count: simpleNumberFormatter.format(Number(($i as any)?.hataskFlowerCount ?? 0)) });
 	if (kind === 'notifications') return unreadNotifCount.value > 0 ? studioCountLabel(unreadNotifCount.value) : copy.none;
 	return hasUnreadAnnouncements.value ? copy.updated : copy.checked;
 }
 
 function studioWidgetDetail(kind: HataSideWidgetKind): string {
 	if (kind === 'clock') return simpleShortDateFormatter.format(studioNow.value);
-	if (kind === 'flowers') return copy.flowersDetail;
 	if (kind === 'notifications') return copy.notificationsDetail;
 	return copy.announcementsDetail;
 }
 
 function studioWidgetClick(kind: HataSideWidgetKind) {
-	if (kind === 'flowers') goToHatask();
-	else if (kind === 'notifications') goToNotifications();
+	if (kind === 'notifications') goToNotifications();
 	else if (kind === 'announcements') goToAnnouncements();
 }
 
@@ -1534,12 +1303,12 @@ const sidebarGroupLabels: Record<string, string> = {
 };
 // 旗鯖fork: サイドバー項目をグループ単位にまとめる (group未指定の項目は 'basic' 扱いで後方互換)
 // 旗鯖fork: visible === false の項目はサイドバーに表示しない。ただし必須項目
-// (timeline / notifications / externalNotifications / announcements / followRequests / more) は強制表示。
-const REQUIRED_SIDEBAR_IDS = ['timeline', 'notifications', 'externalNotifications', 'announcements', 'followRequests', 'more'];
+// (timeline / notifications / announcements / followRequests / more) は強制表示。
+const REQUIRED_SIDEBAR_IDS = ['timeline', 'notifications', 'announcements', 'followRequests', 'more'];
 // 旗鯖fork: 過去に削除された(=コード側に対応する遷移処理が無い)サイドバー項目ID。
 // 既存ユーザーの simpleUi.sidebar 保存値に残っている場合、サイドメニュー/Hataskey UI上部ナビバー
 // の両方で描画されないよう除外する。将来別の項目が削除された場合はここに追記する。
-const DEAD_SIDEBAR_IDS = ['whatsNew', 'portal'];
+const DEAD_SIDEBAR_IDS = ['whatsNew', 'portal', 'hatask', 'hatafeed', 'hatady', 'hatagoes', 'earthquake', 'externalNotifications', 'mascot'];
 // 旗鯖fork: アイコン override は utility/sidebar-icon-overrides.ts に集約。
 // サイドバー本体と設定UI(settings/hata-custom.vue)で同じマップを参照することで、
 // 「サイドバー側だけ新アイコン・設定UI側は旧アイコンのまま」という不整合を防ぐ。
@@ -1550,8 +1319,6 @@ const sidebarGroups = computed(() => {
 	for (const item of sidebarOrder.value) {
 		// 旗鯖fork: 削除済み項目(whatsNew等)は保存値に残っていても無視する
 		if (DEAD_SIDEBAR_IDS.includes(item.id)) continue;
-		// 連携を外しても保存位置は変えず、描画だけ隠す。
-		if (item.id === 'externalNotifications' && !isExternalLinked.value) continue;
 		// 旗鯖fork: visible:false は除外、ただし必須項目は強制的に表示
 		if (item.visible === false && !REQUIRED_SIDEBAR_IDS.includes(item.id)) continue;
 		const g = item.group ?? 'basic';
@@ -1576,7 +1343,7 @@ const switchTab = (t:TabType) => {
 	if (isCollectionTimelinePage.value) mainRouter.push('/');
 	timelinePickerKind.value = null;
 	if (tab.value === t) { if (contentEl.value) contentEl.value.scrollTo({ top: 0, behavior: newNotesMotionEnabled.value ? 'smooth' : 'auto' }); } else { tab.value = t; }
-	if (t !== 'ohtl' && t !== 'oltl' && t !== 'ctl') miLocalStorage.setItem('hatasabaUiLastTab', t);
+	miLocalStorage.setItem('hatasabaUiLastTab', t);
 };
 
 // ===== アカウント切り替えメニュー =====
@@ -1587,7 +1354,7 @@ async function openAccountMenu(ev: MouseEvent) {
 
 // ===== スワイプ =====
 const timelineTabGestures = createTimelineTabGestures({
-	enabled: () => !navbarSearchOpen.value && tabSwipeEnabled.value && !isPageView.value && !deckActive.value && !punchBusy.value,
+	enabled: () => !navbarSearchOpen.value && tabSwipeEnabled.value && !isPageView.value && !deckActive.value,
 	root: () => contentEl.value,
 	canMove: (direction, source) => {
 		const index = tabOrder.value.indexOf(tab.value);
@@ -1604,40 +1371,15 @@ const onTouchStart = timelineTabGestures.touchStart;
 const onTouchMove = timelineTabGestures.touchMove;
 const onTouchEnd = timelineTabGestures.touchEnd;
 const onTouchCancel = timelineTabGestures.touchCancel;
-watch([navbarSearchOpen, tabSwipeEnabled, isPageView, deckActive, punchBusy], () => timelineTabGestures.reset());
+watch([navbarSearchOpen, tabSwipeEnabled, isPageView, deckActive], () => timelineTabGestures.reset());
 onUnmounted(timelineTabGestures.destroy);
 
 // ===== ナビゲーション =====
 // 旗鯖fork: 上部ナビバーの横スクロール(縦ホイール→横)
 const onTopNavWheel = (ev: WheelEvent) => { const el = ev.currentTarget as HTMLElement; el.scrollLeft += (Math.abs(ev.deltaY) > Math.abs(ev.deltaX) ? ev.deltaY : ev.deltaX); };
 const onPostClick = () => {
-	if (isConcrntTab.value && !isPageView.value && !deckActive.value) void concrntTimeline.value?.focusComposer();
-	else if (isHatadyTab.value && !isPageView.value && !deckActive.value) void openHatadyRecord({ variant: 'ui', onDone: () => hatadyTimeline.value?.reloadTimeline() });
-	else os.post({});
+	os.post({});
 };
-
-provide(concrntPagePostContextKey, () => isPageView.value && !deckActive.value);
-
-function interceptConcrntPostForm(request: Parameters<typeof os.post>[0]): boolean {
-	if (!isConcrntTab.value || isPageView.value || deckActive.value || !concrntTimeline.value) return false;
-	return interceptConcrntPostRequest(request ?? {}, () => concrntTimeline.value?.focusComposer());
-}
-
-let releaseConcrntPostInterceptor: (() => void) | undefined;
-onMounted(() => { releaseConcrntPostInterceptor = os.registerPostFormInterceptor(interceptConcrntPostForm); });
-onUnmounted(() => { releaseConcrntPostInterceptor?.(); });
-
-function onHatadyShortcut(event: KeyboardEvent) {
-	if (!isHatadyTab.value || isPageView.value || deckActive.value || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.isComposing || !['p', 'n'].includes(event.key.toLowerCase())) return;
-	const target = event.target;
-	if (!(target instanceof HTMLElement) || !timelineCollapseRoot.value?.contains(target) || target.closest('input, textarea, [contenteditable="true"], [role="dialog"]')) return;
-	event.preventDefault();
-	event.stopImmediatePropagation();
-	onPostClick();
-}
-
-onMounted(() => window.document.addEventListener('keydown', onHatadyShortcut, true));
-onUnmounted(() => window.document.removeEventListener('keydown', onHatadyShortcut, true));
 const scrollToTop = () => { if (contentEl.value) contentEl.value.scrollTo({ top: 0, behavior: 'smooth' }); };
 // 旗鯖fork: ホームボタンは「HTLへ強制的に切り替える」ボタンではなく、今見ているTLタブを
 // 一番上(最新)まで戻すボタンとして扱う。以前は following(HTL)以外のタブを見ている時に
@@ -1717,9 +1459,6 @@ function onNavbarSearchKeydown(event: KeyboardEvent) {
 	}
 }
 
-const goToHatask = () => { mainRouter.push('/hatask'); };
-const goToHataGoes = () => { mainRouter.push('/hatagoes'); };
-const goToHataFeed = () => { mainRouter.push('/hatafeed'); };
 const goToNotifications = () => { mainRouter.push('/my/notifications'); };
 const goToLists = () => { mainRouter.push('/my/lists'); };
 const goToChannels = () => { mainRouter.push('/channels'); };
@@ -1781,12 +1520,6 @@ function openActiveCollectionSettings(kind: TimelineCollectionKind) {
 
 const topNavStackEl = ref<HTMLElement | null>(null);
 const nativeNavbarVisible = computed(() => (!isPageView.value || isCollectionTimelinePage.value) && !deckActive.value);
-const ltlEmojiVoteNavbarTarget = ref<HTMLElement | null>(null);
-const emojiVoteNavbarState = ref({ visible: false, celebrating: false, leaving: false });
-const emojiVoteInNavbar = computed(() => normalLtlVoteActive.value && !punchBusy.value && nativeNavbarVisible.value && emojiVoteNavbarState.value.visible);
-const emojiVoteNavbarNav = ref<HTMLElement | null>(null);
-const emojiVoteNavbarTabs = ref<HTMLElement | null>(null);
-const emojiVoteNavbarRestWidth = ref<number | null>(null);
 const mobileNotificationOnly = computed(() => !isDesktop.value && !nativeNavbarVisible.value);
 const timelineNewNotes = createHataskeyTimelineNewNotes(() => {
 	if (!nativeNavbarVisible.value) return null;
@@ -1799,14 +1532,9 @@ const navbarNewNotes = timelineNewNotes.notice;
 const newNotesMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 const newNotesReducedMotion = ref(newNotesMotionQuery.matches);
 const newNotesMotionEnabled = computed(() => prefer.r.animation.value && !newNotesReducedMotion.value);
-const navbarPullEnabled = computed(() => prefer.r.enablePullToRefresh.value && nativeNavbarVisible.value && !navbarSearchOpen.value && !punchBusy.value && !timelinePickerKind.value);
+const navbarPullEnabled = computed(() => prefer.r.enablePullToRefresh.value && nativeNavbarVisible.value && !navbarSearchOpen.value && !timelinePickerKind.value);
 const pullRefresh = createNavbarPullRefresh(navbarPullEnabled, newNotesMotionEnabled);
 provide(navbarPullRefreshKey, pullRefresh);
-watch([contentEl, isConcrntTab, isPageView, deckActive], ([content, selected, page, deck], _old, onCleanup) => {
-	if (!content || !selected || page || deck) return;
-	const gesture = attachNavbarPullGesture(content, content, pullRefresh, () => concrntTimeline.value?.refreshFromPull() ?? Promise.resolve());
-	onCleanup(gesture.dispose);
-}, { flush: 'post' });
 watch([mainRouter.currentRef, tab], () => pullRefresh.reset(), { flush: 'sync' });
 // The shared controller also resets immediately when navbarPullEnabled becomes false.
 const navbarPullPrompt = computed(() => {
@@ -1872,7 +1600,7 @@ const navbarLoadingVisible = ref(false);
 const navbarLoadingShown = computed(() => nativeNavbarVisible.value && navbarLoadingVisible.value);
 const notificationToasts = createHataskeyNotificationToasts(
 	computed(() => !isDesktop.value),
-	computed(() => nativeNavbarVisible.value && (pullRefresh.active.value || showTopBar.value || navbarNewNotes.value != null || emojiVoteInNavbar.value || navbarLoadingShown.value)),
+	computed(() => nativeNavbarVisible.value && (pullRefresh.active.value || showTopBar.value || navbarNewNotes.value != null || navbarLoadingShown.value)),
 	nativeNavbarVisible,
 );
 const notificationTargetEl = notificationToasts.target;
@@ -1898,7 +1626,6 @@ const stopNavbarPullWatch = watch(pullRefresh.active, active => {
 		'--navbar-pull-base-color': pillStyle.backgroundColor,
 	};
 	const candidates = [
-		emojiVoteInNavbar.value ? ltlEmojiVoteNavbarTarget.value?.querySelector<HTMLElement>('[data-navbar="true"] > div > div') : null,
 		notificationToasts.integrated.value && !notificationToasts.surface.value ? notificationTargetEl.value?.querySelector<HTMLElement>('[data-integrated="true"][data-toast-id]') : null,
 		navbarNewNotes.value ? newNotesContentEl.value?.parentElement : null,
 	];
@@ -1921,28 +1648,6 @@ onUnmounted(() => {
 });
 useHataskeyNavbarNotices(notificationToasts, computed(() => !!$i && nativeNavbarVisible.value
 	&& !!notificationTargetEl.value && !notificationToasts.surface.value && !notificationToastsSuppressed.value));
-const emojiVoteNavbarStackStyle = computed(() => {
-	if (!emojiVoteInNavbar.value) return {};
-	const hasNotice = navbarNewNotes.value != null || (notificationToasts.items.value.length > 0 && notificationToasts.integrated.value && !notificationToasts.surface.value);
-	const width = emojiVoteNavbarState.value.leaving
-		? Math.max(emojiVoteNavbarRestWidth.value ?? 440, hasNotice ? 360 : 0)
-		: 440;
-	return { width: `min(${width}px, 100%)` };
-});
-// The tab strip may be clipped by the vote width. Include its hidden scroll
-// content so the exit ends at the same intrinsic width as ordinary navigation.
-watch([emojiVoteInNavbar, emojiVoteNavbarNav, emojiVoteNavbarTabs], ([visible, nav, tabs], _previous, onCleanup) => {
-	if (!visible || !nav || !tabs) return;
-	const measure = () => {
-		const width = nav.scrollWidth + Math.max(0, tabs.scrollWidth - tabs.clientWidth);
-		if (width > 0) emojiVoteNavbarRestWidth.value = width;
-	};
-	const observer = new ResizeObserver(measure);
-	observer.observe(nav);
-	observer.observe(tabs);
-	measure();
-	onCleanup(() => observer.disconnect());
-}, { flush: 'post' });
 const mobileToastVisible = ref(false);
 const notificationBloomEl = ref<HTMLElement | null>(null);
 const navbarNotificationShowing = ref(false);
@@ -1997,7 +1702,7 @@ function finishNavbarNotificationExit() {
 		cancelNavbarNotificationWidth();
 	}, 350);
 	nextTick(() => {
-		if (!element?.isConnected || !from || revision !== navbarNotificationRevision || !newNotesMotionEnabled.value || pullRefresh.active.value || emojiVoteInNavbar.value) return;
+		if (!element?.isConnected || !from || revision !== navbarNotificationRevision || !newNotesMotionEnabled.value || pullRefresh.active.value) return;
 		const to = element.getBoundingClientRect().width;
 		if (from <= to + 0.5 || !element.animate) return;
 
@@ -2033,7 +1738,7 @@ watch([navbarNotification, newNotesMotionEnabled, notificationToasts.surface, na
 		resetNavbarNotification();
 	} else if (navbarNotificationShowing.value && !navbarNotificationLeaving.value) {
 		navbarNotificationLeaving.value = true;
-		if (!pullRefresh.active.value && !emojiVoteInNavbar.value) {
+		if (!pullRefresh.active.value) {
 			navbarNotificationHeldWidth.value = topNavStackEl.value?.getBoundingClientRect().width ?? 0;
 			navbarNotificationSizing.value = navbarNotificationHeldWidth.value > 0;
 		}
@@ -2045,8 +1750,8 @@ watch([() => navbarNotification.value?.elapsed, notificationToasts.height], ([el
 	if (elapsed != null) navbarNotificationElapsed.value = elapsed;
 	if (height > 0) navbarNotificationHeight.value = height;
 }, { immediate: true });
-watch([pullRefresh.active, emojiVoteInNavbar], ([pulling, voting]) => {
-	if (pulling || voting) cancelNavbarNotificationWidth();
+watch(pullRefresh.active, pulling => {
+	if (pulling) cancelNavbarNotificationWidth();
 });
 window.addEventListener('resize', cancelNavbarNotificationWidth);
 onUnmounted(() => {
@@ -2116,20 +1821,13 @@ function sidebarItemClick(id: string, ev?: MouseEvent) {
 	const map: Record<string, ()=>void> = {
 		timeline: goHome, notifications: () => goToNotifications(), search: () => openSearch(),
 		chat: () => goToChat(),
-		hatagoes: () => goToHataGoes(),
-		hatask: () => goToHatask(), lists: () => goToLists(), channels: () => goToChannels(),
+		lists: () => goToLists(), channels: () => goToChannels(),
 		antennas: () => { if (ev) openAntennaList(ev); else goToAntennas(); }, drive: () => goToDrive(),
 		announcements: () => goToAnnouncements(), uiSetup: () => openUiSetup(),
 		// 旗鯖fork: 新規追加項目
 		favorites: () => mainRouter.push('/my/favorites'),
 		explore: () => mainRouter.push('/explore'),
 		followRequests: () => mainRouter.push('/my/follow-requests'),
-		// 旗鯖fork: HataFeed / Hatady / 地震・津波情報
-		hatafeed: () => mainRouter.push('/hatafeed'),
-		hatady: () => mainRouter.push('/hatady'),
-		earthquake: () => mainRouter.push('/earthquake'),
-		// 旗鯖fork: 外部通知専用ページへ
-		externalNotifications: () => goToExternalNotifications(),
 		more: () => { if (ev) openMore(ev); },
 		// 旗鯖fork: reload はクリックでページ全体をリロード (旧来は独立ボタンだったが sidebar 項目化)
 		reload: () => reloadPage(ev),
@@ -2166,8 +1864,7 @@ function sidebarItemActive(id: string): boolean {
 		timeline: isHomeTL.value && !isPageView.value,
 		notifications: isNotifPage.value, search: isSearchPage.value,
 		chat: isChatPage.value,
-		hatagoes: isHataGoesPage.value,
-		hatask: isHataskPage.value, lists: isListPage.value,
+		lists: isListPage.value,
 		channels: isChannelPage.value, antennas: isAntennaPage.value,
 		drive: isDrivePage.value,
 		announcements: mainRouter.currentRoute.value.path.startsWith('/announcements'),
@@ -2175,11 +1872,6 @@ function sidebarItemActive(id: string): boolean {
 		favorites: mainRouter.currentRoute.value.path.startsWith('/my/favorites'),
 		explore: mainRouter.currentRoute.value.path.startsWith('/explore'),
 		followRequests: mainRouter.currentRoute.value.path.startsWith('/my/follow-requests'),
-		hatafeed: mainRouter.currentRoute.value.path.startsWith('/hatafeed'),
-		hatady: mainRouter.currentRoute.value.path.startsWith('/hatady'),
-		earthquake: mainRouter.currentRoute.value.path.startsWith('/earthquake'),
-		// 旗鯖fork: 外部通知ページのアクティブ判定
-		externalNotifications: mainRouter.currentRoute.value.path.startsWith('/my/external-notifications'),
 	} as Record<string, boolean | undefined>)[id];
 	if (known != null) return known;
 	const fallback = (navbarItemDef as unknown as Record<string, { show?: boolean; to?: string } | undefined>)[id];
@@ -2296,7 +1988,6 @@ let streamRetryTimer: number | null = null;
 let streamUnmounted = false;
 
 function onHataTimelineCollapse() {
-	if (punchBusy.value) return;
 	timelineCollapseEffect.play();
 }
 
@@ -2409,9 +2100,6 @@ onMounted(() => {
 	rememberCurrentCollection();
 	if (isListTimelinePage.value) userListsCache.fetch().catch(() => []);
 	if (isAntennaTimelinePage.value) antennasCache.fetch().catch(() => []);
-	// 旗鯖fork: ログインボーナス(ログイン日数)ポップアップは universal.vue でしか呼ばれておらず、
-	//   Hataskey UI(simple)では表示されなかった(他UIに切替えると出る)。ここでも呼んで設定を尊重する。
-	showLoginBonusIfNeeded();
 	// 旗鯖fork: 復元したタブが現在の設定で表示可能か検証し、非表示なら先頭タブにフォールバック
 	if (!tabOrder.value.includes(tab.value)) {
 		tab.value = tabOrder.value[0] ?? 'following';
@@ -2422,25 +2110,7 @@ onMounted(() => {
 	startUnreadPoll();
 	nextTick(() => { startThemeWatch(); });
 	nextTick(() => { updateSbFade(); });
-	window.addEventListener('ext-tl-notif-count', onExtNotifCount);
-	window.addEventListener('external-notification', onExtNotifRealtime);
 	window.document.addEventListener('pointerdown', closeTimelinePickerOnOutsidePointer, true);
-	// 旗鯖fork: 起動時に1回だけ外部通知の未読有無を初期化 (WS受信前の既存未読を反映)
-	// 外部通知ページ閲覧中は除外。localStorage の lastReadAt 基準で未読判定。
-	if (isExternalLinked.value && !mainRouter.currentRoute.value.path.startsWith('/my/external-notifications')) {
-		(async () => {
-			try {
-				const { callExternalApi } = await import('@/utility/external-api.js');
-				const notifs = await callExternalApi('i/notifications', { limit: 20, markAsRead: false });
-				if (Array.isArray(notifs)) {
-					const lastReadTs = localStorage.getItem('extNotifLastReadAt');
-					const lastReadTime = lastReadTs ? new Date(lastReadTs).getTime() : 0;
-					const hasUnread = notifs.some((n: any) => !lastReadTime || new Date(n.createdAt).getTime() > lastReadTime);
-					extNotifHasUnread.value = hasUnread;
-				}
-			} catch { /* 取得失敗時はドットなし */ }
-		})();
-	}
 });
 onUnmounted(() => {
 	stopViewportRecovery?.();
@@ -2462,8 +2132,6 @@ onUnmounted(() => {
 	stopUnreadPoll();
 	stopThemeWatch();
 	if (scrollTimer) window.clearTimeout(scrollTimer);
-	window.removeEventListener('ext-tl-notif-count', onExtNotifCount);
-	window.removeEventListener('external-notification', onExtNotifRealtime);
 	window.document.removeEventListener('pointerdown', closeTimelinePickerOnOutsidePointer, true);
 	window.removeEventListener('resize', onResize);
 });
@@ -2926,15 +2594,6 @@ onUnmounted(() => {
 }
 .hssButton[data-hss-size="large"] .sbIcon { grid-column:1;grid-row:auto;width:auto;text-align:left;font-size:1.25rem; }
 .hssButton[data-hss-size="large"] .sbLabel { grid-column:1;display:block;width:100%;min-width:0;font-size:.95rem;font-weight:700;line-height:1.3;text-align:left;white-space:normal;overflow-wrap:anywhere; }
-.hssButton[data-menu-id="earthquake"] .sbLabel {
-	white-space:normal;
-	overflow-wrap:anywhere;
-	text-overflow:clip;
-	overflow:visible;
-	letter-spacing:-.04em;
-	font-size:11px;
-}
-.hssGroupGrid[data-hss-columns="3"] .hssButton[data-menu-id="earthquake"] .sbLabel { font-size:9px; }
 .hssButtonLines {
 	grid-column:1;
 	display:grid;
@@ -3067,10 +2726,8 @@ onUnmounted(() => {
 .hssWidget[data-hss-kind="trends"][data-hss-size="large"] :global(.tags > div:nth-child(n+4)),
 .hssWidget[data-hss-kind="federation"][data-hss-size="large"] :global(.instances > .instance:nth-child(n+4)) { display:none!important; }
 .hssWidget[data-hss-kind="notifications"] :global(.mkw-notifications),
-.hssWidget[data-hss-kind="externalNotifications"] :global(.mkw-externalNotifications),
 .hssWidget[data-hss-kind="timeline"] :global(.mkw-timeline) { width:100%!important;height:auto!important;min-height:var(--hss-widget-min-height,112px)!important;box-sizing:border-box;overflow:clip!important; }
 .hssWidget[data-hss-kind="notifications"] :global(.mkw-notifications > div:last-child),
-.hssWidget[data-hss-kind="externalNotifications"] :global(.mkw-externalNotifications > div:last-child),
 .hssWidget[data-hss-kind="timeline"] :global(.mkw-timeline > div:last-child) { overflow:visible!important; }
 .hssWidget[data-hss-kind="notifications"] :global(.mkw-notifications > div:last-child > div > div > div > button),
 .hssWidget[data-hss-kind="timeline"] :global(.mkw-timeline > div:last-child > div > div > div > button) { display:none!important; }
@@ -3080,12 +2737,7 @@ onUnmounted(() => {
 .hssWidget[data-hss-kind="timeline"][data-hss-size="normal"] :global([data-scroll-anchor]:nth-child(n+3)),
 .hssWidget[data-hss-kind="notifications"][data-hss-size="large"] :global([data-scroll-anchor]:nth-child(n+4)),
 .hssWidget[data-hss-kind="timeline"][data-hss-size="large"] :global([data-scroll-anchor]:nth-child(n+4)) { display:none!important; }
-.hssWidget[data-hss-kind="externalNotifications"][data-hss-size="small"] :global(.mkw-externalNotifications > div:last-child > div > div > div:nth-child(n+2)),
-.hssWidget[data-hss-kind="externalNotifications"][data-hss-size="normal"] :global(.mkw-externalNotifications > div:last-child > div > div > div:nth-child(n+3)),
-.hssWidget[data-hss-kind="externalNotifications"][data-hss-size="large"] :global(.mkw-externalNotifications > div:last-child > div > div > div:nth-child(n+4)) { display:none!important; }
-.hssWidget[data-hss-kind="externalNotifications"] :global(.mkw-externalNotifications),
 .hssWidget[data-hss-kind="notifications"] :global(.mkw-notifications) { width:100%!important; }
-.hssWidget[data-hss-kind="externalNotifications"] :global(.mkw-externalNotifications) div:has(> .ti-plug-connected-x) { display:flex!important;flex-direction:column;align-items:center;justify-content:center;min-height:var(--hss-widget-min-height,88px)!important;padding:4px 8px!important;box-sizing:border-box;overflow:clip!important;text-align:center; }
 .hssWidget[data-hss-kind="photos"][data-hss-size="small"] :global(.mkw-photos [style*="background-image"]:nth-child(n+4)),
 .hssWidget[data-hss-kind="photos"][data-hss-size="normal"] :global(.mkw-photos [style*="background-image"]:nth-child(n+7)) { display:none!important; }
 .hssWidget[data-hss-kind="userList"][data-hss-size="small"] :global(.mkw-userList .users > .user:nth-child(n+5)),
@@ -3107,9 +2759,7 @@ onUnmounted(() => {
 .hssWidget[data-hss-kind="aichan"] .hssWidgetFrame { position:relative;height:var(--hss-widget-min-height,168px);min-height:var(--hss-widget-min-height,168px);overflow:hidden; }
 .hssWidget[data-hss-kind="aichan"] .hssWidgetFrame > * { position:relative;height:var(--hss-widget-min-height,168px)!important;overflow:hidden!important; }
 .hssWidget[data-hss-kind="aichan"] .hssWidgetFrame iframe { position:absolute;top:0;left:50%;width:300px!important;height:350px!important;max-width:none!important;transform:translateX(-50%) scale(var(--hss-aichan-scale,1));transform-origin:top center; }
-.hssWidget[data-hss-kind="mascot"][data-hss-size="small"] .hssWidgetFrame > *,
 .hssWidget[data-hss-kind="dice"][data-hss-size="small"] .hssWidgetFrame > * { width:125%!important;transform:scale(.8);transform-origin:top left; }
-.hssWidget[data-hss-kind="mascot"][data-hss-size="normal"] .hssWidgetFrame > *,
 .hssWidget[data-hss-kind="dice"][data-hss-size="normal"] .hssWidgetFrame > * { width:111.12%!important;transform:scale(.9);transform-origin:top left; }
 .hssWidget[data-hss-shape="circle"] { justify-self:center;width:100%;min-width:0;height:var(--hss-widget-min-height, 72px);min-height:0;margin-inline:auto;border-radius:50%;aspect-ratio:1; }
 .hssWidget[data-hss-shape="circle"] > * { height:100%; overflow:hidden; border-radius:50%; }
@@ -3428,37 +3078,6 @@ onUnmounted(() => {
     position:relative;
     overflow:hidden;
 }
-// Reserve the lane inside the column so its scrollbar stays beyond the charms.
-.root[data-note-charm-lane='on'] > .mainColumn > .mainColumnInner {
-    box-sizing:border-box;
-    padding-right:var(--note-charm-rail-width);
-
-    > .topBar {
-        right:var(--note-charm-rail-width);
-    }
-
-    > .content {
-        box-sizing:border-box;
-        margin-right:calc(-1 * var(--note-charm-rail-width));
-        padding-right:var(--note-charm-rail-width);
-
-        // Routed pages own their scrollbar; expand only the outer router chain.
-        > .pageContainer {
-            margin-right:calc(-1 * var(--note-charm-rail-width));
-
-            > :global(._pageContainer) {
-                box-sizing:border-box;
-                padding-right:var(--note-charm-rail-width);
-
-                > :global(._pageScrollable), > :global(._pageScrollableReversed) {
-                    box-sizing:border-box;
-                    margin-right:calc(-1 * var(--note-charm-rail-width));
-                    padding-right:var(--note-charm-rail-width);
-                }
-            }
-        }
-    }
-}
 /* 旗鯖fork: 上部メニューモードのナビバー */
 .topNav {
     flex-shrink: 0; display: flex; align-items: center; gap: 6px;
@@ -3643,7 +3262,7 @@ onUnmounted(() => {
     filter:blur(14px); opacity:.55;
 }
 // Like HyNav, keep the native glow alive after the shared card has left.
-.topPillFrame > svg[data-integrated='true']:not([data-emoji-vote-outline]) { display:none; }
+.topPillFrame > svg[data-integrated='true'] { display:none; }
 .notificationBloom {
     position:absolute; inset:0; border-radius:inherit; z-index:-1; pointer-events:none;
     opacity:1; transition:opacity .55s cubic-bezier(.4,0,.2,1);
@@ -3657,24 +3276,6 @@ onUnmounted(() => {
 .notificationBloom[data-leaving='true'] > svg { filter:blur(20px); }
 .topNavStack[data-notification-sizing='true'] .topPillFrame,
 .topNavStack[data-notification-sizing='true'] .topPill { width:100%; }
-// Reuse the notification's blurred outer SVG path; keep it mounted while the
-// vote and its width collapse so the light fades along the changing outline.
-.topPillFrame > svg[data-emoji-vote-outline='true'] {
-    opacity:0; transition:opacity .48s cubic-bezier(.22,1,.36,1);
-}
-.topPillFrame[data-emoji-celebrating='true'][data-emoji-leaving='false'] > svg[data-emoji-vote-outline='true'] { opacity:.55; }
-.topBar[data-emoji-vote='true'] .topNavStack { transition:width .48s cubic-bezier(.22,1,.36,1); }
-.topBar[data-emoji-vote='true'] .topPillFrame { width:100%; }
-.punchNavbarTarget {
-    width:100%; min-width:0;
-}
-.emojiVoteNavbarViewport {
-    order:2; width:100%; min-width:0; max-height:0; overflow:hidden;
-}
-.emojiVoteNavbarViewport[data-active='true'] {
-    max-height:min(420px,max(96px,calc(var(--MI-viewport-height, 100dvh) - var(--simple-announcements-height,0px) - env(safe-area-inset-top,0px) - 160px)));
-    overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin;
-}
 .topPill {
     position:relative; display:flex; flex-direction:column; align-items:center;
     border-radius:24px; width:max-content; max-width:100%; min-width:0; box-sizing:border-box;
@@ -3805,15 +3406,7 @@ onUnmounted(() => {
     background:rgba(245,245,245,.78); backdrop-filter:blur(24px) saturate(1.4); -webkit-backdrop-filter:blur(24px) saturate(1.4);
     box-shadow:0 4px 24px rgba(0,0,0,.06),0 0 0 .5px rgba(0,0,0,.06) inset;
 }
-.topPill[data-emoji-vote='true'] {
-    width:100%;
-}
-.topBar[data-toast-motion='false'] .topNavStack,
-.topBar[data-toast-motion='false'] .topPillFrame > svg[data-emoji-vote-outline='true'] { transition:none; }
-@media (prefers-reduced-motion:reduce) {
-    .topBar[data-emoji-vote='true'] .topNavStack,
-    .topPillFrame > svg[data-emoji-vote-outline='true'] { transition:none !important; }
-}
+.topBar[data-toast-motion='false'] .topNavStack { transition:none; }
 .topBar[data-notification-only='true'] .topNavStack { width:min(360px,100%); max-width:100%; }
 .topBar[data-notification-only='true'] .topPillFrame { width:100%; }
 .topBar[data-notification-only='true'] .topPill {
@@ -3831,9 +3424,6 @@ onUnmounted(() => {
 .topBarDark .topTabBtn { color:rgba(255,255,255,.4); }
 .topBarLight .topTabBtn { color:rgba(0,0,0,.38); }
 .topTabActive { color:var(--MI_THEME-accent) !important; }
-.topTabBtn[data-concrnt-active='true'] { color:var(--MI_THEME-accent) !important; opacity:1; }
-.topBarDark .topTabBtn[data-concrnt-active='true'] { background:rgba(255,255,255,.1); }
-.topBarLight .topTabBtn[data-concrnt-active='true'] { background:rgba(0,0,0,.06); }
 .topBarDark .topTabActive { background:rgba(255,255,255,.1); }
 .topBarLight .topTabActive { background:rgba(0,0,0,.06); }
 .listTabPill {
@@ -3887,13 +3477,6 @@ onUnmounted(() => {
 
 // ===== コンテンツ =====
 .content { flex:1; overflow-y:auto; position:relative; min-height:0; }
-.ltlEmojiVoteEffects {
-    position:absolute;
-    overflow:hidden;
-    isolation:isolate;
-    pointer-events:none;
-    z-index:50;
-}
 .timelineContainer {
     max-width:800px; margin:0 auto; min-height:100%;
     /* 旗鯖fork: 従来はタイムライン列の左右に divider の縦線を出していたが、
@@ -3907,9 +3490,6 @@ onUnmounted(() => {
     padding-top:calc(56px);
 }
 .timelineContainerWithFixedForm { padding-top:0; }
-/* 旗鯖fork: CTL 表示中は通常TLを隠す。Transition 直下の子に v-show を付けると persisted 扱いになり、
-   キー付きの入れ替えが壊れる (タブ切り替えで投稿欄・TL が消える不具合の再発)。クラスで隠す。 */
-.timelineContainerConcrntHidden { display:none!important; }
 .fixedFormHost { max-width:800px; margin:0 auto; padding-top:calc(56px + env(safe-area-inset-top,0px)); }
 .desktopLayout .fixedFormHost { padding-top:56px; }
 /* 旗鯖fork: タイムライン上部固定投稿フォーム */

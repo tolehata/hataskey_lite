@@ -15,13 +15,6 @@ import { bindThis } from '@/decorators.js';
 import { RedisKVCache } from '@/misc/cache.js';
 import { HttpRequestService } from '@/core/HttpRequestService.js';
 
-export type HatadyPushNotificationBody = {
-	id: string;
-	notificationType: string;
-	reaction?: string | null;
-	value?: number | null;
-};
-
 // Defined also packages/sw/types.ts#L13
 type PushNotificationsTypes = {
 	'notification': Packed<'Notification'>;
@@ -33,7 +26,6 @@ type PushNotificationsTypes = {
 	'readNotification': { id: string };
 	'notificationChanged': { ids: string[] };
 	newChatMessage: Packed<'ChatMessage'>;
-	hatadyNotification: HatadyPushNotificationBody;
 };
 
 // Reduce length because push message servers have character limits

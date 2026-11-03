@@ -23,7 +23,6 @@ const scenesByCategory = vi.hoisted(() => ({
 	access: ['access', 'swipe', 'speed', 'sliders'],
 	mute: ['mute', 'block', 'link'],
 	drive: ['upload', 'upload', 'media', 'video'],
-	apps: ['apps', 'mascot'],
 	data: ['backup', 'backup', 'export', 'link'],
 	advanced: ['globe', 'speed', 'extend', 'clean'],
 }));
@@ -56,12 +55,12 @@ function mountSection(sectionId: SettingsBentoSectionId = 'profile.section0') {
 }
 
 describe('settings section explanations', () => {
-	test('57節の対応を維持し、実際に47種類すべての図と文を描画する', async () => {
+	test('55節の対応を維持し、実際に46種類すべての図と文を描画する', async () => {
 		const expected = Object.fromEntries(Object.entries(scenesByCategory).flatMap(([category, scenes]) => scenes.map((scene, index) => [`${category}.section${index}`, scene])));
 		expect(sectionExplanationScenes).toEqual(expected);
-		expect(Object.keys(expected)).toHaveLength(57);
+		expect(Object.keys(expected)).toHaveLength(55);
 		expect([...new Set(Object.values(expected))].sort()).toEqual([...settingsExplanationSceneIds]);
-		expect(settingsExplanationSceneIds).toHaveLength(47);
+		expect(settingsExplanationSceneIds).toHaveLength(46);
 		const { container, state } = mountSection();
 		for (const [sectionId, sceneId] of Object.entries(sectionExplanationScenes)) {
 			state.sectionId = sectionId as SettingsBentoSectionId;
@@ -88,14 +87,6 @@ describe('settings section explanations', () => {
 		expect(container.querySelector<HTMLElement>('[style*="hata-section-fadeB"]')?.style.opacity).toBe('0');
 	});
 
-	test('アプリ図は既存4ロゴを使い、motion設定を引き継ぐ', async () => {
-		const { container, state } = mountSection('apps.section0');
-		expect([...container.querySelectorAll<HTMLElement>('[data-app]')].map(logo => logo.dataset.app)).toEqual(['hatagoes', 'hatask', 'hatady', 'hatafeed']);
-		state.motionEnabled = false;
-		await nextTick();
-		expect([...container.querySelectorAll<HTMLElement>('[data-app]')].every(logo => logo.dataset.active === 'false')).toBe(true);
-	});
-
 	test('画面外で停止してから復帰し、observerを破棄する', async () => {
 		let update: IntersectionObserverCallback | undefined;
 		const observe = vi.fn();
@@ -105,7 +96,7 @@ describe('settings section explanations', () => {
 			observe = observe;
 			disconnect = disconnect;
 		});
-		const { container, app } = mountSection('apps.section0');
+		const { container, app } = mountSection('profile.section3');
 		expect(observe).toHaveBeenCalledWith(container.firstElementChild);
 		update?.([{ isIntersecting: false } as IntersectionObserverEntry], {} as IntersectionObserver);
 		await nextTick();

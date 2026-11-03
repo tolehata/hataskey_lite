@@ -24,17 +24,12 @@ function fixture() {
 	const database = new DatabaseSync(':memory:');
 	databases.push(database);
 	database.exec(`
-		CREATE TABLE channel (id TEXT, name TEXT, description TEXT, isPrivate BOOLEAN, isArchived BOOLEAN, userId TEXT);
-		CREATE TABLE channel_member (channelId TEXT, userId TEXT);
+		CREATE TABLE channel (id TEXT, name TEXT, description TEXT, isArchived BOOLEAN, userId TEXT);
 		INSERT INTO channel VALUES
-			('q90', 'Tea private', 'secret', TRUE, FALSE, 'owner'),
-			('q80', 'Private description', 'Tea secret', TRUE, FALSE, 'owner'),
-			('q70', 'Tea public', NULL, FALSE, FALSE, 'owner'),
-			('q60', 'Public description', 'Tea', FALSE, FALSE, 'owner'),
-			('q50', 'Other public', '', FALSE, FALSE, 'owner'),
-			('q40', 'Tea archived', '', FALSE, TRUE, 'owner');
-		INSERT INTO channel_member VALUES
-			('q90', 'member'), ('q80', 'member'), ('q90', 'owner'), ('q80', 'owner');
+			('q70', 'Tea public', NULL, FALSE, 'owner'),
+			('q60', 'Public description', 'Tea', FALSE, 'owner'),
+			('q50', 'Other public', '', FALSE, 'owner'),
+			('q40', 'Tea archived', '', TRUE, 'owner');
 	`);
 	const dataSource = new DataSource({ type: 'postgres' });
 	const repository = {
@@ -61,8 +56,8 @@ function fixture() {
 
 const viewer = (id: string | null) => id == null ? null : { id } as MiLocalUser;
 
-describe('channels/search private channel exclusion', () => {
-	test.each([null, 'outsider', 'member', 'owner'])('名前・説明検索は閲覧者 %s に公開チャンネルだけを返す', async (id) => {
+describe('channels/search', () => {
+	test.each([null, 'outsider'])('名前・説明検索は閲覧者 %s に一致するチャンネルを返す', async (id) => {
 		const { endpoint, packMany } = fixture();
 		const me = viewer(id);
 		const result = await endpoint.exec({ query: 'tea', type: 'nameAndDescription' }, me, null, null);
@@ -73,27 +68,22 @@ describe('channels/search private channel exclusion', () => {
 		], me);
 	});
 
-	test('名前だけの検索でも参加中の非公開チャンネルを除外する', async () => {
+	test('名前だけの検索は説明に一致するチャンネルを返さない', async () => {
 		const { endpoint } = fixture();
-		const result = await endpoint.exec({ query: 'tea', type: 'nameOnly' }, viewer('member'), null, null);
+		const result = await endpoint.exec({ query: 'tea', type: 'nameOnly' }, viewer('outsider'), null, null);
 		expect(result.map((channel: { id: string }) => channel.id)).toEqual(['q70']);
 	});
 
-	test.each([null, 'outsider', 'member', 'owner'])('空欄検索でも閲覧者 %s に非公開とアーカイブ済みのチャンネルを返さない', async (id) => {
+	test('空欄検索はアーカイブ済みのチャンネルを返さない', async () => {
 		const { endpoint } = fixture();
-		const result = await endpoint.exec({ query: '' }, viewer(id), null, null);
+		const result = await endpoint.exec({ query: '' }, viewer(null), null, null);
 		expect(result.map((channel: { id: string }) => channel.id)).toEqual(['q70', 'q60', 'q50']);
 	});
 
-	test('非公開チャンネルだけに一致する検索語では結果を返さない', async () => {
-		const { endpoint } = fixture();
-		expect(await endpoint.exec({ query: 'secret' }, viewer('member'), null, null)).toEqual([]);
-	});
-
-	test('件数制限と前後ページの取得に先立って非公開チャンネルを除外する', async () => {
+	test('件数制限と前後ページの取得', async () => {
 		const { endpoint } = fixture();
 		const search = async (pagination: Record<string, string | number>) => {
-			const result = await endpoint.exec({ query: 'tea', limit: 1, ...pagination }, viewer('member'), null, null);
+			const result = await endpoint.exec({ query: 'tea', limit: 1, ...pagination }, viewer('outsider'), null, null);
 			return result.map((channel: { id: string }) => channel.id);
 		};
 		expect(await search({})).toEqual(['q70']);

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { groupedNotificationTypes, hatadyNotificationSubtypes, userExportableEntities } from '@/types.js';
+import { groupedNotificationTypes, userExportableEntities } from '@/types.js';
 
 const baseSchema = {
 	type: 'object',
@@ -418,126 +418,6 @@ export const packedNotificationSchema = {
 				type: 'string',
 				optional: false, nullable: true,
 			},
-		},
-	}, {
-		// 旗鯖fork: HataFeed 通知(app通知と同形。通知フィルタで個別にON/OFFできるよう専用タイプ)
-		type: 'object',
-		properties: {
-			...baseSchema.properties,
-			type: {
-				type: 'string',
-				optional: false, nullable: false,
-				enum: ['hataFeed'],
-			},
-			body: {
-				type: 'string',
-				optional: false, nullable: false,
-			},
-			header: {
-				type: 'string',
-				optional: false, nullable: true,
-			},
-			icon: {
-				type: 'string',
-				optional: false, nullable: true,
-			},
-			link: {
-				type: 'string',
-				optional: false, nullable: true,
-			},
-			sourceNotificationId: { type: 'string', optional: true, nullable: false },
-		},
-	}, {
-		type: 'object',
-		properties: {
-			...baseSchema.properties,
-			type: { type: 'string', optional: false, nullable: false, enum: ['hatady'] },
-			sourceNotificationId: { type: 'string', optional: false, nullable: false },
-			subtype: { type: 'string', optional: false, nullable: false, enum: hatadyNotificationSubtypes },
-			targetType: { type: 'string', optional: false, nullable: false, enum: ['none', 'log', 'comment', 'work', 'session', 'mediaComment'] },
-			targetId: { type: 'string', optional: false, nullable: true, format: 'id' },
-			user: { type: 'object', ref: 'UserLite', optional: true, nullable: false },
-			userId: { type: 'string', optional: true, nullable: false, format: 'id' },
-			title: { type: 'string', optional: true, nullable: false },
-			logId: { type: 'string', optional: true, nullable: false, format: 'id' },
-			mediaWorkId: { type: 'string', optional: true, nullable: false, format: 'id' },
-			mediaSessionId: { type: 'string', optional: true, nullable: false, format: 'id' },
-			mediaCommentId: { type: 'string', optional: true, nullable: false, format: 'id' },
-			commentId: { type: 'string', optional: true, nullable: false, format: 'id' },
-			reaction: { type: 'string', optional: true, nullable: false },
-			value: { type: 'number', optional: true, nullable: false },
-			isRead: { type: 'boolean', optional: false, nullable: false },
-		},
-	}, {
-		// 旗鯖fork: Hataskのお花・アイコンデコ獲得通知(app通知と同形)。
-		type: 'object',
-		properties: {
-			...baseSchema.properties,
-			type: {
-				type: 'string',
-				optional: false, nullable: false,
-				enum: ['hataskFlowerReady', 'hataskFlowerBloomed', 'hataskZukanUpdated', 'hataskFestivalBloomed', 'hataskDecorationUnlocked'],
-			},
-			body: {
-				type: 'string',
-				optional: false, nullable: false,
-			},
-			header: {
-				type: 'string',
-				optional: false, nullable: true,
-			},
-			icon: {
-				type: 'string',
-				optional: false, nullable: true,
-			},
-			link: {
-				type: 'string',
-				optional: false, nullable: true,
-			},
-		},
-	}, {
-		// 旗鯖fork: 地震・津波情報の通知(app通知と同形。通知フィルタで個別ON/OFF可)
-		type: 'object',
-		properties: {
-			...baseSchema.properties,
-			type: {
-				type: 'string',
-				optional: false, nullable: false,
-				enum: ['earthquake'],
-			},
-			body: {
-				type: 'string',
-				optional: false, nullable: false,
-			},
-			header: {
-				type: 'string',
-				optional: false, nullable: true,
-			},
-			icon: {
-				type: 'string',
-				optional: false, nullable: true,
-			},
-			link: {
-				type: 'string',
-				optional: false, nullable: true,
-			},
-		},
-	}, {
-		// 旗鯖fork: プライベートチャンネルのメンバー構成変更通知 (追加 / 除外)
-		// app通知と同形だが、通知フィルタで個別ON/OFFできるよう専用タイプにしている。
-		type: 'object',
-		properties: {
-			...baseSchema.properties,
-			type: {
-				type: 'string',
-				optional: false, nullable: false,
-				enum: ['addedToPrivateChannel', 'removedFromPrivateChannel'],
-			},
-			body: { type: 'string', optional: false, nullable: false },
-			header: { type: 'string', optional: false, nullable: true },
-			icon: { type: 'string', optional: false, nullable: true },
-			link: { type: 'string', optional: false, nullable: true },
-			invitationId: { type: 'string', format: 'misskey:id', optional: true, nullable: false },
 		},
 	}, {
 		type: 'object',

@@ -2,7 +2,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import * as ts from 'typescript';
 import swSource from '../../../sw/src/sw.ts?raw';
-import createNotificationSource from '../../../sw/src/scripts/create-notification.ts?raw';
 
 const runInNewContext = process.getBuiltinModule('vm')!.runInNewContext;
 
@@ -45,7 +44,7 @@ describe('service worker notification handlers', () => {
 		expect(empty).not.toHaveBeenCalled();
 	});
 
-	it('click and close mark the individual notification; Hatady click uses an opaque ID link', async () => {
+	it('click and close mark the individual notification', async () => {
 		const handlers = new Map<string, (event: any) => void>();
 		const api = vi.fn(async () => undefined);
 		const openClient = vi.fn(async () => ({ focus: vi.fn() }));
@@ -54,11 +53,11 @@ describe('service worker notification handlers', () => {
 			'@/scripts/create-notification.js': {}, '@/scripts/lang.js': { swLang: {} },
 			'@/scripts/operations.js': { api, openClient, sendMarkAllAsRead: vi.fn() },
 		}, { addEventListener: (name: string, handler: (event: any) => void) => handlers.set(name, handler) });
-		const notification = { data: { type: 'notification', userId: 'owner', body: { id: 'opaque123', type: 'hatady' } }, close: vi.fn() };
+		const notification = { data: { type: 'notification', userId: 'owner', body: { id: 'opaque123', type: 'receiveFollowRequest' } }, close: vi.fn() };
 		let task: Promise<unknown> = Promise.resolve();
 		handlers.get('notificationclick')!({ action: '', notification, waitUntil: (promise: Promise<unknown>) => { task = promise; } });
 		await task;
-		expect(openClient).toHaveBeenCalledWith('push', '/hatady?notificationId=opaque123', 'owner');
+		expect(openClient).toHaveBeenCalledWith('push', '/my/follow-requests', 'owner');
 		expect(api).toHaveBeenCalledWith('notifications/mark-as-read', 'owner', { notificationIds: ['opaque123'] });
 		api.mockClear();
 		handlers.get('notificationclose')!({ notification, waitUntil: (promise: Promise<unknown>) => { task = promise; } });
@@ -66,18 +65,4 @@ describe('service worker notification handlers', () => {
 		expect(api).toHaveBeenCalledWith('notifications/mark-as-read', 'owner', { notificationIds: ['opaque123'] });
 	});
 
-	it('uses fixed Hatady push copy without private title, target or reaction data', async () => {
-		const showNotification = vi.fn(async () => undefined);
-		const context = runSw(createNotificationSource, {
-			'@/scripts/twemoji-base.js': {}, '@/scripts/operations.js': {}, '@/scripts/get-account-from-id.js': {},
-			'@/scripts/hata-custom-notification-copy.js': {}, '@/scripts/get-user-name.js': {},
-			'@/scripts/lang.js': { swLang: { i18n: { ts: { _hata: { _hatady: { _push: { title: 'Hatady', follow: 'Follow', comment: 'Comment', reaction: 'Reaction', update: 'Update' } } } } } } },
-		}, { registration: { showNotification } });
-		await (context.exports as { createNotification: (data: unknown) => Promise<void> }).createNotification({
-			type: 'notification', userId: 'owner', body: { id: 'opaque123', type: 'hatady', subtype: 'mediaReaction', title: 'private', targetId: 'secret', reaction: 'secret emoji' },
-		});
-		expect(showNotification).toHaveBeenCalledOnce();
-		const [title, options] = showNotification.mock.calls[0] as unknown as [string, { body: string; tag: string }];
-		expect([title, options.body, options.tag]).toEqual(['Hatady', 'Reaction', 'hatady:opaque123']);
-	});
 });

@@ -6,23 +6,13 @@
 /** The generated V2 source inventory deliberately contains no executable page expressions. */
 export type HataCustomCategoryV2 =
 	| 'general'
-	| 'font'
 	| 'glassUi'
-	| 'visual'
-	| 'hatask'
-	| 'hatady'
-	| 'mascot'
-	| 'earthquake'
-	| 'accessibility';
+	| 'visual';
 
 export type SettingsPopupIdV2 =
 	| 'hatasaba-ui2'
-	| 'earthquake'
 	| 'ui-setup'
-	| 'settings-transfer'
-	| 'hatask'
-	| 'hatady'
-	| 'mascot';
+	| 'settings-transfer';
 
 export type SettingsPersistenceV2 = 'device' | 'profile' | 'account';
 export type SettingsSaveModeV2 = 'immediate' | 'buffered' | 'reload';

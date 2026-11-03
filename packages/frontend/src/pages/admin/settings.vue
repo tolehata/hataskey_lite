@@ -146,41 +146,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 					</MkFolder>
 				</SearchMarker>
 
-				<SearchMarker v-slot="slotProps" :keywords="['Hatask', 'flowers', 'garden', 'festival']">
-					<MkFolder :defaultOpen="slotProps.isParentOfTarget">
-						<template #icon><SearchIcon><i class="ti ti-flower"></i></SearchIcon></template>
-						<template #label><SearchLabel>{{ i18n.ts._serverSettings.hataskFlowerRules }}</SearchLabel></template>
-						<template v-if="hataskFlowerRulesForm.modified.value" #footer><MkFormFooter :form="hataskFlowerRulesForm"/></template>
-						<div class="_gaps">
-							<MkInput v-model="hataskFlowerRulesForm.state.todoMinAgeMinutes" type="number" :min="1" :max="100000" :step="1">
-								<template #label>{{ i18n.ts._serverSettings.hataskFlowerTodoMinAgeMinutes }}</template>
-							</MkInput>
-							<MkInput v-model="hataskFlowerRulesForm.state.todoMinLength" type="number" :min="1" :max="100000" :step="1">
-								<template #label>{{ i18n.ts._serverSettings.hataskFlowerTodoMinLength }}</template>
-							</MkInput>
-							<MkInput v-model="hataskFlowerRulesForm.state.hatadyGapSeconds" type="number" :min="1" :max="100000" :step="1">
-								<template #label>{{ i18n.ts._serverSettings.hataskFlowerHatadyGapSeconds }}</template>
-							</MkInput>
-							<MkInput v-model="hataskFlowerRulesForm.state.pourMinutes" type="number" :min="1" :max="100000" :step="1">
-								<template #label>{{ i18n.ts._serverSettings.hataskFlowerPourMinutes }}</template>
-							</MkInput>
-							<MkInput v-model="hataskFlowerRulesForm.state.todoCap" type="number" :min="1" :max="100000" :step="1">
-								<template #label>{{ i18n.ts._serverSettings.hataskFlowerTodoCap }}</template>
-							</MkInput>
-							<MkInput v-model="hataskFlowerRulesForm.state.hatadyCap" type="number" :min="1" :max="100000" :step="1">
-								<template #label>{{ i18n.ts._serverSettings.hataskFlowerHatadyCap }}</template>
-							</MkInput>
-							<MkInput v-model="hataskFlowerRulesForm.state.loginCap" type="number" :min="1" :max="100000" :step="1">
-								<template #label>{{ i18n.ts._serverSettings.hataskFlowerLoginCap }}</template>
-							</MkInput>
-							<MkInput v-model="hataskFlowerRulesForm.state.festivalGoal" type="number" :min="1" :max="100000" :step="1">
-								<template #label>{{ i18n.ts._serverSettings.hataskFlowerFestivalGoal }}</template>
-								<template #caption>{{ i18n.ts._serverSettings.hataskFlowerFestivalGoalDescription }}</template>
-							</MkInput>
-						</div>
-					</MkFolder>
-				</SearchMarker>
-
 				<SearchMarker v-slot="slotProps" :keywords="['ads']">
 					<MkFolder :defaultOpen="slotProps.isParentOfTarget">
 						<template #icon><SearchIcon><i class="ti ti-ad"></i></SearchIcon></template>
@@ -521,20 +486,6 @@ const serviceWorkerForm = useForm({
 		swPublicKey: state.swPublicKey,
 		swPrivateKey: state.swPrivateKey,
 	});
-	fetchInstance(true);
-});
-
-const hataskFlowerRulesForm = useForm(meta.hataskFlowerRules ?? {
-	todoMinAgeMinutes: 30,
-	todoMinLength: 3,
-	hatadyGapSeconds: 60,
-	pourMinutes: 120,
-	todoCap: 5,
-	hatadyCap: 10,
-	loginCap: 1,
-	festivalGoal: 1000,
-}, async (state) => {
-	await os.apiWithDialog('admin/update-meta', { hataskFlowerRules: state });
 	fetchInstance(true);
 });
 

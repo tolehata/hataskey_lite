@@ -14,20 +14,16 @@ The caller keeps the dialog queue and records the displayed version on closed.
 		<div ref="pageBody" :class="[$style.releaseBody, $style.simpleBody]" :data-feature="currentStory.feature" :inert="!contentReady" :aria-hidden="!contentReady" role="region" aria-label="更新内容の本文">
 			<section v-if="(opened || closing) && contentReady" :key="currentStory.id" :class="[$style.storyPage, $style.simplePage]" data-story="updates" :data-feature="currentStory.feature" :data-summary="currentStory.id">
 				<div :class="$style.updatesHeading" data-reveal="lead">
-					<p :class="[$style.eyebrow, { [$style.brandLabel]: isBrandLabel }]">{{ currentStory.label }}</p>
+					<p :class="$style.eyebrow">{{ currentStory.label }}</p>
 					<h2 ref="pageTitle" tabindex="-1">{{ currentStory.title }}</h2>
 				</div>
-				<div v-if="currentStory.feature === 'hatagoes'" :class="$style.mergeStage" data-reveal="stage" data-feature-mock aria-hidden="true" inert>
-					<HatagoesMergeMotion :active="mergeActive" :loop="true"/>
-				</div>
-				<HataigoShowcase v-else-if="currentStory.feature === 'hataigo'" data-reveal="stage" :animate="hataigoActive" @start="startHataigo"/>
-				<a v-else :class="$style.releaseNotesLink" :href="currentStory.cards[0].link?.url" target="_blank" rel="noopener noreferrer" data-reveal="stage">{{ currentStory.cards[0].link?.label }}<i class="ti ti-external-link" aria-hidden="true"></i></a>
+				<a :class="$style.releaseNotesLink" :href="currentStory.cards[0].link?.url" target="_blank" rel="noopener noreferrer" data-reveal="stage">{{ currentStory.cards[0].link?.label }}<i class="ti ti-external-link" aria-hidden="true"></i></a>
 			</section>
 		</div>
 
 		<footer :class="$style.releaseFooter" :inert="!contentReady" :aria-hidden="!contentReady">
 			<button v-if="page > 1" :class="[$style.backButton, $style.pageArrow]" aria-label="戻る" :disabled="changing" @click="move(page - 1)"><i class="ti ti-arrow-left" aria-hidden="true"></i></button>
-			<div :class="$style.stepCaption" aria-live="polite"><span :class="{ [$style.brandLabel]: isBrandLabel }">{{ currentStory.label }}</span><div :class="$style.stepTrack" aria-hidden="true"><i v-for="n in totalPages" :key="n" :data-current="page === n"></i></div><small>{{ page }} / {{ totalPages }}</small></div>
+			<div :class="$style.stepCaption" aria-live="polite"><span>{{ currentStory.label }}</span><div :class="$style.stepTrack" aria-hidden="true"><i v-for="n in totalPages" :key="n" :data-current="page === n"></i></div><small>{{ page }} / {{ totalPages }}</small></div>
 			<button v-if="page < totalPages" :class="[$style.primaryButton, $style.pageArrow]" aria-label="次へ" :disabled="changing" @click="move(page + 1)"><i class="ti ti-arrow-right" aria-hidden="true"></i></button>
 			<button v-else :class="$style.primaryButton" @click="dismiss">{{ copy.gotIt }}<i class="ti ti-check" aria-hidden="true"></i></button>
 		</footer>
@@ -37,8 +33,6 @@ The caller keeps the dialog queue and records the displayed version on closed.
 <script setup lang="ts">
 import { computed, inject, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import ReleaseOpening from './hata-whats-new/ReleaseOpening.vue';
-import HatagoesMergeMotion from './hatagoes/motion/HatagoesMergeMotion.vue';
-import HataigoShowcase from './hata-whats-new/HataigoShowcase.vue';
 import { createReveal } from './hata-whats-new/reveal.js';
 import { getHataWhatsNewStories, getHataWhatsNewDisplayVersion, HATA_WHATS_NEW } from '@/utility/hata-whats-new.js';
 import MkHatakyuIllustration from '@/components/MkHatakyuIllustration.vue';
@@ -47,10 +41,8 @@ import { useHatakyuBranding } from '@/utility/hatakyu-assets.js';
 import { prefer } from '@/preferences.js';
 import { store } from '@/store.js';
 import { i18n } from '@/i18n.js';
-import { HATA_GOES_HOST } from '@/utility/hatagoes-context.js';
 
 const emit = defineEmits<{ closed: [] }>();
-const hataGoesHost = inject(HATA_GOES_HOST, null);
 const copy = i18n.ts._hata._whatsNew._window;
 const displayVersion = getHataWhatsNewDisplayVersion(HATA_WHATS_NEW.version);
 const modal = useTemplateRef('modal');
@@ -63,7 +55,6 @@ const pageId = ref(HATA_WHATS_NEW.groups[0].cards[0].id);
 const page = computed(() => Math.max(0, stories.findIndex(story => story.id === pageId.value || story.cards.some(card => card.id === pageId.value))) + 1);
 const totalPages = computed(() => stories.length);
 const currentStory = computed(() => stories[page.value - 1]);
-const isBrandLabel = computed(() => ['HataGoes', 'HataIgo', 'Hataskey UI S 2', 'HataFeed', 'Hatask'].includes(currentStory.value.label));
 const opened = ref(true);
 const closing = ref(false);
 const contentReady = ref(false);
@@ -74,9 +65,7 @@ const media = window.matchMedia('(prefers-reduced-motion: reduce)');
 const reduced = ref(media.matches);
 const documentVisible = ref(!window.document.hidden);
 const motion = computed(() => opened.value && prefer.r.animation.value && !reduced.value && documentVisible.value);
-const mergeActive = computed(() => opened.value && contentReady.value && !changing.value && currentStory.value.feature === 'hatagoes' && documentVisible.value);
-const hataigoActive = computed(() => motion.value && contentReady.value && !changing.value && currentStory.value.feature === 'hataigo');
-const modalMotionPreset = computed<'none' | 'dissolve' | undefined>(() => !documentVisible.value ? 'none' : hataGoesHost ? undefined : !prefer.r.animation.value || reduced.value ? 'none' : contentReady.value ? 'dissolve' : undefined);
+const modalMotionPreset = computed<'none' | 'dissolve' | undefined>(() => !documentVisible.value ? 'none' : !prefer.r.animation.value || reduced.value ? 'none' : contentReady.value ? 'dissolve' : undefined);
 const reveal = createReveal();
 let transitionRevision = 0;
 let entranceRevision = 0;
@@ -156,13 +145,6 @@ function dismiss() {
 	modal.value?.close();
 }
 
-// 旗鯖fork: 案内を閉じてから HataIgo へ移る。ルーターは押されたときだけ読み込む。
-async function startHataigo() {
-	dismiss();
-	const { mainRouter } = await import('@/router.js');
-	mainRouter.pushByPath('/hataigo');
-}
-
 function onClosed() {
 	closing.value = false;
 	if (closedEmitted) return;
@@ -192,5 +174,5 @@ onBeforeUnmount(() => { disposed = true; stop(); media.removeEventListener('chan
 </script>
 <style module src="./hata-whats-new/release.module.css"></style>
 <style lang="scss">
-@use "./hatask/hatask-fonts.scss";
+@use "./hata-whats-new/release-fonts.scss";
 </style>

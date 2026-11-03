@@ -217,23 +217,4 @@ describe('category settings entry points', () => {
 		expect(new Set(rendered).size).toBe(rendered.length);
 	});
 
-	test('アプリ入口は文字だけを伸ばし、実Hatask・Hatady・HataFeedアイコンのspanへflexを適用しない', async () => {
-		const { host } = await mountCategory('apps');
-		const css = parseSfc(source).descriptor.styles.find(style => style.module)?.content;
-		if (css == null) throw new Error('Missing category styles');
-		for (const id of ['hata-hatask', 'hata-hatady', 'hata-hatafeed']) {
-			const button = destinationButton(host, id);
-			const logo = button.querySelector<HTMLElement>('[data-hata-app-logo]');
-			const label = button.querySelector<HTMLElement>('span[data-brand]');
-			if (logo == null || label == null) throw new Error(`Missing application brand: ${id}`);
-			expect(logo.style.width).toBe('24px');
-			expect(logo.style.height).toBe('24px');
-			const classNames = { link: button.classList[0], linkLabel: label.classList[0] };
-			const selectors = expandingSelectors(css, classNames);
-			expect(selectors.some(selector => label.matches(selector))).toBe(true);
-			expect(selectors.some(selector => logo.matches(selector))).toBe(false);
-			// Positive control: the former generic span selector also expands the real logo root.
-			expect(expandingSelectors('.link > span { flex: 1; }', classNames).some(selector => logo.matches(selector))).toBe(true);
-		}
-	});
 });

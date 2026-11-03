@@ -5,7 +5,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <template>
 <MkModal ref="modal" v-slot="{ type }" :preferType="deviceKind === 'smartphone' ? 'drawer' : 'dialog'" @click="onBgClick" @closed="emit('closed')" @esc="emit('esc')">
-	<div ref="rootEl" :data-mobile-fullscreen="fullScreenOnMobile" :data-hatask-theme="panelTheme" :data-hatask-mode="panelMode" :class="[$style.root, panelClass, type === 'drawer' ? $style.asDrawer : null]" :style="{ width: type === 'drawer' ? '' : `${width}px`, height: type === 'drawer' ? '' : `min(${height}px, 100%)` }">
+	<div ref="rootEl" :data-mobile-fullscreen="fullScreenOnMobile" :class="[$style.root, panelClass, type === 'drawer' ? $style.asDrawer : null]" :style="{ width: type === 'drawer' ? '' : `${width}px`, height: type === 'drawer' ? '' : `min(${height}px, 100%)` }">
 		<div :class="$style.header">
 			<button v-if="withCloseButton" :class="$style.headerButton" class="_button" data-testid="modal-window-close" :aria-label="i18n.ts.close" @click="emit('close')"><i class="ti ti-x" aria-hidden="true"></i></button>
 			<span :class="$style.title">
@@ -38,8 +38,6 @@ const props = withDefaults(defineProps<{
 	fullScreenOnMobile?: boolean;
 	okButtonDisabled?: boolean;
 	panelClass?: string;
-	panelTheme?: string;
-	panelMode?: string;
 	width?: number;
 	height?: number;
 }>(), {

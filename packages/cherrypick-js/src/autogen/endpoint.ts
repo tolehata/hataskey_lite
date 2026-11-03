@@ -87,25 +87,6 @@ import type {
 	AdminGetTableStatsResponse,
 	AdminGetUserIpsRequest,
 	AdminGetUserIpsResponse,
-	AdminHataConsentListRequest,
-	AdminHataConsentListResponse,
-	AdminHataskRecordsListRequest,
-	AdminHataskRecordsListResponse,
-	AdminHataskRecordsReviewRequest,
-	AdminHataskRecordsReviewResponse,
-	AdminHataskRecordsShowRequest,
-	AdminHataskRecordsShowResponse,
-	AdminHataskSupportRegisterRequest,
-	AdminHataskSupportRegisterResponse,
-	AdminHataskSupportShowRequest,
-	AdminHataskSupportShowResponse,
-	AdminHataskSupportSupportersRequest,
-	AdminHataskSupportSupportersResponse,
-	AdminHataskSupportUnregisterRequest,
-	AdminHataskSupportUnregisterResponse,
-	AdminHataskSupportUpdateRequest,
-	AdminHataskSupportUpdateResponse,
-	AdminHataskUpdateDecorationRequest,
 	AdminInviteCreateRequest,
 	AdminInviteCreateResponse,
 	AdminInviteListRequest,
@@ -130,12 +111,6 @@ import type {
 	AdminQueueShowJobLogsRequest,
 	AdminQueueShowJobLogsResponse,
 	AdminQueueStatsResponse,
-	AdminRecordModerationExecuteRequest,
-	AdminRecordModerationExecuteResponse,
-	AdminRecordModerationHistoryRequest,
-	AdminRecordModerationHistoryResponse,
-	AdminRecordModerationPreviewRequest,
-	AdminRecordModerationPreviewResponse,
 	AdminRegistrationApplicationsRequest,
 	AdminRegistrationApplicationsResponse,
 	AdminRejectRegistrationRequest,
@@ -230,7 +205,6 @@ import type {
 	BubbleGameRankingRequest,
 	BubbleGameRankingResponse,
 	BubbleGameRegisterRequest,
-	ChannelsAddMemberRequest,
 	ChannelsCreateRequest,
 	ChannelsCreateResponse,
 	ChannelsFavoriteRequest,
@@ -238,25 +212,13 @@ import type {
 	ChannelsFollowRequest,
 	ChannelsFollowedRequest,
 	ChannelsFollowedResponse,
-	ChannelsInvitationsRequest,
-	ChannelsInvitationsResponse,
-	ChannelsInvitationsAcceptRequest,
-	ChannelsInvitationsAcceptResponse,
-	ChannelsInvitationsRejectRequest,
-	ChannelsJoinRequest,
-	ChannelsJoinResponse,
-	ChannelsMembersRequest,
-	ChannelsMembersResponse,
 	ChannelsMyFavoritesResponse,
 	ChannelsOwnedRequest,
 	ChannelsOwnedResponse,
-	ChannelsRemoveMemberRequest,
 	ChannelsSearchRequest,
 	ChannelsSearchResponse,
 	ChannelsShowRequest,
 	ChannelsShowResponse,
-	ChannelsShowPasswordRequest,
-	ChannelsShowPasswordResponse,
 	ChannelsTimelineRequest,
 	ChannelsTimelineResponse,
 	ChannelsUnfavoriteRequest,
@@ -467,307 +429,6 @@ import type {
 	HashtagsTrendResponse,
 	HashtagsUsersRequest,
 	HashtagsUsersResponse,
-	HataConsentGetRequest,
-	HataConsentGetResponse,
-	HataConsentUpdateRequest,
-	HataConsentUpdateResponse,
-	HataEarthquakeHistoryRequest,
-	HataEarthquakeHistoryResponse,
-	HataEarthquakeNotificationSettingsResponse,
-	HataEarthquakeNotificationSettingsUpdateRequest,
-	HataEarthquakeNotificationSettingsUpdateResponse,
-	HataEarthquakeTsunamiRequest,
-	HataEarthquakeTsunamiResponse,
-	HataEmojiVoteShowRequest,
-	HataEmojiVoteShowResponse,
-	HataEmojiVoteVoteRequest,
-	HataEmojiVoteVoteResponse,
-	HataFeedbackAgreeRequest,
-	HataFeedbackAgreeResponse,
-	HataFeedbackAvailableResponse,
-	HataFeedbackCommentsRequest,
-	HataFeedbackCommentsResponse,
-	HataFeedbackCommentsCreateRequest,
-	HataFeedbackCommentsCreateResponse,
-	HataFeedbackCommentsDeleteRequest,
-	HataFeedbackCommentsMarkRequest,
-	HataFeedbackCommentsMarkResponse,
-	HataFeedbackCommentsReactRequest,
-	HataFeedbackCommentsReactResponse,
-	HataFeedbackEmojiCategoriesResponse,
-	HataFeedbackEmojiChangeRequestsRequest,
-	HataFeedbackEmojiChangeRequestsResponse,
-	HataFeedbackEmojiChangeRequestsApproveRequest,
-	HataFeedbackEmojiChangeRequestsCreateRequest,
-	HataFeedbackEmojiChangeRequestsCreateResponse,
-	HataFeedbackEmojiChangeRequestsHoldRequest,
-	HataFeedbackEmojiChangeRequestsRejectRequest,
-	HataFeedbackEmojiQuotaResponse,
-	HataFeedbackEmojiRequestsRequest,
-	HataFeedbackEmojiRequestsResponse,
-	HataFeedbackEmojiRequestsApproveRequest,
-	HataFeedbackEmojiRequestsCancelRequest,
-	HataFeedbackEmojiRequestsCreateRequest,
-	HataFeedbackEmojiRequestsCreateResponse,
-	HataFeedbackEmojiRequestsHoldRequest,
-	HataFeedbackEmojiRequestsRejectRequest,
-	HataFeedbackIssuesRequest,
-	HataFeedbackIssuesResponse,
-	HataFeedbackIssuesCloseRequest,
-	HataFeedbackIssuesCreateRequest,
-	HataFeedbackIssuesCreateResponse,
-	HataFeedbackIssuesDeleteRequest,
-	HataFeedbackIssuesExportRequest,
-	HataFeedbackIssuesExportResponse,
-	HataFeedbackIssuesShowRequest,
-	HataFeedbackIssuesShowResponse,
-	HataFeedbackIssuesStatusCountsRequest,
-	HataFeedbackIssuesStatusCountsResponse,
-	HataFeedbackIssuesUpdateRequest,
-	HataFeedbackIssuesUpdateResponse,
-	HataFeedbackModeratorsGrantRequest,
-	HataFeedbackModeratorsRevokeRequest,
-	HataFeedbackNotificationsRequest,
-	HataFeedbackNotificationsResponse,
-	HataFeedbackNotificationsReadRequest,
-	HataFeedbackProjectsRequest,
-	HataFeedbackProjectsResponse,
-	HataFeedbackProjectsCreateRequest,
-	HataFeedbackProjectsCreateResponse,
-	HataFeedbackProjectsDeleteRequest,
-	HataFeedbackProjectsUpdateRequest,
-	HataFeedbackProjectsUpdateResponse,
-	HataFeedbackRemoteEmojisRequest,
-	HataFeedbackRemoteEmojisResponse,
-	HataHatadyActivitiesRequest,
-	HataHatadyActivitiesResponse,
-	HataHatadyAdminBooksRequest,
-	HataHatadyAdminBooksResponse,
-	HataHatadyAdminDeleteBookRequest,
-	HataHatadyAdminModerationListRequest,
-	HataHatadyAdminModerationListResponse,
-	HataHatadyAdminModerationReviewRequest,
-	HataHatadyAdminModerationReviewResponse,
-	HataHatadyAdminModerationShowRequest,
-	HataHatadyAdminModerationShowResponse,
-	HataHatadyBookmarksCreateRequest,
-	HataHatadyBookmarksCreateResponse,
-	HataHatadyBookmarksDeleteRequest,
-	HataHatadyBookmarksUpdateRequest,
-	HataHatadyBookmarksUpdateResponse,
-	HataHatadyBooksRequest,
-	HataHatadyBooksResponse,
-	HataHatadyBooksCreateRequest,
-	HataHatadyBooksCreateResponse,
-	HataHatadyBooksDeleteRequest,
-	HataHatadyBooksShowRequest,
-	HataHatadyBooksShowResponse,
-	HataHatadyBooksUpdateRequest,
-	HataHatadyBooksUpdateResponse,
-	HataHatadyCommentsRequest,
-	HataHatadyCommentsResponse,
-	HataHatadyCommentsCreateRequest,
-	HataHatadyCommentsCreateResponse,
-	HataHatadyCommentsDeleteRequest,
-	HataHatadyCommentsDeleteResponse,
-	HataHatadyCommentsUpdateRequest,
-	HataHatadyCommentsUpdateResponse,
-	HataHatadyFollowersRemoveRequest,
-	HataHatadyFollowingCreateRequest,
-	HataHatadyFollowingDeleteRequest,
-	HataHatadyFollowingListRequest,
-	HataHatadyFollowingListResponse,
-	HataHatadyGoalsResponse,
-	HataHatadyGoalsCreateRequest,
-	HataHatadyGoalsCreateResponse,
-	HataHatadyGoalsDeleteRequest,
-	HataHatadyGoalsUpdateRequest,
-	HataHatadyLogsRequest,
-	HataHatadyLogsResponse,
-	HataHatadyLogsCreateRequest,
-	HataHatadyLogsCreateResponse,
-	HataHatadyLogsDeleteRequest,
-	HataHatadyLogsShowRequest,
-	HataHatadyLogsShowResponse,
-	HataHatadyLogsUpdateRequest,
-	HataHatadyLogsUpdateResponse,
-	HataHatadyMediaCommentsCreateRequest,
-	HataHatadyMediaCommentsCreateResponse,
-	HataHatadyMediaCommentsDeleteRequest,
-	HataHatadyMediaCommentsListRequest,
-	HataHatadyMediaCommentsListResponse,
-	HataHatadyMediaCommentsUpdateRequest,
-	HataHatadyMediaCommentsUpdateResponse,
-	HataHatadyMediaReactionsCreateRequest,
-	HataHatadyMediaReactionsDeleteRequest,
-	HataHatadyMediaReactionsListRequest,
-	HataHatadyMediaReactionsListResponse,
-	HataHatadyMediaSessionsCreateRequest,
-	HataHatadyMediaSessionsCreateResponse,
-	HataHatadyMediaSessionsDeleteRequest,
-	HataHatadyMediaSessionsListRequest,
-	HataHatadyMediaSessionsListResponse,
-	HataHatadyMediaSessionsShowRequest,
-	HataHatadyMediaSessionsShowResponse,
-	HataHatadyMediaSessionsUpdateRequest,
-	HataHatadyMediaSessionsUpdateResponse,
-	HataHatadyMediaWorksCreateRequest,
-	HataHatadyMediaWorksCreateResponse,
-	HataHatadyMediaWorksDeleteRequest,
-	HataHatadyMediaWorksListRequest,
-	HataHatadyMediaWorksListResponse,
-	HataHatadyMediaWorksShowRequest,
-	HataHatadyMediaWorksShowResponse,
-	HataHatadyMediaWorksUpdateRequest,
-	HataHatadyMediaWorksUpdateResponse,
-	HataHatadyMemosCreateRequest,
-	HataHatadyMemosCreateResponse,
-	HataHatadyMemosDeleteRequest,
-	HataHatadyMemosUpdateRequest,
-	HataHatadyMemosUpdateResponse,
-	HataHatadyNotificationsRequest,
-	HataHatadyNotificationsResponse,
-	HataHatadyNotificationsDeleteRequest,
-	HataHatadyNotificationsMarkAsReadRequest,
-	HataHatadyNotificationsRestoreRequest,
-	HataHatadyNotificationsUnreadCountResponse,
-	HataHatadyProfileUpdateRequest,
-	HataHatadyReactionsCreateRequest,
-	HataHatadyReactionsDeleteRequest,
-	HataHatadyReactionsListRequest,
-	HataHatadyReactionsListResponse,
-	HataHatadySearchRequest,
-	HataHatadySearchResponse,
-	HataHatadyStatsRequest,
-	HataHatadyStatsResponse,
-	HataHatadyStatsDetailRequest,
-	HataHatadyStatsDetailResponse,
-	HataHatadyStreaksRequest,
-	HataHatadyStreaksResponse,
-	HataHatadySubjectsResponse,
-	HataHatadySubjectsDeleteRequest,
-	HataHatadySubjectsDeleteResponse,
-	HataHatadySubjectsSaveRequest,
-	HataHatadySubjectsSaveResponse,
-	HataHatadyTimelineRequest,
-	HataHatadyTimelineResponse,
-	HataHatadyUsersShowRequest,
-	HataHatadyUsersShowResponse,
-	HataHatagoesHomeDailyRequest,
-	HataHatagoesHomeDailyResponse,
-	HataHatagoesHomeIssuesResponse,
-	HataHatagoesNotificationsUnreadCountResponse,
-	HataHatagoesSearchRequest,
-	HataHatagoesSearchResponse,
-	HataHatagoesShowRequest,
-	HataHatagoesShowResponse,
-	HataHataskEmotionAnalysisCreateRequest,
-	HataHataskEmotionAnalysisCreateResponse,
-	HataHataskEmotionAnalysisDeleteRequest,
-	HataHataskEmotionAnalysisDeleteResponse,
-	HataHataskEmotionAnalysisListRequest,
-	HataHataskEmotionAnalysisListResponse,
-	HataHataskEmotionAnalysisShowRequest,
-	HataHataskEmotionAnalysisShowResponse,
-	HataLoginRankingResponse,
-	HataMascotGetResponse,
-	HataMascotUpdateRequest,
-	HataMascotUpdateResponse,
-	HataUiSAnnouncementClaimResponse,
-	HataigoActionRequest,
-	HataigoActionResponse,
-	HataigoCancelGameRequest,
-	HataigoCancelGameResponse,
-	HataigoChatCapabilityResponse,
-	HataigoChatDeleteRequest,
-	HataigoChatMessagesRequest,
-	HataigoChatMessagesResponse,
-	HataigoChatPostRequest,
-	HataigoChatPostResponse,
-	HataigoClaimTimeoutRequest,
-	HataigoClaimTimeoutResponse,
-	HataigoGamesRequest,
-	HataigoGamesResponse,
-	HataigoInvitationsResponse,
-	HataigoMatchRequest,
-	HataigoMatchResponse,
-	HataigoMyStatsResponse,
-	HataigoReadyRequest,
-	HataigoReadyResponse,
-	HataigoRespondInviteRequest,
-	HataigoRespondInviteResponse,
-	HataigoSettingsRequest,
-	HataigoSettingsResponse,
-	HataigoShowGameRequest,
-	HataigoShowGameResponse,
-	HataigoSurrenderRequest,
-	HataigoSurrenderResponse,
-	HataigoVerifyRequest,
-	HataigoVerifyResponse,
-	HataskEventsCloseRequest,
-	HataskEventsCreateRequest,
-	HataskEventsCreateResponse,
-	HataskEventsDeleteRequest,
-	HataskEventsListRequest,
-	HataskEventsListResponse,
-	HataskEventsOwnedRequest,
-	HataskEventsOwnedResponse,
-	HataskEventsRsvpRequest,
-	HataskEventsUpdateRequest,
-	HataskEventsUpdateResponse,
-	HataskFlowersDropsPourRequest,
-	HataskFlowersDropsPourResponse,
-	HataskFlowersDropsShowRequest,
-	HataskFlowersDropsShowResponse,
-	HataskFlowersFestivalShowRequest,
-	HataskFlowersFestivalShowResponse,
-	HataskFlowersHarvestRequest,
-	HataskFlowersHarvestResponse,
-	HataskFlowersListRequest,
-	HataskFlowersListResponse,
-	HataskFlowersRenameRequest,
-	HataskFlowersRenameResponse,
-	HataskFlowersStateRequest,
-	HataskFlowersStateResponse,
-	HataskFlowersSyncRequest,
-	HataskFlowersSyncResponse,
-	HataskFlowersVisibilityUpdateRequest,
-	HataskFlowersVisibilityUpdateResponse,
-	HataskFlowersZukanClaimSeedRequest,
-	HataskFlowersZukanClaimSeedResponse,
-	HataskFlowersZukanShowRequest,
-	HataskFlowersZukanShowResponse,
-	HataskPlannerCommitRequest,
-	HataskPlannerCommitResponse,
-	HataskPlannerCommitBatchRequest,
-	HataskPlannerCommitBatchResponse,
-	HataskPlannerCreateShadowRequest,
-	HataskPlannerCreateShadowResponse,
-	HataskPlannerGetResponse,
-	HataskRankingListRequest,
-	HataskRankingListResponse,
-	HataskRankingParticipationRequest,
-	HataskRankingParticipationResponse,
-	HataskRecipesCookedCreateRequest,
-	HataskRecipesCookedCreateResponse,
-	HataskRecipesCookedDeleteRequest,
-	HataskRecipesCookedListRequest,
-	HataskRecipesCookedListResponse,
-	HataskRecipesCreateRequest,
-	HataskRecipesCreateResponse,
-	HataskRecipesDeleteRequest,
-	HataskRecipesListRequest,
-	HataskRecipesListResponse,
-	HataskRecipesShowRequest,
-	HataskRecipesShowResponse,
-	HataskRecipesUpdateRequest,
-	HataskRecipesUpdateResponse,
-	HataskRecordsExportResponse,
-	HataskRecordsImportRequest,
-	HataskRecordsImportResponse,
-	HataskSupportShowResponse,
-	HataskSupportSupportersRequest,
-	HataskSupportSupportersResponse,
 	IResponse,
 	I2faDoneRequest,
 	I2faDoneResponse,
@@ -1140,16 +801,6 @@ export type Endpoints = {
 	'admin/get-index-stats': { req: EmptyRequest; res: AdminGetIndexStatsResponse };
 	'admin/get-table-stats': { req: EmptyRequest; res: AdminGetTableStatsResponse };
 	'admin/get-user-ips': { req: AdminGetUserIpsRequest; res: AdminGetUserIpsResponse };
-	'admin/hata/consent-list': { req: AdminHataConsentListRequest; res: AdminHataConsentListResponse };
-	'admin/hatask/records/list': { req: AdminHataskRecordsListRequest; res: AdminHataskRecordsListResponse };
-	'admin/hatask/records/review': { req: AdminHataskRecordsReviewRequest; res: AdminHataskRecordsReviewResponse };
-	'admin/hatask/records/show': { req: AdminHataskRecordsShowRequest; res: AdminHataskRecordsShowResponse };
-	'admin/hatask/support/register': { req: AdminHataskSupportRegisterRequest; res: AdminHataskSupportRegisterResponse };
-	'admin/hatask/support/show': { req: AdminHataskSupportShowRequest; res: AdminHataskSupportShowResponse };
-	'admin/hatask/support/supporters': { req: AdminHataskSupportSupportersRequest; res: AdminHataskSupportSupportersResponse };
-	'admin/hatask/support/unregister': { req: AdminHataskSupportUnregisterRequest; res: AdminHataskSupportUnregisterResponse };
-	'admin/hatask/support/update': { req: AdminHataskSupportUpdateRequest; res: AdminHataskSupportUpdateResponse };
-	'admin/hatask/update-decoration': { req: AdminHataskUpdateDecorationRequest; res: EmptyResponse };
 	'admin/invite/create': { req: AdminInviteCreateRequest; res: AdminInviteCreateResponse };
 	'admin/invite/list': { req: AdminInviteListRequest; res: AdminInviteListResponse };
 	'admin/invite/revoke': { req: EmptyRequest; res: EmptyResponse };
@@ -1169,9 +820,6 @@ export type Endpoints = {
 	'admin/queue/show-job': { req: AdminQueueShowJobRequest; res: AdminQueueShowJobResponse };
 	'admin/queue/show-job-logs': { req: AdminQueueShowJobLogsRequest; res: AdminQueueShowJobLogsResponse };
 	'admin/queue/stats': { req: EmptyRequest; res: AdminQueueStatsResponse };
-	'admin/record-moderation/execute': { req: AdminRecordModerationExecuteRequest; res: AdminRecordModerationExecuteResponse };
-	'admin/record-moderation/history': { req: AdminRecordModerationHistoryRequest; res: AdminRecordModerationHistoryResponse };
-	'admin/record-moderation/preview': { req: AdminRecordModerationPreviewRequest; res: AdminRecordModerationPreviewResponse };
 	'admin/registration-applications': { req: AdminRegistrationApplicationsRequest; res: AdminRegistrationApplicationsResponse };
 	'admin/reject-registration': { req: AdminRejectRegistrationRequest; res: AdminRejectRegistrationResponse };
 	'admin/relays/add': { req: AdminRelaysAddRequest; res: AdminRelaysAddResponse };
@@ -1232,23 +880,15 @@ export type Endpoints = {
 	'blocking/list': { req: BlockingListRequest; res: BlockingListResponse };
 	'bubble-game/ranking': { req: BubbleGameRankingRequest; res: BubbleGameRankingResponse };
 	'bubble-game/register': { req: BubbleGameRegisterRequest; res: EmptyResponse };
-	'channels/add-member': { req: ChannelsAddMemberRequest; res: EmptyResponse };
 	'channels/create': { req: ChannelsCreateRequest; res: ChannelsCreateResponse };
 	'channels/favorite': { req: ChannelsFavoriteRequest; res: EmptyResponse };
 	'channels/featured': { req: EmptyRequest; res: ChannelsFeaturedResponse };
 	'channels/follow': { req: ChannelsFollowRequest; res: EmptyResponse };
 	'channels/followed': { req: ChannelsFollowedRequest; res: ChannelsFollowedResponse };
-	'channels/invitations': { req: ChannelsInvitationsRequest; res: ChannelsInvitationsResponse };
-	'channels/invitations/accept': { req: ChannelsInvitationsAcceptRequest; res: ChannelsInvitationsAcceptResponse };
-	'channels/invitations/reject': { req: ChannelsInvitationsRejectRequest; res: EmptyResponse };
-	'channels/join': { req: ChannelsJoinRequest; res: ChannelsJoinResponse };
-	'channels/members': { req: ChannelsMembersRequest; res: ChannelsMembersResponse };
 	'channels/my-favorites': { req: EmptyRequest; res: ChannelsMyFavoritesResponse };
 	'channels/owned': { req: ChannelsOwnedRequest; res: ChannelsOwnedResponse };
-	'channels/remove-member': { req: ChannelsRemoveMemberRequest; res: EmptyResponse };
 	'channels/search': { req: ChannelsSearchRequest; res: ChannelsSearchResponse };
 	'channels/show': { req: ChannelsShowRequest; res: ChannelsShowResponse };
-	'channels/show-password': { req: ChannelsShowPasswordRequest; res: ChannelsShowPasswordResponse };
 	'channels/timeline': { req: ChannelsTimelineRequest; res: ChannelsTimelineResponse };
 	'channels/unfavorite': { req: ChannelsUnfavoriteRequest; res: EmptyResponse };
 	'channels/unfollow': { req: ChannelsUnfollowRequest; res: EmptyResponse };
@@ -1376,188 +1016,6 @@ export type Endpoints = {
 	'hashtags/show': { req: HashtagsShowRequest; res: HashtagsShowResponse };
 	'hashtags/trend': { req: EmptyRequest; res: HashtagsTrendResponse };
 	'hashtags/users': { req: HashtagsUsersRequest; res: HashtagsUsersResponse };
-	'hata/consent/get': { req: HataConsentGetRequest; res: HataConsentGetResponse };
-	'hata/consent/update': { req: HataConsentUpdateRequest; res: HataConsentUpdateResponse };
-	'hata/earthquake/history': { req: HataEarthquakeHistoryRequest; res: HataEarthquakeHistoryResponse };
-	'hata/earthquake/notification-settings': { req: EmptyRequest; res: HataEarthquakeNotificationSettingsResponse };
-	'hata/earthquake/notification-settings-update': { req: HataEarthquakeNotificationSettingsUpdateRequest; res: HataEarthquakeNotificationSettingsUpdateResponse };
-	'hata/earthquake/tsunami': { req: HataEarthquakeTsunamiRequest; res: HataEarthquakeTsunamiResponse };
-	'hata/emoji-vote/show': { req: HataEmojiVoteShowRequest; res: HataEmojiVoteShowResponse };
-	'hata/emoji-vote/vote': { req: HataEmojiVoteVoteRequest; res: HataEmojiVoteVoteResponse };
-	'hata/feedback/agree': { req: HataFeedbackAgreeRequest; res: HataFeedbackAgreeResponse };
-	'hata/feedback/available': { req: EmptyRequest; res: HataFeedbackAvailableResponse };
-	'hata/feedback/comments': { req: HataFeedbackCommentsRequest; res: HataFeedbackCommentsResponse };
-	'hata/feedback/comments/create': { req: HataFeedbackCommentsCreateRequest; res: HataFeedbackCommentsCreateResponse };
-	'hata/feedback/comments/delete': { req: HataFeedbackCommentsDeleteRequest; res: EmptyResponse };
-	'hata/feedback/comments/mark': { req: HataFeedbackCommentsMarkRequest; res: HataFeedbackCommentsMarkResponse };
-	'hata/feedback/comments/react': { req: HataFeedbackCommentsReactRequest; res: HataFeedbackCommentsReactResponse };
-	'hata/feedback/emoji-categories': { req: EmptyRequest; res: HataFeedbackEmojiCategoriesResponse };
-	'hata/feedback/emoji-change-requests': { req: HataFeedbackEmojiChangeRequestsRequest; res: HataFeedbackEmojiChangeRequestsResponse };
-	'hata/feedback/emoji-change-requests/approve': { req: HataFeedbackEmojiChangeRequestsApproveRequest; res: EmptyResponse };
-	'hata/feedback/emoji-change-requests/create': { req: HataFeedbackEmojiChangeRequestsCreateRequest; res: HataFeedbackEmojiChangeRequestsCreateResponse };
-	'hata/feedback/emoji-change-requests/hold': { req: HataFeedbackEmojiChangeRequestsHoldRequest; res: EmptyResponse };
-	'hata/feedback/emoji-change-requests/reject': { req: HataFeedbackEmojiChangeRequestsRejectRequest; res: EmptyResponse };
-	'hata/feedback/emoji-quota': { req: EmptyRequest; res: HataFeedbackEmojiQuotaResponse };
-	'hata/feedback/emoji-requests': { req: HataFeedbackEmojiRequestsRequest; res: HataFeedbackEmojiRequestsResponse };
-	'hata/feedback/emoji-requests/approve': { req: HataFeedbackEmojiRequestsApproveRequest; res: EmptyResponse };
-	'hata/feedback/emoji-requests/cancel': { req: HataFeedbackEmojiRequestsCancelRequest; res: EmptyResponse };
-	'hata/feedback/emoji-requests/create': { req: HataFeedbackEmojiRequestsCreateRequest; res: HataFeedbackEmojiRequestsCreateResponse };
-	'hata/feedback/emoji-requests/hold': { req: HataFeedbackEmojiRequestsHoldRequest; res: EmptyResponse };
-	'hata/feedback/emoji-requests/reject': { req: HataFeedbackEmojiRequestsRejectRequest; res: EmptyResponse };
-	'hata/feedback/issues': { req: HataFeedbackIssuesRequest; res: HataFeedbackIssuesResponse };
-	'hata/feedback/issues/close': { req: HataFeedbackIssuesCloseRequest; res: EmptyResponse };
-	'hata/feedback/issues/create': { req: HataFeedbackIssuesCreateRequest; res: HataFeedbackIssuesCreateResponse };
-	'hata/feedback/issues/delete': { req: HataFeedbackIssuesDeleteRequest; res: EmptyResponse };
-	'hata/feedback/issues/export': { req: HataFeedbackIssuesExportRequest; res: HataFeedbackIssuesExportResponse };
-	'hata/feedback/issues/show': { req: HataFeedbackIssuesShowRequest; res: HataFeedbackIssuesShowResponse };
-	'hata/feedback/issues/status-counts': { req: HataFeedbackIssuesStatusCountsRequest; res: HataFeedbackIssuesStatusCountsResponse };
-	'hata/feedback/issues/update': { req: HataFeedbackIssuesUpdateRequest; res: HataFeedbackIssuesUpdateResponse };
-	'hata/feedback/moderators/grant': { req: HataFeedbackModeratorsGrantRequest; res: EmptyResponse };
-	'hata/feedback/moderators/revoke': { req: HataFeedbackModeratorsRevokeRequest; res: EmptyResponse };
-	'hata/feedback/notifications': { req: HataFeedbackNotificationsRequest; res: HataFeedbackNotificationsResponse };
-	'hata/feedback/notifications/read': { req: HataFeedbackNotificationsReadRequest; res: EmptyResponse };
-	'hata/feedback/projects': { req: HataFeedbackProjectsRequest; res: HataFeedbackProjectsResponse };
-	'hata/feedback/projects/create': { req: HataFeedbackProjectsCreateRequest; res: HataFeedbackProjectsCreateResponse };
-	'hata/feedback/projects/delete': { req: HataFeedbackProjectsDeleteRequest; res: EmptyResponse };
-	'hata/feedback/projects/update': { req: HataFeedbackProjectsUpdateRequest; res: HataFeedbackProjectsUpdateResponse };
-	'hata/feedback/remote-emojis': { req: HataFeedbackRemoteEmojisRequest; res: HataFeedbackRemoteEmojisResponse };
-	'hata/hatady/activities': { req: HataHatadyActivitiesRequest; res: HataHatadyActivitiesResponse };
-	'hata/hatady/admin/books': { req: HataHatadyAdminBooksRequest; res: HataHatadyAdminBooksResponse };
-	'hata/hatady/admin/delete-book': { req: HataHatadyAdminDeleteBookRequest; res: EmptyResponse };
-	'hata/hatady/admin/moderation/list': { req: HataHatadyAdminModerationListRequest; res: HataHatadyAdminModerationListResponse };
-	'hata/hatady/admin/moderation/review': { req: HataHatadyAdminModerationReviewRequest; res: HataHatadyAdminModerationReviewResponse };
-	'hata/hatady/admin/moderation/show': { req: HataHatadyAdminModerationShowRequest; res: HataHatadyAdminModerationShowResponse };
-	'hata/hatady/bookmarks/create': { req: HataHatadyBookmarksCreateRequest; res: HataHatadyBookmarksCreateResponse };
-	'hata/hatady/bookmarks/delete': { req: HataHatadyBookmarksDeleteRequest; res: EmptyResponse };
-	'hata/hatady/bookmarks/update': { req: HataHatadyBookmarksUpdateRequest; res: HataHatadyBookmarksUpdateResponse };
-	'hata/hatady/books': { req: HataHatadyBooksRequest; res: HataHatadyBooksResponse };
-	'hata/hatady/books/create': { req: HataHatadyBooksCreateRequest; res: HataHatadyBooksCreateResponse };
-	'hata/hatady/books/delete': { req: HataHatadyBooksDeleteRequest; res: EmptyResponse };
-	'hata/hatady/books/show': { req: HataHatadyBooksShowRequest; res: HataHatadyBooksShowResponse };
-	'hata/hatady/books/update': { req: HataHatadyBooksUpdateRequest; res: HataHatadyBooksUpdateResponse };
-	'hata/hatady/comments': { req: HataHatadyCommentsRequest; res: HataHatadyCommentsResponse };
-	'hata/hatady/comments/create': { req: HataHatadyCommentsCreateRequest; res: HataHatadyCommentsCreateResponse };
-	'hata/hatady/comments/delete': { req: HataHatadyCommentsDeleteRequest; res: HataHatadyCommentsDeleteResponse };
-	'hata/hatady/comments/update': { req: HataHatadyCommentsUpdateRequest; res: HataHatadyCommentsUpdateResponse };
-	'hata/hatady/followers/remove': { req: HataHatadyFollowersRemoveRequest; res: EmptyResponse };
-	'hata/hatady/following/create': { req: HataHatadyFollowingCreateRequest; res: EmptyResponse };
-	'hata/hatady/following/delete': { req: HataHatadyFollowingDeleteRequest; res: EmptyResponse };
-	'hata/hatady/following/list': { req: HataHatadyFollowingListRequest; res: HataHatadyFollowingListResponse };
-	'hata/hatady/goals': { req: EmptyRequest; res: HataHatadyGoalsResponse };
-	'hata/hatady/goals/create': { req: HataHatadyGoalsCreateRequest; res: HataHatadyGoalsCreateResponse };
-	'hata/hatady/goals/delete': { req: HataHatadyGoalsDeleteRequest; res: EmptyResponse };
-	'hata/hatady/goals/update': { req: HataHatadyGoalsUpdateRequest; res: EmptyResponse };
-	'hata/hatady/logs': { req: HataHatadyLogsRequest; res: HataHatadyLogsResponse };
-	'hata/hatady/logs/create': { req: HataHatadyLogsCreateRequest; res: HataHatadyLogsCreateResponse };
-	'hata/hatady/logs/delete': { req: HataHatadyLogsDeleteRequest; res: EmptyResponse };
-	'hata/hatady/logs/show': { req: HataHatadyLogsShowRequest; res: HataHatadyLogsShowResponse };
-	'hata/hatady/logs/update': { req: HataHatadyLogsUpdateRequest; res: HataHatadyLogsUpdateResponse };
-	'hata/hatady/media/comments/create': { req: HataHatadyMediaCommentsCreateRequest; res: HataHatadyMediaCommentsCreateResponse };
-	'hata/hatady/media/comments/delete': { req: HataHatadyMediaCommentsDeleteRequest; res: EmptyResponse };
-	'hata/hatady/media/comments/list': { req: HataHatadyMediaCommentsListRequest; res: HataHatadyMediaCommentsListResponse };
-	'hata/hatady/media/comments/update': { req: HataHatadyMediaCommentsUpdateRequest; res: HataHatadyMediaCommentsUpdateResponse };
-	'hata/hatady/media/reactions/create': { req: HataHatadyMediaReactionsCreateRequest; res: EmptyResponse };
-	'hata/hatady/media/reactions/delete': { req: HataHatadyMediaReactionsDeleteRequest; res: EmptyResponse };
-	'hata/hatady/media/reactions/list': { req: HataHatadyMediaReactionsListRequest; res: HataHatadyMediaReactionsListResponse };
-	'hata/hatady/media/sessions/create': { req: HataHatadyMediaSessionsCreateRequest; res: HataHatadyMediaSessionsCreateResponse };
-	'hata/hatady/media/sessions/delete': { req: HataHatadyMediaSessionsDeleteRequest; res: EmptyResponse };
-	'hata/hatady/media/sessions/list': { req: HataHatadyMediaSessionsListRequest; res: HataHatadyMediaSessionsListResponse };
-	'hata/hatady/media/sessions/show': { req: HataHatadyMediaSessionsShowRequest; res: HataHatadyMediaSessionsShowResponse };
-	'hata/hatady/media/sessions/update': { req: HataHatadyMediaSessionsUpdateRequest; res: HataHatadyMediaSessionsUpdateResponse };
-	'hata/hatady/media/works/create': { req: HataHatadyMediaWorksCreateRequest; res: HataHatadyMediaWorksCreateResponse };
-	'hata/hatady/media/works/delete': { req: HataHatadyMediaWorksDeleteRequest; res: EmptyResponse };
-	'hata/hatady/media/works/list': { req: HataHatadyMediaWorksListRequest; res: HataHatadyMediaWorksListResponse };
-	'hata/hatady/media/works/show': { req: HataHatadyMediaWorksShowRequest; res: HataHatadyMediaWorksShowResponse };
-	'hata/hatady/media/works/update': { req: HataHatadyMediaWorksUpdateRequest; res: HataHatadyMediaWorksUpdateResponse };
-	'hata/hatady/memos/create': { req: HataHatadyMemosCreateRequest; res: HataHatadyMemosCreateResponse };
-	'hata/hatady/memos/delete': { req: HataHatadyMemosDeleteRequest; res: EmptyResponse };
-	'hata/hatady/memos/update': { req: HataHatadyMemosUpdateRequest; res: HataHatadyMemosUpdateResponse };
-	'hata/hatady/notifications': { req: HataHatadyNotificationsRequest; res: HataHatadyNotificationsResponse };
-	'hata/hatady/notifications/delete': { req: HataHatadyNotificationsDeleteRequest; res: EmptyResponse };
-	'hata/hatady/notifications/mark-all-read': { req: EmptyRequest; res: EmptyResponse };
-	'hata/hatady/notifications/mark-as-read': { req: HataHatadyNotificationsMarkAsReadRequest; res: EmptyResponse };
-	'hata/hatady/notifications/restore': { req: HataHatadyNotificationsRestoreRequest; res: EmptyResponse };
-	'hata/hatady/notifications/unread-count': { req: EmptyRequest; res: HataHatadyNotificationsUnreadCountResponse };
-	'hata/hatady/profile/update': { req: HataHatadyProfileUpdateRequest; res: EmptyResponse };
-	'hata/hatady/reactions/create': { req: HataHatadyReactionsCreateRequest; res: EmptyResponse };
-	'hata/hatady/reactions/delete': { req: HataHatadyReactionsDeleteRequest; res: EmptyResponse };
-	'hata/hatady/reactions/list': { req: HataHatadyReactionsListRequest; res: HataHatadyReactionsListResponse };
-	'hata/hatady/search': { req: HataHatadySearchRequest; res: HataHatadySearchResponse };
-	'hata/hatady/stats': { req: HataHatadyStatsRequest; res: HataHatadyStatsResponse };
-	'hata/hatady/stats-detail': { req: HataHatadyStatsDetailRequest; res: HataHatadyStatsDetailResponse };
-	'hata/hatady/streaks': { req: HataHatadyStreaksRequest; res: HataHatadyStreaksResponse };
-	'hata/hatady/subjects': { req: EmptyRequest; res: HataHatadySubjectsResponse };
-	'hata/hatady/subjects/delete': { req: HataHatadySubjectsDeleteRequest; res: HataHatadySubjectsDeleteResponse };
-	'hata/hatady/subjects/save': { req: HataHatadySubjectsSaveRequest; res: HataHatadySubjectsSaveResponse };
-	'hata/hatady/timeline': { req: HataHatadyTimelineRequest; res: HataHatadyTimelineResponse };
-	'hata/hatady/users/show': { req: HataHatadyUsersShowRequest; res: HataHatadyUsersShowResponse };
-	'hata/hatagoes/home/daily': { req: HataHatagoesHomeDailyRequest; res: HataHatagoesHomeDailyResponse };
-	'hata/hatagoes/home/issues': { req: EmptyRequest; res: HataHatagoesHomeIssuesResponse };
-	'hata/hatagoes/notifications/unread-count': { req: EmptyRequest; res: HataHatagoesNotificationsUnreadCountResponse };
-	'hata/hatagoes/search': { req: HataHatagoesSearchRequest; res: HataHatagoesSearchResponse };
-	'hata/hatagoes/show': { req: HataHatagoesShowRequest; res: HataHatagoesShowResponse };
-	'hata/hatask/emotion-analysis/create': { req: HataHataskEmotionAnalysisCreateRequest; res: HataHataskEmotionAnalysisCreateResponse };
-	'hata/hatask/emotion-analysis/delete': { req: HataHataskEmotionAnalysisDeleteRequest; res: HataHataskEmotionAnalysisDeleteResponse };
-	'hata/hatask/emotion-analysis/list': { req: HataHataskEmotionAnalysisListRequest; res: HataHataskEmotionAnalysisListResponse };
-	'hata/hatask/emotion-analysis/show': { req: HataHataskEmotionAnalysisShowRequest; res: HataHataskEmotionAnalysisShowResponse };
-	'hata/login-ranking': { req: EmptyRequest; res: HataLoginRankingResponse };
-	'hata/mascot/get': { req: EmptyRequest; res: HataMascotGetResponse };
-	'hata/mascot/update': { req: HataMascotUpdateRequest; res: HataMascotUpdateResponse };
-	'hata/ui-s-announcement/claim': { req: EmptyRequest; res: HataUiSAnnouncementClaimResponse };
-	'hataigo/action': { req: HataigoActionRequest; res: HataigoActionResponse };
-	'hataigo/cancel-game': { req: HataigoCancelGameRequest; res: HataigoCancelGameResponse };
-	'hataigo/cancel-match': { req: EmptyRequest; res: EmptyResponse };
-	'hataigo/chat-capability': { req: EmptyRequest; res: HataigoChatCapabilityResponse };
-	'hataigo/chat-delete': { req: HataigoChatDeleteRequest; res: EmptyResponse };
-	'hataigo/chat-messages': { req: HataigoChatMessagesRequest; res: HataigoChatMessagesResponse };
-	'hataigo/chat-post': { req: HataigoChatPostRequest; res: HataigoChatPostResponse };
-	'hataigo/claim-timeout': { req: HataigoClaimTimeoutRequest; res: HataigoClaimTimeoutResponse };
-	'hataigo/games': { req: HataigoGamesRequest; res: HataigoGamesResponse };
-	'hataigo/invitations': { req: EmptyRequest; res: HataigoInvitationsResponse };
-	'hataigo/match': { req: HataigoMatchRequest; res: HataigoMatchResponse };
-	'hataigo/my-stats': { req: EmptyRequest; res: HataigoMyStatsResponse };
-	'hataigo/ready': { req: HataigoReadyRequest; res: HataigoReadyResponse };
-	'hataigo/respond-invite': { req: HataigoRespondInviteRequest; res: HataigoRespondInviteResponse };
-	'hataigo/settings': { req: HataigoSettingsRequest; res: HataigoSettingsResponse };
-	'hataigo/show-game': { req: HataigoShowGameRequest; res: HataigoShowGameResponse };
-	'hataigo/surrender': { req: HataigoSurrenderRequest; res: HataigoSurrenderResponse };
-	'hataigo/verify': { req: HataigoVerifyRequest; res: HataigoVerifyResponse };
-	'hatask/events/close': { req: HataskEventsCloseRequest; res: EmptyResponse };
-	'hatask/events/create': { req: HataskEventsCreateRequest; res: HataskEventsCreateResponse };
-	'hatask/events/delete': { req: HataskEventsDeleteRequest; res: EmptyResponse };
-	'hatask/events/list': { req: HataskEventsListRequest; res: HataskEventsListResponse };
-	'hatask/events/owned': { req: HataskEventsOwnedRequest; res: HataskEventsOwnedResponse };
-	'hatask/events/rsvp': { req: HataskEventsRsvpRequest; res: EmptyResponse };
-	'hatask/events/update': { req: HataskEventsUpdateRequest; res: HataskEventsUpdateResponse };
-	'hatask/flowers/drops/pour': { req: HataskFlowersDropsPourRequest; res: HataskFlowersDropsPourResponse };
-	'hatask/flowers/drops/show': { req: HataskFlowersDropsShowRequest; res: HataskFlowersDropsShowResponse };
-	'hatask/flowers/festival/show': { req: HataskFlowersFestivalShowRequest; res: HataskFlowersFestivalShowResponse };
-	'hatask/flowers/harvest': { req: HataskFlowersHarvestRequest; res: HataskFlowersHarvestResponse };
-	'hatask/flowers/list': { req: HataskFlowersListRequest; res: HataskFlowersListResponse };
-	'hatask/flowers/rename': { req: HataskFlowersRenameRequest; res: HataskFlowersRenameResponse };
-	'hatask/flowers/state': { req: HataskFlowersStateRequest; res: HataskFlowersStateResponse };
-	'hatask/flowers/sync': { req: HataskFlowersSyncRequest; res: HataskFlowersSyncResponse };
-	'hatask/flowers/visibility/update': { req: HataskFlowersVisibilityUpdateRequest; res: HataskFlowersVisibilityUpdateResponse };
-	'hatask/flowers/zukan/claim-seed': { req: HataskFlowersZukanClaimSeedRequest; res: HataskFlowersZukanClaimSeedResponse };
-	'hatask/flowers/zukan/show': { req: HataskFlowersZukanShowRequest; res: HataskFlowersZukanShowResponse };
-	'hatask/planner/commit': { req: HataskPlannerCommitRequest; res: HataskPlannerCommitResponse };
-	'hatask/planner/commit-batch': { req: HataskPlannerCommitBatchRequest; res: HataskPlannerCommitBatchResponse };
-	'hatask/planner/create-shadow': { req: HataskPlannerCreateShadowRequest; res: HataskPlannerCreateShadowResponse };
-	'hatask/planner/get': { req: EmptyRequest; res: HataskPlannerGetResponse };
-	'hatask/ranking/list': { req: HataskRankingListRequest; res: HataskRankingListResponse };
-	'hatask/ranking/participation': { req: HataskRankingParticipationRequest; res: HataskRankingParticipationResponse };
-	'hatask/recipes/cooked/create': { req: HataskRecipesCookedCreateRequest; res: HataskRecipesCookedCreateResponse };
-	'hatask/recipes/cooked/delete': { req: HataskRecipesCookedDeleteRequest; res: EmptyResponse };
-	'hatask/recipes/cooked/list': { req: HataskRecipesCookedListRequest; res: HataskRecipesCookedListResponse };
-	'hatask/recipes/create': { req: HataskRecipesCreateRequest; res: HataskRecipesCreateResponse };
-	'hatask/recipes/delete': { req: HataskRecipesDeleteRequest; res: EmptyResponse };
-	'hatask/recipes/list': { req: HataskRecipesListRequest; res: HataskRecipesListResponse };
-	'hatask/recipes/show': { req: HataskRecipesShowRequest; res: HataskRecipesShowResponse };
-	'hatask/recipes/update': { req: HataskRecipesUpdateRequest; res: HataskRecipesUpdateResponse };
-	'hatask/records/export': { req: EmptyRequest; res: HataskRecordsExportResponse };
-	'hatask/records/import': { req: HataskRecordsImportRequest; res: HataskRecordsImportResponse };
-	'hatask/support/show': { req: EmptyRequest; res: HataskSupportShowResponse };
-	'hatask/support/supporters': { req: HataskSupportSupportersRequest; res: HataskSupportSupportersResponse };
 	'i': { req: EmptyRequest; res: IResponse };
 	'i/2fa/done': { req: I2faDoneRequest; res: I2faDoneResponse };
 	'i/2fa/key-done': { req: I2faKeyDoneRequest; res: I2faKeyDoneResponse };

@@ -91,29 +91,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 								@input="adjustMemoTextarea"
 							/>
 						</div>
-						<!-- 旗鯖fork: 自鯖限定の実績バッジ。表示中の項目全体を中央揃えにする。 -->
-						<div v-if="hataProfileBadges.length > 0" ref="utageBadgeRef" class="utageSuccessWrapper">
-							<MkHataProfileBadges :user="user"/>
-							<!-- 旗鯖fork: 初回アナウンス吹き出し。
-							     祖先の transform/will-change により position:fixed の基準がズレるため、
-							     Teleport で body 直下に出して真のビューポート基準にする。
-							     scoped CSS が効かないので、グローバルクラス(utageGlobalTip*)でスタイルを当てる。 -->
-							<Teleport to="body">
-								<div v-if="utageBadgeTipVisible && utageBadgeTipPos" :class="['utageGlobalTip', utageBadgeTipPos.mode === 'sheet' ? 'utageGlobalTipSheet' : utageBadgeTipPos.mode === 'windowSheet' ? 'utageGlobalTipWindowSheet' : (utageBadgeTipPos.placement === 'above' ? 'utageGlobalTipAbove' : 'utageGlobalTipBelow')]" :style="utageBadgeTipPos.mode === 'tooltip' ? { top: utageBadgeTipPos.top + 'px', left: utageBadgeTipPos.left + 'px' } : utageBadgeTipPos.mode === 'windowSheet' ? { left: utageBadgeTipPos.left + 'px', right: utageBadgeTipPos.right + 'px', bottom: utageBadgeTipPos.bottom + 'px' } : {}">
-									<div v-if="utageBadgeTipPos.mode === 'tooltip'" class="utageGlobalTipArrow" :style="{ left: utageBadgeTipPos.arrowLeft + 'px' }"></div>
-									<div class="utageGlobalTipBody">
-										<i class="ti ti-info-circle utageGlobalTipIcon"></i>
-									<div class="utageGlobalTipText">
-										<b>{{ profileTipCopy.title }}</b><br>
-										{{ profileTipCopy.description }}
-									</div>
-									</div>
-									<div class="utageGlobalTipFooter">
-									<button class="utageGlobalTipBtn" @click="dismissUtageBadgeTip">{{ profileTipCopy.gotIt }}</button>
-									</div>
-								</div>
-							</Teleport>
-						</div>
 						<div class="description">
 							<MkOmit>
 								<Mfm v-if="user.description" :text="user.description" :isNote="false" :author="user" :enableEmojiMenu="!!$i" class="_selectable"/>
@@ -204,7 +181,6 @@ import MkTextarea from '@/components/MkTextarea.vue';
 import MkOmit from '@/components/MkOmit.vue';
 import MkInfo from '@/components/MkInfo.vue';
 import MkButton from '@/components/MkButton.vue';
-import MkHataProfileBadges from '@/components/MkHataProfileBadges.vue';
 import { getUserMenu } from '@/utility/get-user-menu.js';
 import number from '@/filters/number.js';
 import { userPage } from '@/filters/user.js';
@@ -227,10 +203,8 @@ import detectLanguage from '@/utility/detect-language.js';
 import { globalEvents } from '@/events.js';
 import { notesSearchAvailable, canSearchNonLocalNotes } from '@/utility/check-permissions.js';
 import { store } from '@/store.js';
-import { getHataProfileBadges } from '@/utility/hata-profile-badges.js';
 import type XTimeline_TypeReferenceOnly from './index.timeline.vue';
 
-const profileTipCopy = i18n.ts._hata._profileTip;
 
 function calcAge(birthdate: string): number {
 	const date = new Date(birthdate);
@@ -270,96 +244,7 @@ const router = useRouter();
 
 const user = ref(props.user);
 const narrow = ref<null | boolean>(null);
-const hataProfileBadges = computed(() => getHataProfileBadges(user.value, $i?.id ?? null));
 
-// 旗鯖fork: 宴成功バッジの初回アナウンス吹き出しの表示状態
-const utageBadgeTipVisible = ref(false);
-// 旗鯖fork: 吹き出しを position:fixed で配置する際の座標。
-// プロフィールの祖先に overflow:clip が掛かっているため、absolute だと下部が切られる。
-// バッジ要素の getBoundingClientRect() からビューポート基準の座標を計算する。
-const utageBadgeRef = useTemplateRef('utageBadgeRef');
-const utageBadgeTipPos = ref<{ mode: 'tooltip' | 'sheet' | 'windowSheet'; top: number; left: number; right?: number; bottom?: number; placement: 'below' | 'above'; arrowLeft: number } | null>(null);
-
-function updateUtageBadgeTipPos() {
-	if (!utageBadgeRef.value) return;
-	// 旗鯖fork: スマホ(画面狭幅)はバッジ追従ではなく画面下部にシート表示する。
-	// モバイルブラウザのアドレスバー伸縮や visualViewport との座標系違いで
-	// fixed の座標が安定しないため、画面下部固定の方が確実に見えて押せる。
-	const MOBILE_BREAKPOINT = 600;
-	if (window.innerWidth < MOBILE_BREAKPOINT) {
-		utageBadgeTipPos.value = {
-			mode: 'sheet',
-			top: 0, left: 0, // sheet モードでは未使用(CSSで bottom 固定)
-			placement: 'below', arrowLeft: 0, // sheet モードでは未使用(矢印非表示)
-		};
-		return;
-	}
-	// 旗鯖fork: ウィンドウ表示(MkWindow)内のときは、吹き出しが Teleport で body 直下(fixed=ビューポート基準)に
-	// 出る都合上、バッジ追従だとウィンドウ枠の外(背後ページ上)へはみ出してしまう。
-	// スマホ同様にシート化し、ウィンドウ枠の内側下部に固定して「そのウィンドウの説明」だと分かるようにする。
-	const winEl = (utageBadgeRef.value as HTMLElement).closest('[data-mk-window]') as HTMLElement | null;
-	if (winEl) {
-		const wr = winEl.getBoundingClientRect();
-		const m = 12;
-		utageBadgeTipPos.value = {
-			mode: 'windowSheet',
-			top: 0,
-			left: wr.left + m,
-			right: window.innerWidth - wr.right + m,
-			bottom: window.innerHeight - wr.bottom + m,
-			placement: 'below', arrowLeft: 0, // windowSheet では未使用(矢印非表示)
-		};
-		return;
-	}
-	const rect = (utageBadgeRef.value as HTMLElement).getBoundingClientRect();
-	// 吹き出し最大幅(CSSのmax-widthと一致させる) + 画面端マージン
-	const tipMaxWidth = Math.min(300, window.innerWidth - 48);
-	const margin = 8;
-	// 左端基準で配置するが、右端を超えそうなら左に寄せる
-	let left = rect.left;
-	if (left + tipMaxWidth + margin > window.innerWidth) {
-		left = Math.max(margin, window.innerWidth - tipMaxWidth - margin);
-	}
-	// 吹き出しの予想高さ(content + padding + footer = 約230px、長文時は350px程度)。
-	// 余裕を見て 260px 確保できなければ「上出し」に切り替える。
-	const estimatedTipHeight = 260;
-	const spaceBelow = window.innerHeight - rect.bottom;
-	const spaceAbove = rect.top;
-	let top: number;
-	let placement: 'below' | 'above';
-	if (spaceBelow >= estimatedTipHeight + 10 || spaceBelow >= spaceAbove) {
-		// 下に十分な余白がある or 下の方が広い → 下出し
-		top = rect.bottom + 10;
-		placement = 'below';
-	} else {
-		// 下に余裕無し+上の方が広い → 上出し
-		top = rect.top - estimatedTipHeight - 10;
-		if (top < margin) top = margin;
-		placement = 'above';
-	}
-	// 矢印はバッジの中心を指すよう、吹き出しの左端からのオフセットを動的計算する。
-	const badgeCenterX = rect.left + rect.width / 2;
-	const arrowSize = 10;
-	let arrowLeft = badgeCenterX - left - arrowSize / 2;
-	const arrowMin = 12;
-	const arrowMax = tipMaxWidth - 12 - arrowSize;
-	arrowLeft = Math.max(arrowMin, Math.min(arrowMax, arrowLeft));
-	utageBadgeTipPos.value = { mode: 'tooltip', top, left, placement, arrowLeft };
-}
-
-function dismissUtageBadgeTip() {
-	utageBadgeTipVisible.value = false;
-	// 二度と出さないため preference に記録(preferはマルチデバイス同期されるため媒体問わず通算1回)
-	if (!prefer.s['simpleUi.utageBadgeTipShown']) {
-		prefer.commit('simpleUi.utageBadgeTipShown', true);
-	}
-}
-
-// スクロール時は座標再計算(または閉じる)。リサイズも同様。
-function onUtageScrollOrResize() {
-	if (!utageBadgeTipVisible.value) return;
-	updateUtageBadgeTipPos();
-}
 
 const rootEl = useTemplateRef('rootEl');
 const bannerEl = useTemplateRef('bannerEl');
@@ -493,19 +378,6 @@ function disposeBannerParallaxResizeObserver() {
 onMounted(() => {
 	narrow.value = rootEl.value!.clientWidth < 1000;
 
-	// 旗鯖fork: 宴成功バッジの初回アナウンス吹き出し。
-	// 自分/他人どちらのプロフィールでも、preferが未表示(false)なら1回だけ出す。
-	// 次のtickまで遅らせて、ページ遷移直後の連続描画と衝突しないようにする。
-	if (!prefer.s['simpleUi.utageBadgeTipShown']) {
-		nextTick(() => {
-			updateUtageBadgeTipPos();
-			utageBadgeTipVisible.value = true;
-		});
-	}
-	// 吹き出し表示中のスクロール/リサイズで座標を追従する
-	window.addEventListener('scroll', onUtageScrollOrResize, { passive: true, capture: true });
-	window.addEventListener('resize', onUtageScrollOrResize, { passive: true });
-
 	if (props.user.birthday) {
 		const m = new Date().getMonth() + 1;
 		const d = new Date().getDate();
@@ -546,17 +418,8 @@ onActivated(() => {
 });
 
 onUnmounted(disposeBannerParallaxResizeObserver);
-// 旗鯖fork: 宴バッジ吹き出しのscroll/resizeリスナーを解除し、
-//   Teleport で body 直下に出している吹き出しが画面に残らないよう必ず隠す。
-//   (keep-alive で deactivate された場合や、ウィンドウ(MkWindow)を閉じた場合の残留対策)
-onUnmounted(() => {
-	window.removeEventListener('scroll', onUtageScrollOrResize, { capture: true } as any);
-	window.removeEventListener('resize', onUtageScrollOrResize);
-	utageBadgeTipVisible.value = false;
-});
 onDeactivated(() => {
 	disposeBannerParallaxResizeObserver();
-	utageBadgeTipVisible.value = false;
 });
 </script>
 
@@ -775,17 +638,6 @@ onDeactivated(() => {
 					}
 				}
 
-				/* 旗鯖fork: 自鯖実績バッジ用ラッパー(吹き出しの位置基準) */
-				> .utageSuccessWrapper {
-					position: relative;
-					margin: 16px 24px 0;
-					display: flex;
-					justify-content: center;
-
-					/* 旗鯖fork: 吹き出し本体(.utageGlobalTip*) は Teleport で body 直下に出るため、
-					   scoped CSS では効かない。<style>(scopedなし)ブロックでグローバル定義している。 */
-				}
-
 				> .description {
 					padding: 24px 24px 24px 154px;
 					font-size: 0.95em;
@@ -964,11 +816,6 @@ onDeactivated(() => {
 					}
 				}
 
-				/* 狭い表示でもバッジ群をカード全体の中央に保つ。 */
-				> .utageSuccessWrapper {
-					margin: 16px 16px 0;
-				}
-
 				> .memo {
 					margin: 16px 16px 0 16px;
 				}
@@ -1046,135 +893,14 @@ onDeactivated(() => {
 </style>
 
 <style lang="scss">
-/* 旗鯖fork: 宴成功バッジの初回アナウンス吹き出し。
-   <Teleport to="body"> で body 直下に出すため scoped CSS が効かないので、
-   グローバルスコープでユニークなクラス名(.utageGlobalTip*)を使って定義する。 */
-.utageGlobalTip {
-	position: fixed;
-	z-index: 9999;
-	max-width: min(300px, calc(100vw - 48px));
-	min-width: 180px;
-	background: var(--MI_THEME-panel);
-	border: 1.5px solid color-mix(in srgb, var(--MI_THEME-accent) 50%, transparent);
-	border-radius: 10px;
-	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
-	padding: 10px 12px 8px;
-	animation: utageGlobalTipFadeIn 0.25s ease-out;
-
-	/* 旗鯖fork: スマホ時(画面下部シート表示)。バッジ追従ではなく画面下端固定。
-	   モバイルの座標系のブレ(visualViewport/アドレスバー伸縮)を完全に回避できる。 */
-	&.utageGlobalTipSheet {
-		top: auto !important;
-		left: 16px !important;
-		right: 16px;
-		bottom: 16px;
-		max-width: none;
-		min-width: 0;
-		padding: 14px 16px 12px;
-		border-radius: 14px;
-		box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
-		animation: utageGlobalTipSheetSlideUp 0.3s ease-out;
-	}
-
-	/* 旗鯖fork: ウィンドウ表示内のシート。位置(left/right/bottom)は JS からインライン指定し、
-	   ウィンドウ枠の内側下部に固定する。!important で潰さないようここでは位置を指定しない。 */
-	&.utageGlobalTipWindowSheet {
-		top: auto;
-		max-width: none;
-		min-width: 0;
-		padding: 14px 16px 12px;
-		border-radius: 14px;
-		box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
-		animation: utageGlobalTipSheetSlideUp 0.3s ease-out;
-	}
-
-	> .utageGlobalTipArrow {
-		position: absolute;
-		/* left はJSから動的指定される(バッジ中心に追従) */
-		width: 10px;
-		height: 10px;
-		background: var(--MI_THEME-panel);
-	}
-	/* 下出し時: 矢印は吹き出しの上端で上向き */
-	&.utageGlobalTipBelow > .utageGlobalTipArrow {
-		top: -6px;
-		border-top: 1.5px solid color-mix(in srgb, var(--MI_THEME-accent) 50%, transparent);
-		border-left: 1.5px solid color-mix(in srgb, var(--MI_THEME-accent) 50%, transparent);
-		transform: rotate(45deg);
-	}
-	/* 上出し時: 矢印は吹き出しの下端で下向き */
-	&.utageGlobalTipAbove > .utageGlobalTipArrow {
-		bottom: -6px;
-		border-bottom: 1.5px solid color-mix(in srgb, var(--MI_THEME-accent) 50%, transparent);
-		border-right: 1.5px solid color-mix(in srgb, var(--MI_THEME-accent) 50%, transparent);
-		transform: rotate(45deg);
-	}
-	> .utageGlobalTipBody {
-		display: flex;
-		gap: 6px;
-		align-items: flex-start;
-		font-size: 0.85em;
-		line-height: 1.5;
-		color: var(--MI_THEME-fg);
-
-		> .utageGlobalTipIcon {
-			flex-shrink: 0;
-			font-size: 1.15em;
-			color: var(--MI_THEME-accent);
-			margin-top: 1px;
-		}
-		> .utageGlobalTipText {
-			flex: 1;
-			min-width: 0;
-			word-break: break-word;
-
-			b {
-				display: block;
-				margin-bottom: 3px;
-				font-size: 1em;
-			}
-		}
-	}
-	> .utageGlobalTipFooter {
-		margin-top: 8px;
-		text-align: center;
-
-		> .utageGlobalTipBtn {
-			padding: 5px 18px;
-			background: var(--MI_THEME-accent);
-			color: var(--MI_THEME-fgOnAccent);
-			border: none;
-			border-radius: 999px;
-			font-size: 0.85em;
-			font-weight: 700;
-			cursor: pointer;
-			font-family: inherit;
-			transition: opacity 0.15s;
-
-			&:hover {
-				opacity: 0.85;
-			}
-		}
-	}
-}
-
-@keyframes utageGlobalTipFadeIn {
-	from { opacity: 0; transform: translateY(-4px); }
-	to { opacity: 1; transform: translateY(0); }
-}
-@keyframes utageGlobalTipSheetSlideUp {
-	from { opacity: 0; transform: translateY(12px); }
-	to { opacity: 1; transform: translateY(0); }
-}
-
 /* =======================================================================
    旗鯖fork: UI 2 / S のプロフィールカードをガラス面にする。
    scoped ではプレフィックスの都合で :global を跨げないため、ページ固有ラッパ .ftskorzw
    配下に限定した非scopedグローバルとして定義(他ページの .main/.profile に影響させない)。
    ぼかしは --MI-blur (useBlurEffect=false で none) を尊重。
    ======================================================================= */
-html:is(.hataGlassUi, [data-hk3-ui]) .ftskorzw > .main > .profile > .main {
-	background: var(--hk3-glass-soft, color-mix(in srgb, var(--MI_THEME-panel) 70%, transparent));
+html.hataGlassUi .ftskorzw > .main > .profile > .main {
+	background: color-mix(in srgb, var(--MI_THEME-panel) 70%, transparent);
 	-webkit-backdrop-filter: var(--MI-blur, blur(20px)) saturate(1.5);
 	backdrop-filter: var(--MI-blur, blur(20px)) saturate(1.5);
 }
@@ -1183,7 +909,7 @@ html:is(.hataGlassUi, [data-hk3-ui]) .ftskorzw > .main > .profile > .main {
 .profileBgBlur {
 	display: none;
 }
-html:is(.hataGlassUi, [data-hk3-ui]) .ftskorzw > .main > .profile > .main > .profileBgBlur {
+html.hataGlassUi .ftskorzw > .main > .profile > .main > .profileBgBlur {
 	display: block;
 	position: absolute;
 	inset: -60px;
@@ -1199,10 +925,10 @@ html:is(.hataGlassUi, [data-hk3-ui]) .ftskorzw > .main > .profile > .main > .pro
    プロフィールカードのぼかしレイヤを非表示にする。
    同時にプロフィールカード面 (.main の背景) を不透明パネルに戻すことで、背景が透けない
    従来カードの見た目を維持する。 */
-html:is(.hataGlassUi, [data-hk3-ui]).hataProfileNoBannerBg .ftskorzw > .main > .profile > .main > .profileBgBlur {
+html.hataGlassUi.hataProfileNoBannerBg .ftskorzw > .main > .profile > .main > .profileBgBlur {
 	display: none !important;
 }
-html:is(.hataGlassUi, [data-hk3-ui]).hataProfileNoBannerBg .ftskorzw > .main > .profile > .main {
+html.hataGlassUi.hataProfileNoBannerBg .ftskorzw > .main > .profile > .main {
 	background: var(--MI_THEME-panel) !important;
 	-webkit-backdrop-filter: none !important;
 	backdrop-filter: none !important;
@@ -1212,7 +938,7 @@ html:is(.hataGlassUi, [data-hk3-ui]).hataProfileNoBannerBg .ftskorzw > .main > .
    (明るい文字が映える)と、テーマに応じてコントラストが取れる方向に自動で働く。
    ヘッダー画像の色がベールを突き抜けて文字と干渉しないよう、やや濃いめ(72%)にしている
    (28% はぼかし画像が残るのでヒーロー感は保たれる)。 */
-html:is(.hataGlassUi, [data-hk3-ui]) .ftskorzw > .main > .profile > .main > .profileBgBlur::after {
+html.hataGlassUi .ftskorzw > .main > .profile > .main > .profileBgBlur::after {
 	content: "";
 	position: absolute;
 	inset: 0;
@@ -1225,20 +951,9 @@ html:is(.hataGlassUi, [data-hk3-ui]) .ftskorzw > .main > .profile > .main > .pro
    「グラスUI × 狭い幅(コンテナ500px以下)」でプロフィールの名前が消えていた
    (広い幅ではバナー上の .banner-container > .title が使われるため再現しない＝"場合がある"の正体)。
    ⚠️.profile > .main の直下に子を足したら、必ずこのリストにも足すこと。 */
-html:is(.hataGlassUi, [data-hk3-ui]) .ftskorzw > .main > .profile > .main > :is(.banner-container, .title, .followedMessage, .roles, .moderationNote, .memo, .utageSuccessWrapper, .description, .fields, .status) {
+html.hataGlassUi .ftskorzw > .main > .profile > .main > :is(.banner-container, .title, .followedMessage, .roles, .moderationNote, .memo, .description, .fields, .status) {
 	position: relative;
 	z-index: 1;
 }
 
-/* プロフィール内だけ、埋め込みTLとピン留めノートへSのガラス面を渡す。 */
-html[data-hk3-ui] .ftskorzw {
-	--MI-notes-canvas: transparent;
-	--MI-notes-surface: var(--hk3-glass-note, color-mix(in srgb, var(--MI_THEME-panel) 70%, transparent));
-	--MI-notes-backdrop-filter: var(--MI-blur, blur(20px)) saturate(1.3);
-}
-html[data-hk3-ui] .ftskorzw > .main > .contents > ._gaps > .note {
-	background: var(--MI-notes-surface);
-	-webkit-backdrop-filter: var(--MI-notes-backdrop-filter);
-	backdrop-filter: var(--MI-notes-backdrop-filter);
-}
 </style>

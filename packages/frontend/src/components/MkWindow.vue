@@ -5,19 +5,17 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <template>
 <Transition
-	:enterActiveClass="goesMotion ? $style.transition_hatagoes_enterActive : motionEnabled ? $style.transition_window_enterActive : ''"
-	:leaveActiveClass="goesMotion ? $style.transition_hatagoes_leaveActive : motionEnabled ? $style.transition_window_leaveActive : ''"
-	:enterFromClass="goesMotion ? $style.transition_hatagoes_enterFrom : motionEnabled ? $style.transition_window_enterFrom : ''"
-	:leaveToClass="goesMotion ? $style.transition_hatagoes_leaveTo : motionEnabled ? $style.transition_window_leaveTo : ''"
-	:duration="goesMotion ? { enter: 180, leave: 140 } : undefined"
+	:enterActiveClass="prefer.s.animation ? $style.transition_window_enterActive : ''"
+	:leaveActiveClass="prefer.s.animation ? $style.transition_window_leaveActive : ''"
+	:enterFromClass="prefer.s.animation ? $style.transition_window_enterFrom : ''"
+	:leaveToClass="prefer.s.animation ? $style.transition_window_leaveTo : ''"
 	appear
 	@afterLeave="emit('closed')"
 >
-	<div v-if="showing" ref="rootEl" data-mk-window :data-hatagoes="!!hataGoes" :data-hatagoes-palette="hataGoesTheme ? '' : undefined" :data-hatask-theme="hataGoesTheme?.hataskTheme" :data-hatask-mode="hataGoesTheme?.hataskMode" :data-hatady-theme="hataGoesTheme?.hatadyTheme" :style="hataGoesTheme?.style" :data-center-title="centerTitle" :data-content-height="autoHeight" :data-auto-height="autoHeight && !resized && !maximized && !minimized" :class="[$style.root, hataGoesTheme?.className, { [$style.maximized]: maximized }]">
+	<div v-if="showing" ref="rootEl" data-mk-window :data-center-title="centerTitle" :data-content-height="autoHeight" :data-auto-height="autoHeight && !resized && !maximized && !minimized" :class="[$style.root, { [$style.maximized]: maximized }]">
 		<div :class="$style.body" class="_shadow" @mousedown="onBodyMousedown" @keydown="onKeydown">
 			<div :class="[$style.header, { [$style.mini]: mini }]" :data-center-title="centerTitle" @contextmenu.prevent.stop="onContextmenu">
 				<span :class="$style.headerLeft">
-					<button v-if="hataGoes && 'data-hatafeed-window' in surfaceAttrs && buttonsLeft.length === 0" type="button" :class="[$style.headerButton, $style.goesBack]" class="_button" :aria-label="i18n.ts._hata._hatady._controls.back" @click="close()"><i class="ti ti-arrow-left" aria-hidden="true"></i></button>
 					<template v-if="!minimized">
 						<button v-for="button in buttonsLeft" v-tooltip="button.title" :aria-label="button.title" class="_button" :class="[$style.headerButton, { [$style.highlighted]: button.highlighted }]" @click="button.onClick"><i :class="button.icon"></i></button>
 					</template>
@@ -55,22 +53,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { computed, inject, useAttrs, onBeforeUnmount, onMounted, provide, useTemplateRef, ref } from 'vue';
+import { onBeforeUnmount, onMounted, provide, useTemplateRef, ref } from 'vue';
 import type { MenuItem } from '@/types/menu.js';
 import contains from '@/utility/contains.js';
 import * as os from '@/os.js';
 import { i18n } from '@/i18n.js';
 import { prefer } from '@/preferences.js';
 import { getViewportTopInset } from '@/utility/viewport-inset.js';
-import { HATA_GOES_HOST, HATA_GOES_THEME } from '@/utility/hatagoes-context.js';
-import { hatagoesWindowMotion } from '@/utility/hatagoes-motion.js';
-
-const hataGoes = inject(HATA_GOES_HOST, null);
-const themeContext = inject(HATA_GOES_THEME, null);
-const hataGoesTheme = computed(() => themeContext?.value);
-const goesMotion = hataGoes != null;
-const motionEnabled = computed(() => hatagoesWindowMotion(prefer.s.animation, goesMotion));
-const surfaceAttrs = useAttrs();
 
 type WindowButton = {
 	title: string;
@@ -508,7 +497,7 @@ onMounted(() => {
 	// 他のウィンドウ内のボタンなどを押してこのウィンドウが開かれた場合、親が最前面になろうとするのでそれに隠されないようにする
 	top();
 
-	// 旗鯖fork: 全画面で開くよう指定された場合は最大化状態で起動する(Hatady 等の全画面アプリ用)。
+	// 旗鯖fork: 全画面で開くよう指定された場合は最大化状態で起動する(全画面アプリ用)。
 	if (props.initialMaximized) maximize();
 	if (props.autoHeight && rootEl.value) {
 		contentObserver = new ResizeObserver(onBrowserResize);
@@ -529,9 +518,6 @@ defineExpose({
 </script>
 
 <style lang="scss" module>
-.transition_hatagoes_enterActive { transition: opacity 180ms ease, transform 180ms cubic-bezier(.2,.8,.2,1) !important; }
-.transition_hatagoes_leaveActive { transition: opacity 140ms ease, transform 140ms ease-in !important; }
-.transition_hatagoes_enterFrom, .transition_hatagoes_leaveTo { pointer-events: none; opacity: 0; transform: translateY(6px); }
 .transition_window_enterActive,
 .transition_window_leaveActive {
 	transition: opacity 0.2s, transform 0.2s !important;
@@ -726,17 +712,4 @@ $handleSize: 8px;
 	height: $handleSize * 2;
 	cursor: nesw-resize;
 }
-.goesBack { display: none; }
-@media (max-width: 700px) {
-	.root[data-hatagoes='true'][data-hatafeed-window] {
-		inset: 0 !important; width: 100dvw !important; height: 100dvh !important;
-		max-width: none !important; max-height: none !important;
-		> .body { border-radius: 0; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); box-sizing: border-box; }
-		> :not(.body) { display: none; }
-		.header { --height: 52px; }
-		.headerRight > button:not(:last-child) { display: none; }
-		.goesBack { display: inline-flex; align-items: center; justify-content: center; }
-	}
-}
-
 </style>

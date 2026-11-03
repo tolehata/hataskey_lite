@@ -6,7 +6,6 @@
  */
 
 import { Module } from '@nestjs/common';
-import { HATAIGO_CHAT_POLICY, hataigoChatRetentionPolicy } from '@/misc/hataigo/chat-policy.js';
 import { FanoutTimelineEndpointService } from '@/core/FanoutTimelineEndpointService.js';
 import { AbuseReportService } from '@/core/AbuseReportService.js';
 import { SystemWebhookEntityService } from '@/core/entities/SystemWebhookEntityService.js';
@@ -57,26 +56,7 @@ import { RegistrationApplicationNotificationService } from './RegistrationApplic
 import { RegistrationApplicationReviewService } from './RegistrationApplicationReviewService.js';
 import { RegistrationRejectionNotificationService } from './RegistrationRejectionNotificationService.js';
 import { PollService } from './PollService.js';
-import { UtageService } from './UtageService.js';
-import { LtlPunchService } from './LtlPunchService.js';
-import { LtlEmojiVoteService } from './LtlEmojiVoteService.js';
-import { HataskRankingService } from './HataskRankingService.js';
-import { HataskSupportService } from './HataskSupportService.js';
-import { HataskFlowerV2Service } from './HataskFlowerV2Service.js';
-import { HataskRecipeService } from './HataskRecipeService.js';
-import { HataskRecordReviewService } from './HataskRecordReviewService.js';
-import { FeedbackService } from './FeedbackService.js';
-import { FeedbackEmojiService } from './FeedbackEmojiService.js';
-import { HatadyService } from './HatadyService.js';
-import { HatagoesSearchService } from './HatagoesSearchService.js';
-import { HatadyStreamService } from './HatadyStreamService.js';
-import { HatadyMediaService } from './HatadyMediaService.js';
-import { HatadyActivityService } from './HatadyActivityService.js';
-import { HatadyAttachmentService } from './HatadyAttachmentService.js';
-import { HatadyModerationService } from './HatadyModerationService.js';
-import { RecordModerationService } from './RecordModerationService.js';
 import { ChannelService } from './ChannelService.js';
-import { EarthquakeService } from './EarthquakeService.js';
 import { PushNotificationService } from './PushNotificationService.js';
 import { QueryService } from './QueryService.js';
 import { ReactionService } from './ReactionService.js';
@@ -111,9 +91,6 @@ import { ChannelFollowingService } from './ChannelFollowingService.js';
 import { ChatService } from './ChatService.js';
 import { RegistryApiService } from './RegistryApiService.js';
 import { ReversiService } from './ReversiService.js';
-import { HataigoService } from './HataigoService.js';
-import { HataigoWithdrawalService } from './HataigoWithdrawalService.js';
-import { HataigoChatService } from './HataigoChatService.js';
 import { PageService } from './PageService.js';
 import { ActivityPubAccessControlService } from './ActivityPubAccessControlService.js';
 
@@ -141,8 +118,6 @@ import { BlockingEntityService } from './entities/BlockingEntityService.js';
 import { ChannelEntityService } from './entities/ChannelEntityService.js';
 import { ChatEntityService } from './entities/ChatEntityService.js';
 import { ClipEntityService } from './entities/ClipEntityService.js';
-import { FeedbackEntityService } from './entities/FeedbackEntityService.js';
-import { HatadyEntityService } from './entities/HatadyEntityService.js';
 import { DriveFileEntityService } from './entities/DriveFileEntityService.js';
 import { DriveFolderEntityService } from './entities/DriveFolderEntityService.js';
 import { EmojiEntityService } from './entities/EmojiEntityService.js';
@@ -172,7 +147,6 @@ import { FlashEntityService } from './entities/FlashEntityService.js';
 import { FlashLikeEntityService } from './entities/FlashLikeEntityService.js';
 import { RoleEntityService } from './entities/RoleEntityService.js';
 import { ReversiGameEntityService } from './entities/ReversiGameEntityService.js';
-import { HataigoGameEntityService } from './entities/HataigoGameEntityService.js';
 import { MetaEntityService } from './entities/MetaEntityService.js';
 
 import { ApAudienceService } from './activitypub/ApAudienceService.js';
@@ -242,18 +216,7 @@ const $NotificationService: Provider = { provide: 'NotificationService', useExis
 const $RegistrationApplicationReviewService: Provider = { provide: 'RegistrationApplicationReviewService', useExisting: RegistrationApplicationReviewService };
 const $RegistrationApplicationNotificationService: Provider = { provide: 'RegistrationApplicationNotificationService', useExisting: RegistrationApplicationNotificationService };
 const $PollService: Provider = { provide: 'PollService', useExisting: PollService };
-const $UtageService: Provider = { provide: 'UtageService', useExisting: UtageService };
-const $LtlPunchService: Provider = { provide: 'LtlPunchService', useExisting: LtlPunchService };
-const $LtlEmojiVoteService: Provider = { provide: 'LtlEmojiVoteService', useExisting: LtlEmojiVoteService };
-const $FeedbackService: Provider = { provide: 'FeedbackService', useExisting: FeedbackService };
-const $HatadyService: Provider = { provide: 'HatadyService', useExisting: HatadyService };
-const $HatadyStreamService: Provider = { provide: 'HatadyStreamService', useExisting: HatadyStreamService };
-const $HatadyMediaService: Provider = { provide: 'HatadyMediaService', useExisting: HatadyMediaService };
-const $HatadyActivityService: Provider = { provide: 'HatadyActivityService', useExisting: HatadyActivityService };
-const $HatadyAttachmentService: Provider = { provide: 'HatadyAttachmentService', useExisting: HatadyAttachmentService };
-const $HatadyModerationService: Provider = { provide: 'HatadyModerationService', useExisting: HatadyModerationService };
 const $ChannelService: Provider = { provide: 'ChannelService', useExisting: ChannelService };
-const $EarthquakeService: Provider = { provide: 'EarthquakeService', useExisting: EarthquakeService };
 const $SystemAccountService: Provider = { provide: 'SystemAccountService', useExisting: SystemAccountService };
 const $PushNotificationService: Provider = { provide: 'PushNotificationService', useExisting: PushNotificationService };
 const $QueryService: Provider = { provide: 'QueryService', useExisting: QueryService };
@@ -293,10 +256,6 @@ const $ChannelFollowingService: Provider = { provide: 'ChannelFollowingService',
 const $ChatService: Provider = { provide: 'ChatService', useExisting: ChatService };
 const $RegistryApiService: Provider = { provide: 'RegistryApiService', useExisting: RegistryApiService };
 const $ReversiService: Provider = { provide: 'ReversiService', useExisting: ReversiService };
-const $HataigoChatPolicy: Provider = { provide: HATAIGO_CHAT_POLICY, useValue: hataigoChatRetentionPolicy };
-const $HataigoWithdrawalService: Provider = { provide: 'HataigoWithdrawalService', useExisting: HataigoWithdrawalService };
-const $HataigoChatService: Provider = { provide: 'HataigoChatService', useExisting: HataigoChatService };
-const $HataigoService: Provider = { provide: 'HataigoService', useExisting: HataigoService };
 const $PageService: Provider = { provide: 'PageService', useExisting: PageService };
 const $ActivityPubAccessControlService: Provider = { provide: 'ActivityPubAccessControlService', useExisting: ActivityPubAccessControlService };
 
@@ -325,8 +284,6 @@ const $BlockingEntityService: Provider = { provide: 'BlockingEntityService', use
 const $ChannelEntityService: Provider = { provide: 'ChannelEntityService', useExisting: ChannelEntityService };
 const $ChatEntityService: Provider = { provide: 'ChatEntityService', useExisting: ChatEntityService };
 const $ClipEntityService: Provider = { provide: 'ClipEntityService', useExisting: ClipEntityService };
-const $FeedbackEntityService: Provider = { provide: 'FeedbackEntityService', useExisting: FeedbackEntityService };
-const $HatadyEntityService: Provider = { provide: 'HatadyEntityService', useExisting: HatadyEntityService };
 const $DriveFileEntityService: Provider = { provide: 'DriveFileEntityService', useExisting: DriveFileEntityService };
 const $DriveFolderEntityService: Provider = { provide: 'DriveFolderEntityService', useExisting: DriveFolderEntityService };
 const $EmojiEntityService: Provider = { provide: 'EmojiEntityService', useExisting: EmojiEntityService };
@@ -357,7 +314,6 @@ const $FlashEntityService: Provider = { provide: 'FlashEntityService', useExisti
 const $FlashLikeEntityService: Provider = { provide: 'FlashLikeEntityService', useExisting: FlashLikeEntityService };
 const $RoleEntityService: Provider = { provide: 'RoleEntityService', useExisting: RoleEntityService };
 const $ReversiGameEntityService: Provider = { provide: 'ReversiGameEntityService', useExisting: ReversiGameEntityService };
-const $HataigoGameEntityService: Provider = { provide: 'HataigoGameEntityService', useExisting: HataigoGameEntityService };
 const $MetaEntityService: Provider = { provide: 'MetaEntityService', useExisting: MetaEntityService };
 const $SystemWebhookEntityService: Provider = { provide: 'SystemWebhookEntityService', useExisting: SystemWebhookEntityService };
 
@@ -428,26 +384,7 @@ const $ApEventService: Provider = { provide: 'ApEventService', useExisting: ApEv
 		RegistrationApplicationReviewService,
 		RegistrationRejectionNotificationService,
 		PollService,
-		UtageService,
-		LtlPunchService,
-		LtlEmojiVoteService,
-		HataskRankingService,
-		HataskSupportService,
-		HataskRecipeService,
-		HataskFlowerV2Service,
-		HataskRecordReviewService,
-		FeedbackService,
-		FeedbackEmojiService,
-		HatadyService,
-		HatagoesSearchService,
-		HatadyStreamService,
-		HatadyMediaService,
-		HatadyActivityService,
-		HatadyModerationService,
-		RecordModerationService,
-		HatadyAttachmentService,
 		ChannelService,
-		EarthquakeService,
 		SystemAccountService,
 		PushNotificationService,
 		QueryService,
@@ -487,10 +424,6 @@ const $ApEventService: Provider = { provide: 'ApEventService', useExisting: ApEv
 		ChatService,
 		RegistryApiService,
 		ReversiService,
-		HataigoService,
-		HataigoChatService,
-		HataigoWithdrawalService,
-		$HataigoChatPolicy,
 		PageService,
 		NoteHistorySerivce,
 		ActivityPubAccessControlService,
@@ -520,8 +453,6 @@ const $ApEventService: Provider = { provide: 'ApEventService', useExisting: ApEv
 		ChannelEntityService,
 		ChatEntityService,
 		ClipEntityService,
-		FeedbackEntityService,
-		HatadyEntityService,
 		DriveFileEntityService,
 		DriveFolderEntityService,
 		EmojiEntityService,
@@ -552,7 +483,6 @@ const $ApEventService: Provider = { provide: 'ApEventService', useExisting: ApEv
 		FlashLikeEntityService,
 		RoleEntityService,
 		ReversiGameEntityService,
-		HataigoGameEntityService,
 		MetaEntityService,
 		SystemWebhookEntityService,
 
@@ -617,18 +547,7 @@ const $ApEventService: Provider = { provide: 'ApEventService', useExisting: ApEv
 		$RegistrationApplicationNotificationService,
 		$RegistrationApplicationReviewService,
 		$PollService,
-		$UtageService,
-		$LtlPunchService,
-		$LtlEmojiVoteService,
-		$FeedbackService,
-		$HatadyService,
-		$HatadyStreamService,
-		$HatadyMediaService,
-		$HatadyActivityService,
-		$HatadyModerationService,
-		$HatadyAttachmentService,
 		$ChannelService,
-		$EarthquakeService,
 		$SystemAccountService,
 		$PushNotificationService,
 		$QueryService,
@@ -667,9 +586,6 @@ const $ApEventService: Provider = { provide: 'ApEventService', useExisting: ApEv
 		$ChatService,
 		$RegistryApiService,
 		$ReversiService,
-		$HataigoService,
-		$HataigoChatService,
-		$HataigoWithdrawalService,
 		$PageService,
 		$ActivityPubAccessControlService,
 
@@ -698,8 +614,6 @@ const $ApEventService: Provider = { provide: 'ApEventService', useExisting: ApEv
 		$ChannelEntityService,
 		$ChatEntityService,
 		$ClipEntityService,
-		$FeedbackEntityService,
-		$HatadyEntityService,
 		$DriveFileEntityService,
 		$DriveFolderEntityService,
 		$EmojiEntityService,
@@ -730,7 +644,6 @@ const $ApEventService: Provider = { provide: 'ApEventService', useExisting: ApEv
 		$FlashLikeEntityService,
 		$RoleEntityService,
 		$ReversiGameEntityService,
-		$HataigoGameEntityService,
 		$MetaEntityService,
 		$SystemWebhookEntityService,
 
@@ -798,26 +711,7 @@ const $ApEventService: Provider = { provide: 'ApEventService', useExisting: ApEv
 		RegistrationApplicationReviewService,
 		RegistrationRejectionNotificationService,
 		PollService,
-		UtageService,
-		LtlPunchService,
-		LtlEmojiVoteService,
-		HataskRankingService,
-		HataskSupportService,
-		HataskRecipeService,
-		HataskFlowerV2Service,
-		HataskRecordReviewService,
-		FeedbackService,
-		FeedbackEmojiService,
-		HatadyService,
-		HatagoesSearchService,
-		HatadyStreamService,
-		HatadyMediaService,
-		HatadyActivityService,
-		HatadyModerationService,
-		RecordModerationService,
-		HatadyAttachmentService,
 		ChannelService,
-		EarthquakeService,
 		SystemAccountService,
 		PushNotificationService,
 		QueryService,
@@ -857,9 +751,6 @@ const $ApEventService: Provider = { provide: 'ApEventService', useExisting: ApEv
 		ChatService,
 		RegistryApiService,
 		ReversiService,
-		HataigoService,
-		HataigoChatService,
-		HataigoWithdrawalService,
 		PageService,
 		NoteHistorySerivce,
 		ActivityPubAccessControlService,
@@ -888,8 +779,6 @@ const $ApEventService: Provider = { provide: 'ApEventService', useExisting: ApEv
 		ChannelEntityService,
 		ChatEntityService,
 		ClipEntityService,
-		FeedbackEntityService,
-		HatadyEntityService,
 		DriveFileEntityService,
 		DriveFolderEntityService,
 		EmojiEntityService,
@@ -920,7 +809,6 @@ const $ApEventService: Provider = { provide: 'ApEventService', useExisting: ApEv
 		FlashLikeEntityService,
 		RoleEntityService,
 		ReversiGameEntityService,
-		HataigoGameEntityService,
 		MetaEntityService,
 		SystemWebhookEntityService,
 
@@ -985,10 +873,6 @@ const $ApEventService: Provider = { provide: 'ApEventService', useExisting: ApEv
 		$RegistrationApplicationNotificationService,
 		$RegistrationApplicationReviewService,
 		$PollService,
-		$UtageService,
-		$LtlPunchService,
-		$LtlEmojiVoteService,
-		$FeedbackService,
 		$ChannelService,
 		$SystemAccountService,
 		$PushNotificationService,
@@ -1027,9 +911,6 @@ const $ApEventService: Provider = { provide: 'ApEventService', useExisting: ApEv
 		$ChatService,
 		$RegistryApiService,
 		$ReversiService,
-		$HataigoService,
-		$HataigoChatService,
-		$HataigoWithdrawalService,
 		$PageService,
 		$ActivityPubAccessControlService,
 
@@ -1057,7 +938,6 @@ const $ApEventService: Provider = { provide: 'ApEventService', useExisting: ApEv
 		$ChannelEntityService,
 		$ChatEntityService,
 		$ClipEntityService,
-		$FeedbackEntityService,
 		$DriveFileEntityService,
 		$DriveFolderEntityService,
 		$EmojiEntityService,
@@ -1088,7 +968,6 @@ const $ApEventService: Provider = { provide: 'ApEventService', useExisting: ApEv
 		$FlashLikeEntityService,
 		$RoleEntityService,
 		$ReversiGameEntityService,
-		$HataigoGameEntityService,
 		$MetaEntityService,
 		$SystemWebhookEntityService,
 

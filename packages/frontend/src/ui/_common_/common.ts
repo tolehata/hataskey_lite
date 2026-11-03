@@ -5,15 +5,12 @@
 
 import { defineAsyncComponent } from 'vue';
 import { host } from '@@/js/config.js';
-import { miLocalStorage } from '@/local-storage.js';
 import type { MenuItem } from '@/types/menu.js';
 import * as os from '@/os.js';
 import { instance } from '@/instance.js';
 import { i18n } from '@/i18n.js';
 import { $i } from '@/i.js';
-import { prefer } from '@/preferences.js';
 import { store } from '@/store.js';
-import { enqueueHataDialog } from '@/utility/hata-dialog-queue.js';
 
 function toolsMenuItems(): MenuItem[] {
 	const items: MenuItem[] = [{
@@ -245,35 +242,4 @@ export function openToolsMenu(ev: MouseEvent) {
 	os.popupMenu(toolsMenuItems(), ev.currentTarget ?? ev.target, {
 		align: 'left',
 	});
-}
-
-// ログインボーナスダイアログを表示
-export function showLoginBonusIfNeeded() {
-	if (!$i) return;
-	if (!prefer.s.showLoginBonusPopup) return;
-	
-	const today = new Date();
-	const todayStr = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
-	const lastShown = miLocalStorage.getItem('loginBonusLastShown');
-	
-	if (lastShown === todayStr) return;
-
-	/*
-	旗鯖fork: 更新ダイアログ等と重ならないよう待ち行列に載せる。
-	⚠️以前は「表示済み」を**出す前に**書いていたため、更新ダイアログのキャッシュ削除で
-	  ページが再読み込みされると、その日はもう二度と出なかった（利用者報告）。
-	⚠️記録は閉じられたときに付ける。
-	*/
-	enqueueHataDialog(() => new Promise<void>(resolve => {
-		// 少し遅延させて表示（起動直後は避ける）
-		window.setTimeout(() => {
-			const { dispose } = os.popup(defineAsyncComponent(() => import('@/components/MkLoginBonusDialog.vue')), {}, {
-				closed: () => {
-					miLocalStorage.setItem('loginBonusLastShown', todayStr);
-					dispose();
-					resolve();
-				},
-			});
-		}, 1500);
-	}));
 }

@@ -13,7 +13,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<span>Switch is now {{ flag ? 'on' : 'off' }}</span>
 		</MkSwitch>
 		<div :class="$style.preview__content1__input">
-			<MkRadio v-model="radio" value="cherrypick">Hataskey</MkRadio>
+			<MkRadio v-model="radio" value="cherrypick">Hataskey Lite</MkRadio>
 			<MkRadio v-model="radio" value="misskey">Misskey</MkRadio>
 			<MkRadio v-model="radio" value="mastodon">Mastodon</MkRadio>
 			<MkRadio v-model="radio" value="pleroma">Pleroma</MkRadio>

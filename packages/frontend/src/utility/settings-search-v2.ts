@@ -197,18 +197,17 @@ const FALLBACKS = [
 	['/settings/webhook/new', '/settings/webhook/new'],
 	['/settings/custom-css', '/settings/custom-css'],
 	['/settings/account-stats', '/settings/account-stats'],
-	['/settings/external-account', '/settings/external-account'],
 	['/settings/hata-custom', '/settings/hata-custom'],
 	['/settings/hidden-reactions', '/settings/hidden-reactions'],
 ] as const;
 
 const KNOWN_SETTINGS_ROUTES = new Set([
-	'/settings', '/settings/profile', '/settings/note-charm', '/settings/avatar-decoration', '/settings/privacy', '/settings/emoji-palette', '/settings/drive', '/settings/drive/cleaner',
+	'/settings', '/settings/profile', '/settings/avatar-decoration', '/settings/privacy', '/settings/emoji-palette', '/settings/drive', '/settings/drive/cleaner',
 	'/settings/notifications', '/settings/email', '/settings/security', '/settings/preferences', '/settings/theme/install', '/settings/theme/manage',
 	'/settings/theme', '/settings/navbar', '/settings/timeline', '/settings/statusbar', '/settings/sounds', '/settings/plugin/install', '/settings/plugin',
 	'/settings/account-data', '/settings/mute-block', '/settings/connect', '/settings/apps', '/settings/webhook/edit/:webhookId', '/settings/webhook/new',
-	'/settings/deck', '/settings/custom-css', '/settings/profiles', '/settings/accounts', '/settings/other', '/settings/hata-custom', '/settings/external-account',
-	'/settings/hidden-reactions', '/settings/account-stats', '/settings/cherrypick', '/settings/hatafeed', '/settings/concrnt',
+	'/settings/deck', '/settings/custom-css', '/settings/profiles', '/settings/accounts', '/settings/other', '/settings/hata-custom',
+	'/settings/hidden-reactions', '/settings/account-stats', '/settings/cherrypick',
 ]);
 
 const ENGLISH_CATEGORY_LABELS_V2: Record<string, string> = {
@@ -228,7 +227,6 @@ const ENGLISH_FALLBACK_LABELS: Record<string, { label: string; aliases: string[]
 	'/settings/webhook/new': { label: 'Add Webhook', aliases: ['webhook 新規', 'Webhook作成'], description: 'Create a Webhook' },
 	'/settings/custom-css': { label: 'Custom CSS', aliases: ['custom css', 'CSS'], description: 'Configure custom CSS' },
 	'/settings/account-stats': { label: 'Account statistics', aliases: ['統計', 'account statistics'], description: 'View account statistics' },
-	'/settings/external-account': { label: 'External account', aliases: ['外部連携', 'external account'], description: 'Configure external account connections' },
 	'/settings/hata-custom': { label: 'Hataskey features', aliases: ['旗鯖', 'Hataskey独自設定', 'custom features'], description: 'Configure Hataskey features' },
 	'/settings/hidden-reactions': { label: 'Hidden reactions', aliases: ['リアクション非表示', 'hidden reactions'], description: 'Manage hidden reactions' },
 };
@@ -281,7 +279,6 @@ const FALLBACK_SEMANTIC_GROUPS: Readonly<Record<string, string>> = {
 };
 
 const LEGACY_ROUTE_SEMANTIC_GROUPS: Readonly<Record<string, string>> = {
-	'/settings/concrnt': 'settings.semantic.feature.concrnt-linking',
 	'/settings/emoji-palette': 'settings.semantic.feature.emoji-input',
 	// The code editor is the install form itself; the existing Plugin settings
 	// marker is its named management peer, rather than a generic same-route
@@ -308,19 +305,16 @@ const KNOWN_ALIASES: Array<[string, string[]]> = [
 	['showGapBetweenNotesInTimeline', ['間隔', '詰める', '余白']],
 	['simpleUi.glassUiCardOpacity', ['透過', 'opacity', '角丸カード']],
 	['simpleUi.hideBotsInTimeline', ['bot', '自動投稿', 'ノイズ']],
-	['simpleUi.showHatadyTab', ['Hatady', '記録', 'タイムライン', 'タブ']],
 	['simpleUi.bottomNav', ['ナビ', 'タブ', '下のバー']],
 	['nicknameEnabled', ['ニックネーム', 'ニャ']],
 	['chat.sendOnEnter', ['Enterで送信', 'エンターで送信']],
 	['hataBranding.useHatakyu', ['ハタキュ', 'アイコン', 'ブランディング']],
-	['weatherEffect.enabled', ['天気', '雨', '雪', '若葉', '演出']],
 	['deck.columnAlign', ['カラム']],
 	['deck.wallpaper', ['壁紙']],
 	['deck.menuPosition', ['メニュー位置']],
 ];
 
 const KEYWORD_ALIASES: Record<string, string[]> = {
-	concrnt: ['コンカレント', 'Concrnt', 'concurrent', 'CTL'],
 	note: ['ノート'], notes: ['ノート'], gap: ['間隔', 'すき間'], spacing: ['間隔'], timeline: ['タイムライン'],
 	font: ['フォント'], blur: ['ぼかし'], send: ['送信'], enter: ['Enter'], bottom: ['下', '下部'],
 };
@@ -405,13 +399,11 @@ function categoryFor(
 	// `/settings/hata-custom` is a launch surface, not a product category.  Its
 	// individual source and activation are the only deterministic evidence for
 	// the redesigned IA, so resolve those before route/term heuristics.
-	if (route === '/settings/note-charm') id = 'account';
-	else if (sourceFile === 'src/components/HatasabaUi2SettingsBody.vue'
+	if (sourceFile === 'src/components/HatasabaUi2SettingsBody.vue'
 		|| sourceFile === 'src/components/HatasabaUi2ImmediateSettings.vue'
 		|| /hatasaba-ui2|hatasaba-ui-/u.test(semantic)
 		|| (context.activation?.kind === 'popup' && context.activation.popup === 'hatasaba-ui2')) id = 'hataskey-ui';
 	else if (route === '/settings/hata-custom' && activationCategory === 'glassUi') id = 'hataskey-ui';
-	else if (route === '/settings/hata-custom' && activationCategory === 'font') id = 'theme-font';
 	else if (route === '/settings/hata-custom' && activationCategory === 'visual') id = 'display-notes';
 	else if (route === '/settings/hata-custom' && activationCategory != null) id = 'hata-tools';
 	else if (/hata-custom|旗鯖|custom features/u.test(value)) id = 'hata-tools';
@@ -421,7 +413,7 @@ function categoryFor(
 	else if (/font|theme|custom-css|blur|opacity|transparent|semi|フォント|テーマ|カスタムcss|ぼかし|透過|半透明/u.test(value)) id = 'theme-font';
 	else if (/timeline|send|enter|posting|投稿|送信|タイムライン/u.test(value)) id = 'timeline-posting';
 	else if (/navbar|deck|avatar-decoration|statusbar|display|表示|ナビ|デッキ/u.test(value)) id = 'display-notes';
-	else if (/drive|account-data|apps|connect|webhook|external-account|concrnt|データ|連携/u.test(value)) id = 'data-connect';
+	else if (/drive|account-data|apps|connect|webhook|データ|連携/u.test(value)) id = 'data-connect';
 	else if (/profile|privacy|security|accounts|account|email|プロフィール|プライバシー|セキュリティ|アカウント/u.test(value)) id = 'account';
 	else if (/ui|interface|misskey/u.test(value)) id = 'misskey-ui';
 	return { id, label: categoryLabelV2(id, presentation) };
@@ -429,14 +421,10 @@ function categoryFor(
 
 function catalogOwnerFor(sourceFile: string | undefined, route: string): SettingsOwnerV2 {
 	if (route === '/settings/cherrypick') return 'cherrypick';
-	if (route === '/settings/hata-custom' || route === '/settings/concrnt'
+	if (route === '/settings/hata-custom'
 		|| sourceFile === 'settings-shell'
 		|| sourceFile?.includes('HatasabaUi2') === true
 		|| sourceFile?.includes('HataSettings') === true
-		|| sourceFile?.endsWith('/HataskSettings.vue') === true
-		|| sourceFile?.endsWith('/HatadyDisplaySettings.vue') === true
-		|| sourceFile?.endsWith('/MkMascotSettings.vue') === true
-		|| sourceFile?.endsWith('/MkEarthquakeSettings.vue') === true
 		|| sourceFile?.endsWith('/MkUISetup.vue') === true) return 'hatasaba';
 	return 'core';
 }
@@ -484,16 +472,6 @@ function applicableUiCovers(source: SettingsApplicableUiV2, target: SettingsAppl
 }
 
 function metadataForLegacyDescriptor(route: string, sourceFile?: string): Pick<SettingsCatalogDescriptorV2, 'persistence' | 'saveMode' | 'availability' | 'owner' | 'applicableUi' | 'metadataEvidence'> {
-	if (route === '/settings/concrnt') return {
-		persistence: 'device', saveMode: 'immediate', availability: 'all', owner: 'hatasaba', applicableUi: 'all',
-		metadataEvidence: {
-			persistence: 'ConcrntStorage stores settings in the owner-scoped HataskeyConcrnt/private IndexedDB connection record; preferences sync and export exclude it',
-			saveMode: 'updateConcrntSettings persists each confirmed setting change',
-			availability: 'The Concrnt settings page has no viewport restriction',
-			owner: 'Hataskey independent Concrnt v2 integration',
-			applicableUi: 'The Concrnt settings route is shared by all shells',
-		},
-	};
 	return {
 		persistence: 'profile',
 		saveMode: 'immediate',
@@ -698,14 +676,11 @@ const MAX_NESTED_MARKER_GROUP_MEMBERS = 8;
 const MAX_NEARBY_FEATURE_DISTANCE = 6;
 const FINITE_GROUP_PEER_FEATURES = new Set([
 	'settings.semantic.feature.preference-profiles',
-	'settings.semantic.feature.external-account-linking',
-	'settings.semantic.feature.concrnt-linking',
 	'settings.semantic.feature.mute-block',
 	'settings.semantic.feature.plugin-install',
 	'settings.semantic.feature.statusbar-editor',
 	'settings.semantic.feature.theme-customization',
 	'settings.semantic.feature.drive-cleaner',
-	'settings.semantic.feature.mascot-display-settings',
 	'settings.semantic.feature.emoji-palette',
 ]);
 
@@ -855,19 +830,6 @@ function relationEvidence(
 	const sharedFeatureGroup = featureGroups(a).find(group => featureGroups(b).includes(group));
 	const pushSource = 'src/components/MkPushNotificationAllowButton.vue';
 	if (sharedFeatureGroup === 'settings.semantic.feature.notification-delivery' && (a.sourceFile !== pushSource || b.sourceFile !== pushSource)) return null;
-	// The external-account popup has one static parent and a separate toast
-	// toggle. Keep that audited parent relationship, while refusing every
-	// timeline-looking target from the same feature namespace.
-	if (sharedFeatureGroup === 'settings.semantic.feature.external-account-linking'
-		&& (isExternalNotificationLabel(a.label) || isExternalNotificationLabel(b.label))) {
-		const toast = isExternalNotificationLabel(a.label) ? a : b;
-		const target = toast === a ? b : a;
-		if (target.preferenceKeys.includes('external.enabled')
-			|| target.stableId === 'settings.fallback.settings-external-account') {
-			return { stableId: b.stableId, kind: 'sameTopic', reasonKey: 'sameFeature', reason: relationReasonV2('sameFeature', presentation), weight: 1.05 };
-		}
-		return null;
-	}
 	if (sharedFeatureGroup != null && a.sourceFile != null && a.sourceFile === b.sourceFile
 		&& ((semanticMemberCounts.get(sharedFeatureGroup) ?? Number.POSITIVE_INFINITY) <= MAX_NESTED_MARKER_GROUP_MEMBERS
 			|| relationDistance(a, b, 'sameFeature') <= MAX_NEARBY_FEATURE_DISTANCE)) {
@@ -886,18 +848,6 @@ function relationEvidence(
 	// widen this to route/category fallback.
 	if (sharedFeatureGroup === 'settings.semantic.feature.drive-cleaner'
 		&& (a.isFallback || b.isFallback || a.stableId === 'settings.fallback.settings-drive-cleaner' || b.stableId === 'settings.fallback.settings-drive-cleaner')) {
-		return { stableId: b.stableId, kind: 'sameTopic', reasonKey: 'sameFeature', reason: relationReasonV2('sameFeature', presentation), weight: 1.05 };
-	}
-	// The Hatady popup has one save control and one static launcher host. Both
-	// are the same named feature even though the host is generated from the
-	// outer settings page rather than the popup SFC's source group.
-	const isHatadyActivation = (activation: SettingsControlActivationV2 | undefined): boolean => activation?.kind === 'popup'
-		? activation.popup === 'hatady'
-		: activation?.kind === 'hata-custom-category' && activation.category === 'hatady';
-	if (isHatadyActivation(a.activation) && isHatadyActivation(b.activation)) {
-		return { stableId: b.stableId, kind: 'sameTopic', reasonKey: 'sameFeature', reason: relationReasonV2('sameFeature', presentation), weight: 1.05 };
-	}
-	if (a.sourceFile === 'src/components/HatadyDisplaySettings.vue' && b.activation?.kind === 'hata-custom-category' && b.activation.category === 'hatady') {
 		return { stableId: b.stableId, kind: 'sameTopic', reasonKey: 'sameFeature', reason: relationReasonV2('sameFeature', presentation), weight: 1.05 };
 	}
 	const sameSemanticGroup = a.semanticGroupId != null && a.semanticGroupId === b.semanticGroupId;

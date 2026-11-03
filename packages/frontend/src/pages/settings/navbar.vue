@@ -23,7 +23,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 							:class="$style.item"
 						>
 							<button class="_button" :class="$style.itemHandle"><i class="ti ti-menu"></i></button>
-							<HataAppNavIcon v-if="hataAppForMenuIcon(element.type)" :app="hataAppForMenuIcon(element.type)!" :size="24" :monochrome="store.r.darkMode.value" :class="$style.itemIcon"/><i v-else class="ti-fw" :class="[$style.itemIcon, navbarItemDef[element.type]?.icon]"></i><span :class="$style.itemText">{{ navbarItemDef[element.type]?.title ?? i18n.ts.divider }}</span>
+							<i class="ti-fw" :class="[$style.itemIcon, navbarItemDef[element.type]?.icon]"></i><span :class="$style.itemText">{{ navbarItemDef[element.type]?.title ?? i18n.ts.divider }}</span>
 							<button class="_button" :class="$style.itemRemove" @click="removeItem(index)"><i class="ti ti-x"></i></button>
 						</div>
 					</template>
@@ -85,13 +85,10 @@ import { definePage } from '@/page.js';
 import { prefer } from '@/preferences.js';
 import { getInitialPrefValue } from '@/preferences/manager.js';
 import { genId } from '@/utility/id.js';
-import HataAppNavIcon from '@/components/HataAppNavIcon.vue';
-import { hataAppForMenuIcon } from '@/utility/hata-app-brand.js';
-import { normalizeHatagoesMenu } from '@/utility/hatagoes-sidebar.js';
 
 const Sortable = defineAsyncComponent(() => import('vuedraggable').then(x => x.default));
 
-const items = ref(normalizeHatagoesMenu(prefer.s.menu).map(x => ({
+const items = ref(prefer.s.menu.map(x => ({
 	id: genId(),
 	type: x,
 })));
@@ -137,12 +134,12 @@ function removeItem(index: number) {
 }
 
 function save() {
-	prefer.commit('menu', normalizeHatagoesMenu(itemTypeValues.value));
+	prefer.commit('menu', itemTypeValues.value);
 	os.success();
 }
 
 function reset() {
-	items.value = normalizeHatagoesMenu(getInitialPrefValue('menu')).map(x => ({
+	items.value = getInitialPrefValue('menu').map(x => ({
 		id: genId(),
 		type: x,
 	}));

@@ -4,7 +4,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-<SearchMarker path="/settings/hata-custom" :label="i18n.ts._hata._customSettings.title" :keywords="['hata', 'custom', 'simple', 'widget', 'timeline', 'font']" icon="ti ti-flag" data-settings-search-group-id="settings.group.src-pages-settings-hata-custom-vue-28qg9w">
+<SearchMarker path="/settings/hata-custom" :label="i18n.ts._hata._customSettings.title" :keywords="['hata', 'custom', 'simple', 'widget', 'timeline']" icon="ti ti-flag" data-settings-search-group-id="settings.group.src-pages-settings-hata-custom-vue-28qg9w">
 	<div class="_gaps_m">
 		<!-- 旗鯖fork: 再設計の設定画面に埋め込まれているときは出さない。
              ⚠️左ペインが同じ案内を持つため、二重の見出しになってしまう。 -->
@@ -19,9 +19,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 		     消すと「フォント」を押しても既定の「Hataskey全体」から動かなくなる。 -->
 		<div v-show="presentationCategory == null" :class="[$style.catTabs, embeddedInSettingsShell && $style.catTabsOffscreen]">
 			<button v-for="cat in categories" :key="cat.id" :class="[$style.catTab, activeCat === cat.id && $style.catTabOn]" :tabindex="embeddedInSettingsShell ? -1 : undefined" @click="activeCat = cat.id">
-				<!-- Hataskey fork: 地震ビューアだけは既存の Tabler アイコンを維持する(ゲーム/地震機能へハタキュを持ち込まない方針のため明示除外)。
-                     それ以外は hatakyuAsset があればハタキュイラストを優先して出す。 -->
-				<HataAppNavIcon v-if="hataAppForMenuIcon(cat.id, cat.icon)" :app="hataAppForMenuIcon(cat.id, cat.icon)!" :size="24" :monochrome="store.r.darkMode.value"/><i v-else-if="cat.id === 'earthquake' || !cat.hatakyuAsset || !useHatakyuBranding()" :class="cat.icon"></i>
+				<!-- Hataskey fork: hatakyuAsset があればハタキュイラストを優先して出す。 -->
+				<i v-if="!cat.hatakyuAsset || !useHatakyuBranding()" :class="cat.icon"></i>
 				<MkHatakyuIllustration v-else :asset="cat.hatakyuAsset" :size="24"/>
 				{{ cat.label }}
 			</button>
@@ -35,14 +34,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<button class="_buttonPrimary" style="width:100%;padding:12px;font-weight:bold;" @click="openSettingsTransfer">
 					<i class="ti ti-arrows-exchange"></i> {{ generalCopy.openTransfer }}
 				</button>
-			</FormSection>
-			<FormSection v-show="showsCategory('data')" data-settings-section-anchor="owner:hata-custom:external-account" :data-settings-section-label="generalCopy.externalAccount" data-settings-section-icon="ti ti-link" tabindex="-1">
-				<template #label>{{ generalCopy.externalAccount }}</template>
-				<FormLink to="/settings/external-account">
-					<template #icon><i class="ti ti-link"></i></template>
-					{{ generalCopy.externalAccountSettings }}
-					<template #suffix><span v-if="isExternalLinked" :class="$style.linkedBadge"><i class="ti ti-check"></i> {{ generalCopy.linked }}</span></template>
-				</FormLink>
 			</FormSection>
 			<FormSection v-show="showsCategory('appearance')" data-settings-section-anchor="owner:hata-custom:ui-change" :data-settings-section-label="generalCopy.uiChange" data-settings-section-icon="ti ti-wand" tabindex="-1">
 				<template #label>{{ generalCopy.uiChange }}</template>
@@ -76,11 +67,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<FormSection v-show="showsCategory('post')" data-settings-section-anchor="owner:hata-custom:post-form" :data-settings-section-label="generalCopy.postForm" data-settings-section-icon="ti ti-forms" tabindex="-1">
 				<template #label>{{ generalCopy.postForm }}</template>
 				<MkSwitch v-model="showHashtagButtonInPostForm"><template #label>{{ generalCopy.showHashtagButton }}</template></MkSwitch>
-				<MkSwitch v-model="showDrawingButtonInPostForm"><template #label>{{ generalCopy.showDrawingButton }}</template></MkSwitch>
-			</FormSection>
-			<FormSection v-show="showsCategory('notify')" data-settings-section-anchor="owner:hata-custom:login-days" :data-settings-section-label="generalCopy.loginDays" data-settings-section-icon="ti ti-calendar" tabindex="-1">
-				<template #label>{{ generalCopy.loginDays }}</template>
-				<MkSwitch v-model="showLoginBonusPopup"><template #label>{{ generalCopy.showLoginDaysPopup }}</template></MkSwitch>
 			</FormSection>
 			<!-- 旗鯖fork: bot ユーザーの投稿をタイムラインから非表示にする + 許可アカウント指定 -->
 			<FormSection v-show="showsCategory('timeline')" data-settings-section-anchor="owner:hata-custom:bot-filter" :data-settings-section-label="generalCopy.hideBotPosts" data-settings-section-icon="ti ti-robot-off" tabindex="-1">
@@ -131,78 +117,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<MkColorInput v-model="pfvbFollowers"><template #label>{{ generalCopy.followers }}</template></MkColorInput>
 					<MkColorInput v-model="pfvbSpecified"><template #label>{{ generalCopy.direct }}</template></MkColorInput>
 				</template>
-			</FormSection>
-		</template>
-
-		<!-- ===== フォント ===== -->
-		<template v-if="activeCat === 'font'">
-			<FormSection first>
-				<template #label>{{ fontCopy.uiFontSelection }}</template>
-				<div style="font-size:.85em;opacity:.7;margin-bottom:12px;">
-					{{ fontCopy.presetDescriptionLine1 }}
-					{{ fontCopy.presetDescriptionLine2 }}
-				</div>
-				<div :class="$style.fontGrid">
-					<button
-						v-for="preset in fontPresets"
-						:key="preset.id"
-						:class="[$style.fontCard, fontId === preset.id && $style.fontCardOn]"
-						@click="onFontChange(preset.id)"
-					>
-						<div :class="$style.fontSample" :style="{ fontFamily: preset.family + ', sans-serif' }">
-							{{ fontCopy.samplePrimary }}
-						</div>
-						<div :class="$style.fontSampleSub" :style="{ fontFamily: preset.family + ', sans-serif' }">
-							{{ fontCopy.sampleSecondary }}
-						</div>
-						<div :class="$style.fontName">{{ fontPresetLabel(preset) }}</div>
-						<div :class="$style.fontMeta">
-							<span :class="$style.fontLicense"><i class="ti ti-license"></i> {{ preset.license }}</span>
-							<span :class="$style.fontAuthor">{{ preset.author }}</span>
-						</div>
-					</button>
-
-					<!-- システムフォント -->
-					<button
-						:class="[$style.fontCard, fontId === 'system' && $style.fontCardOn]"
-						@click="onFontChange('system')"
-					>
-						<div :class="$style.fontSample" :style="{ fontFamily: systemFontStack }">{{ fontCopy.samplePrimary }}</div>
-						<div :class="$style.fontSampleSub" :style="{ fontFamily: systemFontStack }">{{ fontCopy.sampleSecondary }}</div>
-						<div :class="$style.fontName">{{ fontCopy.systemFont }}</div>
-						<div :class="$style.fontMeta">
-							<span :class="$style.fontLicense">{{ fontCopy.useOsFont }}</span>
-						</div>
-					</button>
-				</div>
-			</FormSection>
-
-			<FormSection>
-				<template #label>{{ fontCopy.customFont }}</template>
-				<div style="font-size:.85em;opacity:.7;margin-bottom:12px;">
-					{{ fontCopy.customFontDescription }}<br>
-					{{ fontCopy.consentRequired }}
-				</div>
-				<div v-if="fontId === 'custom' && customFontName" :class="$style.customFontStatus">
-					<i class="ti ti-typography"></i>
-					{{ fontCopy.currentCustomFont }} <strong>{{ customFontName }}</strong>
-				</div>
-				<div style="display:flex;gap:8px;flex-wrap:wrap;">
-					<button class="_buttonPrimary" :disabled="customFontUploading" style="padding:10px 20px;font-weight:bold;" @click="uploadCustomFont">
-						<i :class="customFontUploading ? 'ti ti-loader-2 ti-spin' : 'ti ti-upload'"></i>
-						{{ customFontUploading ? fontCopy.uploadingFont : fontCopy.uploadFont }}
-						<span v-if="customFontUploadProgress != null"> {{ customFontUploadProgress }}%</span>
-					</button>
-					<button class="_button" :disabled="customFontUploading" style="padding:10px 20px;font-weight:bold;" @click="openDrivePicker">
-						<i class="ti ti-cloud-search"></i> {{ fontCopy.selectFromDrive }}
-					</button>
-					<button class="_buttonGradate" :disabled="customFontUploading" style="padding:10px 20px;" @click="resetToDefault">
-						<i class="ti ti-arrow-back"></i> {{ fontCopy.resetDefault }}
-					</button>
-				</div>
-				<div v-if="customFontConsent" :class="$style.consentNote">
-					<i class="ti ti-check"></i> {{ fontCopy.consentAccepted }}
-				</div>
 			</FormSection>
 		</template>
 
@@ -316,79 +230,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</FormSection>
 		</template>
 
-		<template v-if="activeCat === 'hatask'">
-			<FormSection first>
-				<template #label>{{ hataskCopy.settings }}</template>
-				<div style="font-size:.85em;opacity:.7;margin-bottom:12px;line-height:1.6;">{{ hataskCopy.settingsDescription }}</div>
-				<button class="_buttonPrimary" style="padding:10px 20px;font-weight:bold;" @click="openHataskSettings"><i class="ti ti-settings"></i> {{ hataskCopy.openSettings }}</button>
-			</FormSection>
-			<FormSection>
-				<template #label>{{ hataskCopy.open }}</template>
-				<div style="font-size:.85em;opacity:.7;margin-bottom:12px;">{{ hataskCopy.openDescription }}</div>
-				<button class="_button" style="padding:10px 20px;" @click="goToHatask"><i class="ti ti-external-link"></i> {{ hataskCopy.open }}</button>
-			</FormSection>
-		</template>
-		<!-- ===== Hatady ===== -->
-		<template v-if="activeCat === 'hatady'">
-			<FormSection first>
-				<template #label>{{ hatadyCopy.settings }}</template>
-				<div style="font-size:.85em;opacity:.7;margin-bottom:12px;line-height:1.6;">{{ hatadyCopy.settingsDescription }}</div>
-				<button class="_buttonPrimary" style="padding:10px 20px;font-weight:bold;" @click="openHatadySettings"><i class="ti ti-palette"></i> {{ hatadyCopy.openSettings }}</button>
-			</FormSection>
-			<FormSection>
-				<template #label>{{ hatadyCopy.open }}</template>
-				<div style="font-size:.85em;opacity:.7;margin-bottom:12px;">{{ hatadyCopy.openDescription }}</div>
-				<button class="_button" style="padding:10px 20px;" @click="goToHatady"><i class="ti ti-external-link"></i> {{ hatadyCopy.open }}</button>
-			</FormSection>
-		</template>
-		<template v-if="activeCat === 'mascot'">
-			<FormSection first>
-				<template #label>{{ mascotCopy.title }}</template>
-				<div style="font-size:.85em;opacity:.7;margin-bottom:12px;line-height:1.6;">{{ mascotCopy.description }}</div>
-				<button class="_buttonPrimary" style="padding:10px 20px;font-weight:bold;" @click="openMascotSettings"><i class="ti ti-mood-smile"></i> {{ mascotCopy.openSettings }}</button>
-			</FormSection>
-		</template>
-
-		<!-- ===== 地震ビューア ===== -->
-		<template v-if="activeCat === 'earthquake'">
-			<FormSection first>
-				<template #label>地震ビューアの設定</template>
-				<div style="font-size:.85em;opacity:.7;margin-bottom:12px;line-height:1.6;">地震・津波情報ビューアの設定です。お住いの都道府県（付近の地震表示用）と取得間隔を変更できます。<b>お住いの都道府県はこの端末にのみ保存され、サーバーには送信されません。</b></div>
-				<button class="_buttonPrimary" style="padding:10px 20px;font-weight:bold;" @click="openEarthquakeSettings"><i class="ti ti-settings"></i> 地震ビューアの設定を開く</button>
-			</FormSection>
-			<FormSection>
-				<template #label>地震ビューアを開く</template>
-				<div style="font-size:.85em;opacity:.7;margin-bottom:12px;">地震・津波情報の画面を開きます。</div>
-				<button class="_button" style="padding:10px 20px;" @click="goToEarthquake"><i class="ti ti-activity"></i> 地震・津波情報を開く</button>
-			</FormSection>
-		</template>
-
-		<!-- ===== その他 (旧アクセシビリティ) ===== -->
-		<!-- 旗鯖fork: タブ再編で、旧アクセシビリティタブの項目はほぼ全て ビジュアル / Hataskey UI 2 /
-             Hataskey全体 タブに分散移動した。ここには「他タブに分類しづらい」ものだけを残す。
-             現状は天気エフェクトのみ。preferences のキー自体は変更していないので、
-             既存ユーザーの設定値は移動後もそのまま保持される (マイグレ不要)。 -->
-		<template v-if="activeCat === 'accessibility'">
-			<FormSection first>
-				<template #label>{{ otherCopy.weatherEffects }}</template>
-				<MkSwitch v-model="weatherEffectEnabled">
-					<template #label>{{ otherCopy.enableWeatherEffects }}</template>
-					<template #caption>{{ otherCopy.weatherEffectsCaption }}</template>
-				</MkSwitch>
-				<div v-if="weatherEffectEnabled" class="_gaps_s" style="margin-top:10px;">
-					<div style="font-weight:bold;margin-bottom:8px;">{{ otherCopy.effectDuration }}</div>
-					<MkRadios v-model="weatherEffectDuration">
-						<option value="long">{{ otherCopy.durationLong }}</option>
-						<option value="short">{{ otherCopy.durationShort }}</option>
-					</MkRadios>
-					<div style="font-size:.82em;color:var(--MI_THEME-warn);padding:8px 10px;border:1px solid var(--MI_THEME-divider);border-radius:8px;background:var(--MI_THEME-panel);">
-						{{ otherCopy.weatherWordNote }}<br>
-						{{ otherCopy.greetingNote }}<br>
-						{{ otherCopy.safetyNote }}
-					</div>
-				</div>
-			</FormSection>
-		</template>
 	</div>
 </SearchMarker>
 </template>
@@ -397,7 +238,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { computed, inject, ref, watch } from 'vue';
 import type { HatakyuAssetKey } from '@/utility/hatakyu-assets.js';
 import type { HataFoldableMode } from '@/utility/hatasaba-device-prefs.js';
-import type { HataFontId } from '@/scripts/hata-font-manager.js';
 import type { SettingsBentoCategoryId } from '@/pages/settings-redesign/settings-bento-catalog.js';
 import { settingsSearchV2ContextKey } from '@/utility/settings-search-v2-context.js';
 import MkSwitch from '@/components/MkSwitch.vue';
@@ -423,12 +263,7 @@ import { getHiddenReactions, hiddenReactionsVersion } from '@/utility/hidden-rea
 // 旗鯖fork: deckIgnoreWidth / setDeckIgnoreWidth は Hataskey UI 設定モーダル側で消費するのみ。
 // 旗鯖fork: 端末ローカルのミュートリアクション非表示と折りたたみ端末レイアウトを使うため import。
 import { hideMutedReactionsLocal, setHideMutedReactionsLocal, foldableLayoutMode, setFoldableLayoutMode } from '@/utility/hatasaba-device-prefs.js';
-import { HATA_FONT_PRESETS, DEFAULT_HATA_FONT_ID, SYSTEM_HATA_FONT_STACK, applyHataFont, resolveHataFontId } from '@/scripts/hata-font-manager.js';
-import { isDirectUploadCustomFontFile, isSupportedCustomFontFile } from '@/utility/hata-font-file.js';
-import { chooseDriveFile, uploadFile } from '@/utility/drive.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
-import HataAppNavIcon from '@/components/HataAppNavIcon.vue';
-import { hataAppForMenuIcon } from '@/utility/hata-app-brand.js';
 import { store } from '@/store.js';
 // 旗鯖fork: applySidebarIconOverride も同上 (サイドバー編集はモーダル側で完結)。
 const router = useRouter();
@@ -449,34 +284,21 @@ function showsCategory(...categories: SettingsBentoCategoryId[]): boolean {
 const copy = i18n.ts._hata._customSettings;
 const copyx = i18n.tsx._hata._customSettings;
 const generalCopy = copy._general;
-const fontCopy = copy._font;
 const uiCopy = copy._ui;
 // Hataskey fork: ハタキュ表示のON/OFF(プロフィール同期)。
 const useHatakyuIllustrations = prefer.model('hataBranding.useHatakyu');
 const visualCopy = copy._visual;
-const hataskCopy = copy._hatask;
-const hatadyCopy = copy._hatady;
-const mascotCopy = copy._mascot;
-const otherCopy = copy._other;
 
 // 旗鯖fork: タブ再編。
 //   - Hataskey UI 2 タブ新設 (グラス系設定を集約)
 //   - ビジュアルタブ新設 (見た目系を集約)
-//   - accessibility タブは「その他」にリネームし、天気エフェクトなど余ったものだけ残す
 //   - 見た目に関わらない設定 (postFormVisibilityBorder 等) は general に移動
 // preferences のキー自体は変更しないため、既存ユーザーの設定は移動先タブでもそのまま保持される。
 // Hataskey fork: 各カテゴリタブにハタキュイラストを割り当てる。
-//   ⚠️地震ビューア(earthquake)は地震・津波情報機能に触れるため対象外(icon のみ・テンプレート側でも明示除外)。
 const categories: { id: string; icon: string; label: string; hatakyuAsset?: HatakyuAssetKey }[] = [
 	{ id: 'general', icon: 'ti ti-flag', label: copy.categoryGeneral, hatakyuAsset: 'wrench' },
-	{ id: 'font', icon: 'ti ti-typography', label: copy.categoryFont, hatakyuAsset: 'readingBook' },
 	{ id: 'glassUi', icon: 'ti ti-layout-dashboard', label: 'UI', hatakyuAsset: 'computerChat' },
 	{ id: 'visual', icon: 'ti ti-palette', label: copy.categoryVisual, hatakyuAsset: 'stargazing' },
-	{ id: 'hatask', icon: 'ti ti-checklist', label: 'Hatask', hatakyuAsset: 'checkingTime' },
-	{ id: 'hatady', icon: 'ti ti-book-2', label: 'Hatady', hatakyuAsset: 'readingBook' },
-	{ id: 'mascot', icon: 'ti ti-mood-smile', label: copy.categoryMascot, hatakyuAsset: 'dogPawUp' },
-	{ id: 'earthquake', icon: 'ti ti-activity', label: '地震ビューア' },
-	{ id: 'accessibility', icon: 'ti ti-dots', label: copy.categoryOther, hatakyuAsset: 'umbrellaRain' },
 ];
 const activeCat = ref('general');
 
@@ -486,164 +308,13 @@ watch(() => props.presentationCategory, category => {
 	if (category != null) activeCat.value = 'general';
 }, { immediate: true });
 
-// フォントタブに切り替えたらプリロード開始
-watch(activeCat, (v) => {
-	if (v === 'font') preloadAllFonts();
-});
-
-// ===== フォント設定 =====
-const savedFontId = prefer.model('hataFont.id');
-const fontId = computed({
-	get: () => resolveHataFontId(savedFontId.value),
-	set: (id: HataFontId) => { savedFontId.value = id; },
-});
-const customFontUrl = prefer.model('hataFont.customUrl');
-const customFontName = prefer.model('hataFont.customName');
-const customFontConsent = prefer.model('hataFont.customFontConsent');
-const customFontUploading = ref(false);
-const customFontUploadProgress = ref<number | null>(null);
-
-const fontPresets = HATA_FONT_PRESETS;
-const systemFontStack = SYSTEM_HATA_FONT_STACK;
-const fontsPreloaded = ref(false);
-
-// プリセットの表示名を現在のロケールで解決する。
-function fontPresetLabel(preset: (typeof HATA_FONT_PRESETS)[number]): string {
-	const labels: Partial<Record<HataFontId, string>> = {
-		'line-seed-jp': fontCopy.presetLineSeedJp,
-		'zen-kaku-antique': fontCopy.presetZenKaku,
-		'm-plus-1p': fontCopy.presetMPlus,
-		'dotgothic16': fontCopy.presetDotGothic,
-		'train-one': fontCopy.presetTrainOne,
-		'ibm-plex-sans-jp': fontCopy.presetIbmPlex,
-	};
-	return labels[preset.id] ?? preset.label;
-}
-
-// フォントタブを開いた時にすべてのプリセットフォントをプリロード
-function preloadAllFonts() {
-	if (fontsPreloaded.value) return;
-	for (const preset of HATA_FONT_PRESETS) {
-		if (preset.googleFontsQuery) {
-			const link = window.document.createElement('link');
-			link.rel = 'stylesheet';
-			link.href = `https://fonts.googleapis.com/css2?family=${preset.googleFontsQuery}&display=swap`;
-			link.dataset.hataPreview = preset.id;
-			window.document.head.appendChild(link);
-		}
-	}
-	fontsPreloaded.value = true;
-}
-
-function onFontChange(id: HataFontId) {
-	fontId.value = id;
-	applyHataFont();
-}
-
-async function ensureCustomFontConsent(): Promise<boolean> {
-	// 免責事項の同意確認
-	if (!customFontConsent.value) {
-		const { canceled } = await os.confirm({
-			type: 'warning',
-			title: fontCopy.disclaimerTitle,
-			text: [
-				fontCopy.disclaimerIntro,
-				'',
-				fontCopy.disclaimerLicense,
-				fontCopy.disclaimerLiability,
-				fontCopy.disclaimerQuality,
-				'',
-				fontCopy.disclaimerConfirm,
-			].join('\n'),
-		});
-		if (canceled) return false;
-		customFontConsent.value = true;
-		prefer.commit('hataConsent.customFont', true);
-		prefer.commit('hataConsent.customFontDate', new Date().toISOString());
-		// サーバーに同意を記録
-		misskeyApi('hata/consent/update', { type: 'customFont', agree: true }).catch(console.error);
-	}
-	return true;
-}
-
-function showUnsupportedCustomFont(text: string) {
-	os.alert({
-		type: 'error',
-		title: fontCopy.unsupportedFontTitle,
-		text,
-	});
-}
-
-function applyCustomFontFile(file: { name: string; type: string; url: string }): boolean {
-	if (!isSupportedCustomFontFile(file)) {
-		showUnsupportedCustomFont(fontCopy.unsupportedDriveFontText);
-		return false;
-	}
-	customFontUrl.value = file.url;
-	customFontName.value = file.name.replace(/\.(ttf|otf|woff2)$/i, '');
-	fontId.value = 'custom';
-	applyHataFont();
-	return true;
-}
-
-async function uploadCustomFont() {
-	if (customFontUploading.value || !(await ensureCustomFontConsent())) return;
-	const files = await os.chooseFileFromPc({
-		multiple: false,
-		accept: '.ttf,.otf,font/ttf,font/otf',
-	});
-	const file = files[0];
-	if (file == null) return;
-	if (!isDirectUploadCustomFontFile(file)) {
-		showUnsupportedCustomFont(fontCopy.unsupportedUploadFontText);
-		return;
-	}
-
-	customFontUploading.value = true;
-	customFontUploadProgress.value = 0;
-	try {
-		const { filePromise } = uploadFile(file, {
-			name: file.name,
-			onProgress: ({ total, loaded }) => {
-				customFontUploadProgress.value = total > 0 ? Math.min(100, Math.round((loaded / total) * 100)) : null;
-			},
-		});
-		const driveFile = await filePromise;
-		applyCustomFontFile(driveFile);
-	} catch {
-		// uploadFile側で、容量・許可形式・通信エラーに対応する案内を表示する。
-	} finally {
-		customFontUploading.value = false;
-		customFontUploadProgress.value = null;
-	}
-}
-
-async function openDrivePicker() {
-	if (!(await ensureCustomFontConsent())) return;
-
-	// ドライブファイルピッカーを開く
-	const files = await chooseDriveFile({ multiple: false }).catch(() => []);
-	if (files.length > 0) {
-		applyCustomFontFile(files[0]);
-	}
-}
-
-function resetToDefault() {
-	fontId.value = DEFAULT_HATA_FONT_ID;
-	customFontUrl.value = '';
-	customFontName.value = '';
-	applyHataFont();
-}
-
 // ===== Hataskey全体 =====
-// 旗鯖fork: 投稿フォームのハッシュタグ/お絵かきボタン表示トグルは
+// 旗鯖fork: 投稿フォームのハッシュタグボタン表示トグルは
 // preferences/def.ts 側で prefer キーとして定義されており、MkPostForm も
-// `prefer.s.showHashtagButtonInPostForm` / `prefer.s.showDrawingButtonInPostForm`
+// `prefer.s.showHashtagButtonInPostForm`
 // を読む。設定 UI 側だけ miLocalStorage (useLSBool) に書き込む実装になっており、
 // 書き先と読み先がズレていてトグルが機能していなかったので prefer.model に修正。
 const showHashtagButtonInPostForm = prefer.model('showHashtagButtonInPostForm');
-const showDrawingButtonInPostForm = prefer.model('showDrawingButtonInPostForm');
-const showLoginBonusPopup = prefer.model('showLoginBonusPopup');
 // 旗鯖fork(#31): ミュートユーザーのリアクション非表示（端末ローカル）。ベータ機能から正式機能へ移動。
 const hideMutedReactions = computed({
 	get: () => hideMutedReactionsLocal.value,
@@ -675,31 +346,6 @@ const openSettingsTransfer = async () => {
 	const { defineAsyncComponent: dac } = await import('vue');
 	const { dispose } = os.popup(dac(() => import('@/components/MkHataSettingsTransfer.vue')), {}, { closed: () => dispose() });
 };
-// 旗鯖fork: Hataskの設定を共有コンポーネントで開く(本体とregistry同期)
-const openHataskSettings = async () => {
-	const { defineAsyncComponent: dac } = await import('vue');
-	const { dispose } = os.popup(dac(() => import('@/pages/HataskSettings.vue')), {}, { closed: () => dispose() });
-};
-const goToHatask = () => { router.push('/hatask'); };
-
-// 旗鯖fork(Hatady): 表示設定(テーマ・言語・同期・チュートリアル再実行)を共有ダイアログで開く。
-const openHatadySettings = async () => {
-	const { defineAsyncComponent: dac } = await import('vue');
-	const { dispose } = os.popup(dac(() => import('@/components/HatadyDisplaySettings.vue')), {}, { closed: () => dispose() });
-};
-const goToHatady = () => { router.push('/hatady'); };
-
-// 旗鯖fork(#34): 地震ビューア設定を共有ダイアログで開く
-const openEarthquakeSettings = async () => {
-	const { defineAsyncComponent: dac } = await import('vue');
-	const { dispose } = os.popup(dac(() => import('@/components/MkEarthquakeSettings.vue')), {}, { closed: () => dispose() });
-};
-const goToEarthquake = () => { router.push('/earthquake'); };
-// 旗鯖fork: マスコット設定を開く
-const openMascotSettings = async () => {
-	const { defineAsyncComponent: dac } = await import('vue');
-	const { dispose } = os.popup(dac(() => import('@/pages/MkMascotSettings.vue')), {}, { closed: () => dispose() });
-};
 // 旗鯖fork: Hataskey UI 2 の設定を独立ウィンドウ (MkHatasabaUi2EditWindow) で開く。
 //   有効化トグル・吹き出し・背景ぼかし・透過率スライダーを 1 ウィンドウに集約。
 //   MkWindow ベースなので開いたまま裏の Hataskey UI をリアルタイム確認可能。
@@ -711,7 +357,6 @@ const openHatasabaUi2EditWindow = async () => {
 		{ closed: () => dispose() },
 	);
 };
-const isExternalLinked = computed(() => prefer.s['external.enabled'] && prefer.s['external.token'] != null);
 const hiddenReactionCount = computed(() => { hiddenReactionsVersion.value; return getHiddenReactions().length; });
 // 旗鯖fork: simpleUi タブに直接あった topNav/bottomNav の ref / saveTopNav / saveBottomNav /
 //   resetTopNav / resetBottomNav / showTrendingTab / topNavMode / deckIgnoreWidthModel /
@@ -795,8 +440,6 @@ const foldableLayout = computed({
 	set: (v: HataFoldableMode) => setFoldableLayoutMode(v),
 });
 
-// 旗鯖fork: 天気エフェクト(weatherEffect)
-const weatherEffectEnabled = prefer.model('weatherEffect.enabled');
 // 旗鯖fork: 投稿範囲ごとの投稿フォーム枠色
 const pfvbEnabled = prefer.model('postFormVisibilityBorder.enabled');
 const pfvbWidth = prefer.model('postFormVisibilityBorder.width');
@@ -804,7 +447,6 @@ const pfvbPublic = prefer.model('postFormVisibilityBorder.color.public');
 const pfvbHome = prefer.model('postFormVisibilityBorder.color.home');
 const pfvbFollowers = prefer.model('postFormVisibilityBorder.color.followers');
 const pfvbSpecified = prefer.model('postFormVisibilityBorder.color.specified');
-const weatherEffectDuration = prefer.model('weatherEffect.duration');
 
 // 旗鯖fork: 旧「Misskey UIで吹き出し表示を無効にする」トグルは廃止。
 //   Misskey(デフォルト)UI は常にクラシック表示(吹き出しなし＋従来の投稿間隔)に固定したため、
@@ -868,7 +510,6 @@ definePage({ title: copy.title, icon: 'ti ti-flag' });
 </script>
 
 <style lang="scss" module>
-.linkedBadge { color: var(--MI_THEME-success); font-size: 0.9em; }
 
 /* 旗鯖fork: bot 許可アカウントリスト */
 .botAllowlistHead {
@@ -990,29 +631,4 @@ definePage({ title: copy.title, icon: 'ti ti-flag' });
 }
 .spacingLabel { font-size:.82rem; font-weight:600; color:var(--MI_THEME-fg); }
 
-/* ===== フォント設定 ===== */
-.fontGrid { display: flex; flex-direction: column; gap: 8px; }
-.fontCard {
-    display: flex; flex-direction: column; gap: 6px; padding: 14px 16px;
-    border-radius: 12px; border: 2px solid var(--MI_THEME-divider);
-    background: var(--MI_THEME-panel); cursor: pointer; text-align: left;
-    transition: all .2s; font-family: inherit;
-    &:hover { border-color: color-mix(in srgb, var(--MI_THEME-accent) 40%, var(--MI_THEME-divider)); }
-}
-.fontCardOn { border-color: var(--MI_THEME-accent); background: var(--MI_THEME-accentedBg); }
-.fontSample { font-size: 1.4em; line-height: 1.5; margin-bottom: 2px; }
-.fontSampleSub { font-size: 0.92em; line-height: 1.4; opacity: 0.6; margin-bottom: 6px; }
-.fontName { font-size: .88rem; font-weight: 600; }
-.fontMeta { display: flex; flex-direction: column; gap: 2px; }
-.fontLicense { font-size: .72rem; opacity: .5; display: flex; align-items: center; gap: 4px; }
-.fontAuthor { font-size: .72rem; opacity: .4; }
-.customFontStatus {
-    padding: 10px 14px; border-radius: 10px; margin-bottom: 8px;
-    background: var(--MI_THEME-accentedBg); font-size: .88rem;
-    display: flex; align-items: center; gap: 6px;
-}
-.consentNote {
-    margin-top: 8px; font-size: .82rem; opacity: .6;
-    display: flex; align-items: center; gap: 4px; color: var(--MI_THEME-success);
-}
 </style>

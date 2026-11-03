@@ -197,7 +197,7 @@ function fixture(options: { mobile?: boolean; native?: boolean } = {}) {
 				emojiVoteInNavbar: Vue.ref(false), emojiVoteNavbarState: Vue.ref({ celebrating: false, leaving: false }),
 				emojiVoteNavbarStackStyle: Vue.ref({}), navbarNewNotes: Vue.ref(null), navbarNewNotesContent: Vue.ref(null),
 				mobileNotificationOnly: Vue.computed(() => !isDesktop.value && !nativeNavbarVisible.value),
-				punchVisible: Vue.ref(false), navbarSearchOpen: Vue.ref(false), navbarLoadingShown: Vue.ref(false),
+				navbarSearchOpen: Vue.ref(false), navbarLoadingShown: Vue.ref(false),
 				pendingApiRequestsCount: Vue.ref(0), footerIsDark: Vue.ref(false),
 			};
 			const state = new Function(...Object.keys(bindings), stateCode)(...Object.values(bindings));

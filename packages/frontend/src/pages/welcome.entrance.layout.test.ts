@@ -9,24 +9,12 @@ import { resolve } from 'node:path';
 import { parse as parseSfc } from '@vue/compiler-sfc';
 import { parse as parseCss } from 'postcss';
 import { describe, expect, test } from 'vitest';
-import { createApp, h } from 'vue';
-import WelcomeHatadyHeading from './welcome.entrance.hatady-heading.vue';
-import WelcomeHataskHeading from './welcome.entrance.hatask-heading.vue';
-import type { Component } from 'vue';
 import type { AtRule, Document, Root, Rule } from 'postcss';
 
 // Source/DOM contracts only: these assertions do not measure rendered line boxes,
 // browser layout, pixel positions, or the visual smoothness of an animation.
 const sourcePath = resolve(process.cwd(), 'src/pages/welcome.entrance.hataskey.vue');
-function headingMarkup(component: Component): string {
-	const host = window.document.createElement('div');
-	const app = createApp({ render: () => h(component) });
-	app.mount(host);
-	const markup = host.innerHTML;
-	app.unmount();
-	return markup;
-}
-const source = readFileSync(sourcePath, 'utf8').replace('<WelcomeHatadyHeading/>', headingMarkup(WelcomeHatadyHeading)).replace('<WelcomeHataskHeading/>', headingMarkup(WelcomeHataskHeading));
+const source = readFileSync(sourcePath, 'utf8');
 const css = readFileSync(resolve(process.cwd(), 'src/pages/welcome.entrance.hataskey.css'), 'utf8');
 const scope = '[data-hataskey-entrance]';
 const geometryProperty = /^(?:position|display|float|clear|inset(?:-.+)?|top|right|bottom|left|(?:min-|max-)?(?:width|height|inline-size|block-size)|margin(?:-.+)?|padding(?:-.+)?|border(?:-.+)?|line-height|vertical-align|font(?:-.+)?|letter-spacing|white-space|grid(?:-.+)?|place(?:-.+)?|align(?:-.+)?|justify(?:-.+)?)$/;
@@ -185,12 +173,6 @@ function assertDesktopSectionSpacing(stylesSource: string): void {
 	const styles = parseCss(stylesSource);
 	const desktop = [{ name: 'container', params: 'hataskey-entrance (min-width:821px)' }];
 	const mobile = [{ name: 'container', params: 'hataskey-entrance (max-width:820px)' }];
-	assert.equal(declarations(exactRule(styles, `${scope} .more-features`, desktop)).padding, '106px 0 112px');
-	const hatakyu = exactRule(styles, `${scope} #hatakyu`, desktop);
-	const hatakyuPadding = hatakyu.nodes.find(node => node.type === 'decl' && node.prop === 'padding-block');
-	assert.ok(hatakyuPadding && hatakyuPadding.type === 'decl');
-	assert.equal(hatakyuPadding.value, '120px');
-	assert.equal(hatakyuPadding.important, true);
 	const join = exactRule(styles, `${scope} .join-section`, desktop);
 	for (const [property, value] of [['padding-top', '120px'], ['padding-bottom', 'calc(max(72px,8dvh) + 24px)']] as const) {
 		const declaration = join.nodes.find(node => node.type === 'decl' && node.prop === property);
@@ -198,7 +180,6 @@ function assertDesktopSectionSpacing(stylesSource: string): void {
 		assert.equal(declaration.value, value);
 		assert.equal(declaration.important, true);
 	}
-	assert.equal(declarations(exactRule(styles, `${scope} .more-features`, mobile)).padding, '68px 0 74px');
 	assert.equal(declarations(exactRule(styles, `${scope} .join-section`, mobile))['padding-bottom'], 'max(24px,env(safe-area-inset-bottom))');
 }
 
@@ -292,7 +273,7 @@ function assertSymbolLayout(stylesSource: string, markup = source): void {
 		assert.equal(initialSwap.display, 'inline-block', 'swap must not derive its baseline from a grid icon');
 		assert.equal(initialSwap['vertical-align'], 'baseline', 'swap must align with neighboring text');
 		assert.equal(initialSwap['white-space'], 'nowrap', 'a symbol word must stay together');
-		assert.equal(initialSwap['min-height'], undefined, 'mascot height must not reserve a different line box');
+		assert.equal(initialSwap['min-height'], undefined, 'symbol height must not reserve a different line box');
 		assert.equal(initialText.display, 'inline-block', 'visible or hidden text must stay in flow');
 		assert.equal(initialText.position, undefined, 'text must not be absolutely positioned');
 		assert.equal(initialText['line-height'], 'inherit', 'text must keep the surrounding line height');
@@ -327,22 +308,25 @@ function assertSymbolLayout(stylesSource: string, markup = source): void {
 	}
 }
 
-function assertHatadyPhrases(stylesSource: string, markup = source): void {
+function assertLiteIntroduction(markup: string): void {
 	const template = parseTemplate(markup);
-	const copy = template.querySelector('#hatady h2 .symbol-copy[data-symbol-lang="ja"]');
-	assert.ok(copy, 'Japanese Hatady heading must exist');
-	const phrases = Array.from(copy.querySelectorAll(':scope > .symbol-phrase'));
-	assert.deepEqual(phrases.map(phrase => phrase.textContent), ['学びも、', '趣味も、', '日々のことも。'], 'all three Japanese phrases must keep their particles and punctuation');
-	for (const node of Array.from(copy.childNodes)) {
-		if (node.nodeName === 'BR') break;
-		if (node.nodeType === 8) continue;
-		if (node.nodeType === 3 && !node.textContent?.trim()) continue;
-		assert.ok(phrases.includes(node as Element), 'no orphaned particle may sit between the phrase wrappers');
+	for (const removed of ['ui', 'deck', 'studio', 'more', 'hatakyu']) assert.equal(template.querySelector(`#${removed}`), null, `the former ${removed} tour must not return`);
+	const section = template.querySelector('section#lite');
+	assert.ok(section, 'the Lite introduction must exist');
+	const ids = Array.from(template.querySelectorAll('section[id]'), item => item.id);
+	assert.deepEqual(ids, ['top', 'lite', 'fediverse', 'join'], 'the Lite introduction sits between the hero and the federation primer');
+	const heading = section.querySelector('h2');
+	const headingJa = heading?.querySelector('[data-symbol-lang="ja"]')?.textContent?.trim();
+	const headingEn = heading?.querySelector('[data-symbol-lang="en"]')?.textContent?.trim();
+	assert.ok(headingJa && headingEn && heading?.getAttribute('aria-label') === headingJa && heading.getAttribute('data-aria-en') === headingEn, 'the heading needs Japanese and English copy');
+	const brands = Array.from(heading?.querySelectorAll('.lite-intro-brand') ?? [], brand => brand.textContent);
+	assert.deepEqual(brands, ['Hataskey', 'Hataskey'], 'the Hataskey wordmark is set in Righteous in both languages');
+	assert.equal(heading?.querySelectorAll('.symbol-pointer .symbol-pointer-cursor').length, 2, 'the pointer motion exists in both languages');
+	const points = Array.from(section.querySelectorAll('.lite-intro-point'));
+	assert.equal(points.length, 3);
+	for (const point of points) {
+		for (const text of point.querySelectorAll('h3,p')) assert.ok(text.textContent?.trim() && text.getAttribute('data-en'), 'every point needs Japanese and English copy');
 	}
-	assert.equal(phrases[2].querySelector('[data-symbol-last]')?.textContent, '日々', 'calendar animation and its trailing particle must share a wrapper');
-	const phraseStyle = declarations(baseRule(parseCss(stylesSource), 'symbol-phrase'));
-	assert.equal(phraseStyle.display, 'inline-block');
-	assert.equal(phraseStyle['white-space'], 'nowrap');
 }
 
 function assertFooterLayout(stylesSource: string, markup = source): void {
@@ -357,7 +341,7 @@ function assertFooterLayout(stylesSource: string, markup = source): void {
 	assert.ok([undefined, 'center'].includes(declarations(baseRule(styles, 'join-ack-version'))['text-align']), 'version must inherit or specify centered text');
 	const breaks = footer.querySelectorAll('.join-ack-copy > br.mobile-copy-break');
 	assert.equal(breaks.length, 1, 'thanks must have exactly one mobile-only line break');
-	assert.equal(breaks[0].previousElementSibling?.textContent, 'HataskeyはCherryPickのフォークで、CherryPickはMisskeyのフォークです。');
+	assert.equal(breaks[0].previousElementSibling?.textContent, 'Hataskey LiteはHataskeyの軽量版です。HataskeyはCherryPickのフォークで、CherryPickはMisskeyのフォークです。');
 	assert.equal(breaks[0].nextElementSibling?.textContent, '両プロジェクトへ深く感謝します。', 'mobile break must be immediately before thanks');
 	assert.equal(breaks[0].nextElementSibling.nextElementSibling?.tagName, 'BR', 'the existing final sentence break must remain');
 	const breakRules: Rule[] = [];
@@ -416,15 +400,6 @@ function changeThemeDeclaration(selector: string, expectedConditions: { name: st
 	return styles.toString();
 }
 
-function assertDeviceControlsOnly(markup: string): void {
-	const template = parseTemplate(markup);
-	const controls = template.querySelector('#ui .device-mode-controls');
-	assert.ok(controls, 'the preview device controls must remain');
-	assert.equal(controls.children.length, 1, 'the removed demo helper must not remain beside the switch');
-	assert.deepEqual(Array.from(controls.querySelectorAll('button'), button => button.getAttribute('data-dev')), ['pc', 'mobile']);
-	assert.equal(template.querySelector('#ui textarea')?.getAttribute('placeholder'), 'これはデモです。試しに何か書いてみましょう。', 'the composer itself must keep its demo hint');
-}
-
 describe('welcome entrance source layout contracts', () => {
 	test('連合状態を1行のwide/compact表示に分け、説明を閉じた開閉部へ収める', () => {
 		assertFediverseDisclosure(source, css);
@@ -476,35 +451,29 @@ describe('welcome entrance source layout contracts', () => {
 		assertHeaderIdentityStaysOnTextLayer(source, css);
 	});
 
-	test('PCだけMORE HATASKEY・HATAKYU・JOINの上下余白を広げ、モバイル値を保つ', () => {
+	test('PCだけJOINの上下余白を広げ、モバイル値を保つ', () => {
 		assertDesktopSectionSpacing(css);
 	});
 
 	test.each([
-		['MORE HATASKEYのPC余白復帰', `${scope} .more-features`, 'padding', '82px 0 88px'],
-		['HATAKYUのPC余白復帰', `${scope} #hatakyu`, 'padding-block', '96px'],
 		['JOINのPC上余白復帰', `${scope} .join-section`, 'padding-top', '96px'],
 	] as const)('陽性対照：%sを検出する', (_name, selector, property, value) => {
 		const desktop = [{ name: 'container', params: 'hataskey-entrance (min-width:821px)' }];
 		expect(() => assertDesktopSectionSpacing(changeConditionalDeclaration(selector, desktop, property, value))).toThrow();
 	});
 
-	test('削除した投稿案内を戻さず、端末切り替えと入力欄のヒントを残す', () => {
-		assertDeviceControlsOnly(source);
-	});
-
-	test('陽性対照：端末切り替えの下に案内文を戻すと検出する', () => {
-		const mutated = source.replace('<div class="device-mode-controls">', '<div class="device-mode-controls"><span>ノートを投稿してみてください。3秒カウントダウンも、新着の流れ込みも動きます</span>');
-		expect(mutated).not.toBe(source);
-		expect(() => assertDeviceControlsOnly(mutated)).toThrow('removed demo helper');
-	});
-
 	test('アイコンとカプセルを文字の行ボックスから分離し、全再生状態で文字寸法を保つ', () => {
 		assertSymbolLayout(css);
 	});
 
-	test('Hatadyの三つの句を保ち、日々と「のことも。」を同じ改行不可の単位に置く', () => {
-		assertHatadyPhrases(css);
+	test('紹介節はLite専用の1節だけにし、日英の文言を持つ', () => {
+		assertLiteIntroduction(source);
+	});
+
+	test('陽性対照：Lite紹介の英訳を外すと検出する', () => {
+		const mutated = source.replace('<h3 data-no-split="" data-en="Light enough to focus">', '<h3 data-no-split="">');
+		expect(mutated).not.toBe(source);
+		expect(() => assertLiteIntroduction(mutated)).toThrow('English copy');
 	});
 
 	test('末尾全体を中央揃えにし、感謝文直前だけ600px以下で改行する', () => {
@@ -513,27 +482,15 @@ describe('welcome entrance source layout contracts', () => {
 
 	test.each([
 		['旧inline-gridの復活', () => changeBaseDeclaration('symbol-swap', 'display', 'inline-grid')],
-		['アイコンのインフロー化', () => changeBaseDeclaration('symbol-icon', 'position', 'static')],
-		['カプセル図形のインフロー化', () => changeBaseDeclaration('symbol-capsule-form', 'position', 'static')],
+		['アイコンのインフロー化', () => `${css}\n${scope} [data-symbol-heading] .symbol-icon{position:static}`],
 		['文字の絶対配置', () => `${css}\n${scope} .symbol-text{position:absolute}`],
-		['ハタキュ固有の高さの復活', () => `${css}\n${scope} .symbol-hatakyu{min-height:1.52em}`],
 		['アイコン固有の最小幅の復活', () => `${css}\n${scope} .symbol-icon{min-width:1.18em}`],
 		['完了時だけの行高変更', () => `${css}\n${scope} [data-symbol-state="done"] .symbol-text{line-height:1}`],
-		['reduced-motionだけの高さ変更', () => `${css}\n@media(prefers-reduced-motion:reduce){${scope} .symbol-hatakyu{min-height:1em}}`],
+		['reduced-motionだけの高さ変更', () => `${css}\n@media(prefers-reduced-motion:reduce){${scope} .symbol-swap{min-height:1em}}`],
 	] as const)('陽性対照：%sを検出する', (_name, mutate) => {
 		const mutated = mutate();
 		expect(mutated).not.toBe(css);
 		expect(() => assertSymbolLayout(mutated)).toThrow();
-	});
-
-	test('陽性対照：日々の「のことも。」を句の外へ出すと検出する', () => {
-		const mutated = source.replace('日々</span></span>のことも。</span>', '日々</span></span></span>のことも。');
-		expect(mutated).not.toBe(source);
-		expect(() => assertHatadyPhrases(css, mutated)).toThrow();
-	});
-
-	test('陽性対照：句の改行不可を外すと検出する', () => {
-		expect(() => assertHatadyPhrases(changeBaseDeclaration('symbol-phrase', 'white-space', 'normal'))).toThrow();
 	});
 
 	test('陽性対照：末尾を左揃えへ戻すと検出する', () => {

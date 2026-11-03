@@ -138,7 +138,7 @@ cherrypickUpdatedCacheClear: "테마 및 색상, 로케일 등의 변경 사항�
 cherrypickUpdatedCacheClearLater: "나중에 캐시를 지우려면 <b>설정</b> → <b>캐시 지우기</b>에서 할 수 있어요!"
 headlineMisskey: "노트로 연결되는 네트워크"
 introMisskey: "어서오세요! CherryPick은 오픈 소스 분산형 마이크로 블로그 서비스에요.\n'노트'를 작성해서 지금 일어나고 있는 일을 공유하거나, 나만의 이야기를 모두에게 발신할 수 있어요.📡\n'리액션' 기능으로 친구의 노트에 총알같이 반응을 추가할 수도 있답니다!👍\n새로운 세계를 탐험해 보세요!🚀"
-poweredByMisskeyDescription: "{name}은(는) 오픈소스 플랫폼 <b>Hataskey</b>의 서버 중 하나예요."
+poweredByMisskeyDescription: "{name}은(는) 오픈소스 플랫폼 <b>Hataskey Lite</b>의 서버 중 하나예요."
 monthAndDay: "{month}월 {day}일"
 search: "검색"
 reset: "초기화"

@@ -59,7 +59,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<div :class="$style.basicTitle"><h3 id="hatasaba-ui2-basic">{{ editor.copy.basic }}</h3><span>{{ copyx.ui2.basicItemCount({ count: 5 }) }}</span></div>
 		<div :class="$style.basicRows" data-settings-ui2-basic-group>
 			<MkSwitch v-model="editor.draft.editedShowTrendingTab" :flat="mode === 'permanent'"><template #label>{{ editor.copy.showTrendingTab }}</template><template #caption>{{ editor.copy.showTrendingTabCaption }}</template></MkSwitch>
-			<MkSwitch v-model="editor.draft.editedShowHatadyTab" :flat="mode === 'permanent'"><template #label>{{ editor.copy.showHatadyTab }}</template><template #caption>{{ editor.copy.showHatadyTabCaption }}</template></MkSwitch>
 			<MkSwitch id="hatasaba-ui2-deck" v-model="editor.draft.editedTopNavMode" tabindex="-1" :flat="mode === 'permanent'"><template #label>{{ editor.copy.showMenuAtTop }}</template><template #caption>{{ editor.copy.showMenuAtTopCaption }}<b>{{ editor.copy.deckOnlyNote }}</b></template></MkSwitch>
 			<MkSwitch v-model="editor.draft.editedDeckIgnoreWidth" :flat="mode === 'permanent'"><template #label>{{ editor.copy.ignoreDeckWidth }}</template><template #caption>{{ editor.copy.ignoreDeckWidthCaption }}<b>{{ editor.copy.deviceSpecificSetting }}</b></template></MkSwitch>
 			<MkSwitch v-model="editor.draft.editedTabSwipeEnabled" :flat="mode === 'permanent'"><template #label>{{ editor.copy.swipeTabs }}</template><template #caption>{{ editor.copy.swipeTabsCaption }}<b>{{ editor.copy.thisDeviceOnly }}</b>{{ editor.copy.savedSuffix }}</template></MkSwitch>

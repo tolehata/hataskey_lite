@@ -9,14 +9,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<div class="main">
 			<template v-for="item in items" :key="item.text">
 				<button v-if="item.action" v-click-anime class="_button item" @click="$event => { item.action($event); close(); }">
-					<HataAppNavIcon v-if="item.brandApp" :app="item.brandApp" :size="24" :monochrome="onDark" class="icon"/><i v-else class="icon" :class="item.icon"></i>
-				<div class="text"><HataAppWordmark v-if="hataAppForMenuLabel(item.id, item.text)" :app="hataAppForMenuLabel(item.id, item.text)!" inheritColor/><template v-else>{{ item.text }}</template></div>
+					<i class="icon" :class="item.icon"></i>
+				<div class="text">{{ item.text }}</div>
 					<span v-if="item.indicate && item.indicateValue" class="_indicateCounter indicatorWithValue">{{ item.indicateValue }}</span>
 					<span v-else-if="item.indicate" class="indicator _blink"><i class="_indicatorCircle"></i></span>
 				</button>
 				<MkA v-else :key="item.text" v-click-anime :to="item.to" class="item" @click.passive="close()">
-					<HataAppNavIcon v-if="item.brandApp" :app="item.brandApp" :size="24" :monochrome="onDark" class="icon"/><i v-else class="icon" :class="item.icon"></i>
-				<div class="text"><HataAppWordmark v-if="hataAppForMenuLabel(item.id, item.text)" :app="hataAppForMenuLabel(item.id, item.text)!" inheritColor/><template v-else>{{ item.text }}</template></div>
+					<i class="icon" :class="item.icon"></i>
+				<div class="text">{{ item.text }}</div>
 					<span v-if="item.indicate && item.indicateValue" class="_indicateCounter indicatorWithValue">{{ item.indicateValue }}</span>
 					<span v-else-if="item.indicate" class="indicator _blink"><i class="_indicatorCircle"></i></span>
 				</MkA>
@@ -34,9 +34,6 @@ import { deviceKind } from '@/utility/device-kind.js';
 import { prefer } from '@/preferences.js';
 import { miLocalStorage } from '@/local-storage.js';
 import { getActiveHataSideStudioMenuIds, hataSideStudioStore, normalizeHataSideStudioMenuId } from '@/utility/hata-side-studio.js';
-import HataAppNavIcon from '@/components/HataAppNavIcon.vue';
-import HataAppWordmark from '@/components/HataAppWordmark.vue';
-import { hataAppForMenuIcon, hataAppForMenuLabel } from '@/utility/hata-app-brand.js';
 import { store } from '@/store.js';
 
 const props = withDefaults(defineProps<{
@@ -69,7 +66,7 @@ const menu = prefer.s.menu;
 ⚠️Hataskey UI のときは「両方に入っているもの」だけを省く。こうすると:
   - マスコットは「もっと」に出る（今回の修正点）
   - 両方にある項目（通知・チャット等）は従来どおり省かれる
-  - Hataskey UI 側にしか無い項目（ドライブ・Hatady 等）も従来どおり「もっと」に残る
+  - Hataskey UI 側にしか無い項目（ドライブ等）も従来どおり「もっと」に残る
 ⚠️サイドバーで非表示にした項目（visible === false）は「辿れない」ので省かない。
 
 HataSideStudio導入後は、Studioから追加できるnavbarItemDef項目に限ってactive profileを正本にする。
@@ -77,10 +74,6 @@ HataSideStudio導入後は、Studioから追加できるnavbarItemDef項目に�
 拡大/縮小のどちら側に置かれていても重複表示しない。Studio対象外の項目は上記の従来判定を維持する。
 */
 const hiddenFromLaunchPad = computed(() => {
-	if (miLocalStorage.getItem('ui') === 'hataskey3') {
-		const shownInStudio = getActiveHataSideStudioMenuIds(hataSideStudioStore.value);
-		return Object.keys(navbarItemDef).filter(id => shownInStudio.has(normalizeHataSideStudioMenuId(id)));
-	}
 	if (miLocalStorage.getItem('ui') !== 'simple') return menu;
 	const sidebar = prefer.s['simpleUi.sidebar'] as { id: string; visible?: boolean }[] | undefined;
 	const shownInSidebar = new Set((sidebar ?? []).filter(t => t.visible !== false).map(t => t.id));
@@ -103,7 +96,6 @@ const items = computed(() => Object.keys(navbarItemDef).filter(k => !hiddenFromL
 	type: def.to ? 'link' : 'button',
 	text: def.title,
 	icon: def.icon,
-	brandApp: hataAppForMenuIcon(id),
 	to: def.to,
 	action: def.action,
 	indicate: def.indicated,

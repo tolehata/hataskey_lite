@@ -13,8 +13,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 >
 	<template #header>
 		<template v-if="pageMetadata">
-			<HataAppLogo v-if="pageMetadata.hataApp" :app="pageMetadata.hataApp" :size="20" :monochrome="store.r.darkMode.value"/><i v-else-if="pageMetadata.icon" :class="pageMetadata.icon"></i>
-			<HataAppWordmark v-if="isExactHataAppTitle(pageMetadata)" :app="pageMetadata.hataApp!" inheritColor/><template v-else>{{ pageMetadata.title }}</template>
+			<i v-if="pageMetadata.icon" :class="pageMetadata.icon"></i>
+			{{ pageMetadata.title }}
 		</template>
 	</template>
 
@@ -31,9 +31,6 @@ import { isLink } from '@@/js/is-link.js';
 import XColumn from './column.vue';
 import type { Column } from '@/deck.js';
 import type { PageMetadata } from '@/page.js';
-import { isExactHataAppTitle } from '@/page.js';
-import HataAppLogo from '@/components/HataAppLogo.vue';
-import HataAppWordmark from '@/components/HataAppWordmark.vue';
 import { store } from '@/store.js';
 import * as os from '@/os.js';
 import { i18n } from '@/i18n.js';

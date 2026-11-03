@@ -37,7 +37,6 @@ const mocks = vi.hoisted(() => ({
 	measure: vi.fn(),
 	mount: vi.fn(),
 	destroy: vi.fn(),
-	clockUpdate: vi.fn(),
 	federationModeUpdate: vi.fn(),
 	controllerOptions: undefined as Record<string, unknown> | undefined,
 	eventOn: vi.fn(),
@@ -72,9 +71,6 @@ vi.mock('@/router.js', () => ({ mainRouter: { push: vi.fn() } }));
 vi.mock('@/os.js', () => ({ popup: vi.fn(), confirm: vi.fn() }));
 vi.mock('@/components/MkSigninDialog.vue', () => ({ default: { render: () => null } }));
 vi.mock('@/components/MkSignupBranchDialog.vue', () => ({ default: { render: () => null } }));
-vi.mock('./welcome.entrance.hatask-preview.vue', () => ({ default: { render: () => null } }));
-vi.mock('./welcome.entrance.hatady-preview.vue', () => ({ default: { render: () => null } }));
-vi.mock('./welcome.entrance.hatafeed-preview.vue', () => ({ default: { render: () => null } }));
 vi.mock('./welcome.entrance.hataskey.js', () => ({
 	HataskeyWelcomeController: class {
 		root = null;
@@ -83,7 +79,6 @@ vi.mock('./welcome.entrance.hataskey.js', () => ({
 		mount = mocks.mount;
 		destroy = () => { this.destroyed = true; mocks.destroy(); };
 		requestMeasure = mocks.measure;
-		updateHataskClock = mocks.clockUpdate;
 		setFederationMode = mocks.federationModeUpdate;
 		setLanguage = vi.fn();
 		selectLang = vi.fn();
@@ -532,16 +527,11 @@ function mountMetadata() {
 
 describe('実入口SFCのサーバーメタ連携', () => {
 	beforeEach(() => { instance.policies.ltlAvailable = false; });
-	test('公開pingを一度だけ使って時計を同期し、連合設定をコントローラーへ渡す', async () => {
+	test('連合設定をコントローラーへ渡す', async () => {
 		instance.federation = 'specified';
-		mocks.api.mockResolvedValueOnce({ pong: Date.now() });
 		const item = mountMetadata();
 		await flush();
-		expect(mocks.api).toHaveBeenCalledOnce();
-		expect(mocks.api).toHaveBeenCalledWith('ping', {}, null, expect.any(AbortSignal));
 		expect(mocks.controllerOptions?.federationMode).toBe('specified');
-		expect(mocks.controllerOptions?.now).toBeTypeOf('function');
-		expect(mocks.clockUpdate).toHaveBeenCalledOnce();
 		item.unmount();
 	});
 
@@ -555,19 +545,6 @@ describe('実入口SFCのサーバーメタ連携', () => {
 		await flush();
 		expect(mocks.federationModeUpdate).toHaveBeenLastCalledWith('none');
 		item.unmount();
-	});
-
-	test('アンマウント時に未完了の時計同期をabortし、後着応答を反映しない', async () => {
-		const pending = deferred<{ pong: number }>();
-		mocks.api.mockReturnValueOnce(pending.promise);
-		const item = mountMetadata();
-		await flush();
-		const signal = mocks.api.mock.calls[0][3];
-		item.unmount();
-		expect(signal.aborted).toBe(true);
-		pending.resolve({ pong: Date.now() });
-		await flush();
-		expect(mocks.clockUpdate).not.toHaveBeenCalled();
 	});
 
 	test('実サーバー名・アイコン・背景・規約を表示し、メタ更新へ追従する', async () => {

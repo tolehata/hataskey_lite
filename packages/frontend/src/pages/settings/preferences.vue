@@ -251,20 +251,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 					<div class="_gaps_m">
 						<div class="_gaps_s">
-							<SearchMarker :keywords="['ltl', 'local', 'emoji', 'vote', 'poll', 'deck', '絵文字', '投票']">
-								<MkPreferenceContainer k="ltlEmojiVoteEnabled">
-									<MkSwitch v-model="ltlEmojiVoteEnabled">
-										<template #label><SearchLabel>{{ i18n.ts._hata._customSettings._general.showLtlEmojiVote }}</SearchLabel></template>
-										<template #caption><SearchText>{{ i18n.ts._hata._customSettings._general.showLtlEmojiVoteDescription }}</SearchText></template>
-									</MkSwitch>
-								</MkPreferenceContainer>
-							</SearchMarker>
 
 							<SearchMarker :keywords="['post', 'form', 'timeline']">
 								<MkPreferenceContainer k="showFixedPostForm">
-									<MkSwitch v-model="showFixedPostForm" :disabled="ui === 'hataskey3'">
+									<MkSwitch v-model="showFixedPostForm">
 										<template #label><SearchLabel>{{ i18n.ts.showFixedPostForm }}</SearchLabel></template>
-										<template v-if="ui === 'hataskey3'" #caption><SearchText>{{ i18n.ts._hata._customSettings._general.ui3ComposerUsePosition }}</SearchText></template>
 									</MkSwitch>
 								</MkPreferenceContainer>
 							</SearchMarker>
@@ -1433,7 +1424,6 @@ const hemisphere = prefer.model('hemisphere');
 const showNoteActionsOnlyHover = prefer.model('showNoteActionsOnlyHover');
 const showClipButtonInNoteFooter = prefer.model('showClipButtonInNoteFooter');
 const collapseRenotes = prefer.model('collapseRenotes');
-const ltlEmojiVoteEnabled = prefer.model('ltlEmojiVoteEnabled');
 const advancedMfm = prefer.model('advancedMfm');
 const showReactionsCount = prefer.model('showReactionsCount');
 const enableQuickAddMfmFunction = prefer.model('enableQuickAddMfmFunction');

@@ -15,7 +15,6 @@ import { IdService } from '@/core/IdService.js';
 import type { MiNoteReaction } from '@/models/NoteReaction.js';
 import { isDuplicateKeyValueError } from '@/misc/is-duplicate-key-value-error.js';
 import { GlobalEventService } from '@/core/GlobalEventService.js';
-import { UtageService } from '@/core/UtageService.js';
 import { NotificationService } from '@/core/NotificationService.js';
 import PerUserReactionsChart from '@/core/chart/charts/per-user-reactions.js';
 import { emojiRegex } from '@/misc/emoji-regex.js';
@@ -102,7 +101,6 @@ export class ReactionService {
 		// 旗鯖fork: トレンドタイムライン
 		private trendingService: TrendingService,
 		private globalEventService: GlobalEventService,
-		private utageService: UtageService,
 		private apRendererService: ApRendererService,
 		private apDeliverManagerService: ApDeliverManagerService,
 		private notificationService: NotificationService,
@@ -182,7 +180,7 @@ export class ReactionService {
 		};
 
 		try {
-			await this.utageService.saveReaction(note, user, record);
+			await this.noteReactionsRepository.insert(record);
 		} catch (e) {
 			if (isDuplicateKeyValueError(e)) {
 				const exists = await this.noteReactionsRepository.findOneByOrFail({
@@ -193,7 +191,7 @@ export class ReactionService {
 				if (exists.reaction !== reaction) {
 					// 別のリアクションがすでにされていたら置き換える
 					await this.delete(user, note);
-					await this.utageService.saveReaction(note, user, record);
+					await this.noteReactionsRepository.insert(record);
 				} else {
 					// 同じリアクションがすでにされていたらエラー
 					throw new IdentifiableError('51c42bb4-931a-456b-bff7-e5a8a70dd298');
@@ -318,7 +316,7 @@ export class ReactionService {
 		}
 
 		// Delete reaction
-		const result = await this.utageService.removeReaction(note, exist.id);
+		const result = await this.noteReactionsRepository.delete(exist.id);
 
 		if (result.affected !== 1) {
 			throw new IdentifiableError('60527ec9-b4cb-4a88-a6bd-32d3ad26817d', 'not reacted');

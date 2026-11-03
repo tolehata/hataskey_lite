@@ -37,8 +37,8 @@ export const paramDef = {
 	type: 'object',
 	properties: {
 		query: { type: 'string', nullable: true },
-		// 表示フィルタ: all=全部 / public=公開のみ / private=プライベートのみ / archived=アーカイブ済み
-		filter: { type: 'string', enum: ['all', 'public', 'private', 'archived'], default: 'all' },
+		// 表示フィルタ: all=全部 / public=アーカイブされていないもの / archived=アーカイブ済み
+		filter: { type: 'string', enum: ['all', 'public', 'archived'], default: 'all' },
 		sinceId: { type: 'string', format: 'misskey:id' },
 		untilId: { type: 'string', format: 'misskey:id' },
 		limit: { type: 'integer', minimum: 1, maximum: 100, default: 30 },
@@ -60,10 +60,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 			switch (ps.filter) {
 				case 'public':
-					query.andWhere('channel.isPrivate = FALSE').andWhere('channel.isArchived = FALSE');
-					break;
-				case 'private':
-					query.andWhere('channel.isPrivate = TRUE');
+					query.andWhere('channel.isArchived = FALSE');
 					break;
 				case 'archived':
 					query.andWhere('channel.isArchived = TRUE');

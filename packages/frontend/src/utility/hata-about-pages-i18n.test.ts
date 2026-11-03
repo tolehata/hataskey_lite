@@ -22,7 +22,7 @@ const locale = (code: string) => (load(fs.readFileSync(path.resolve(process.cwd(
 function serverDescriptionIssues(description: unknown): string[] {
 	if (typeof description !== 'string') return ['missing description'];
 	const issues: string[] = [];
-	if (!description.includes('<b>Hataskey</b>')) issues.push('platform markup');
+	if (!description.includes('<b>Hataskey Lite</b>')) issues.push('platform markup');
 	if (/CherryPick|Misskey|ميسكي/i.test(description)) issues.push('old platform name');
 	if (description.match(/\{name\}/g)?.length !== 1) issues.push('server name placeholder');
 	return issues;
@@ -30,13 +30,13 @@ function serverDescriptionIssues(description: unknown): string[] {
 
 describe('Hataskey・サーバー情報ページの共通言語対応', () => {
 	test('サーバー説明の旧ブランド・閉じタグ・プレースホルダーの違反を検出する', () => {
-		expect(serverDescriptionIssues('{name} <b>Hataskey</b>')).toEqual([]);
+		expect(serverDescriptionIssues('{name} <b>Hataskey Lite</b>')).toEqual([]);
 		for (const broken of [
 			'{name} <b>CherryPick</b> (CherryPick instance)',
 			'{name} <b>ميسكي</b> (ميسكي)',
-			'{name} <b>Hataskey</b> (CherryPick instance)',
-			'{name} <b>Hataskey<b>',
-			'<b>Hataskey</b>',
+			'{name} <b>Hataskey Lite</b> (CherryPick instance)',
+			'{name} <b>Hataskey Lite<b>',
+			'<b>Hataskey Lite</b>',
 			undefined,
 		]) {
 			expect(serverDescriptionIssues(broken).length).toBeGreaterThan(0);
@@ -69,9 +69,9 @@ describe('Hataskey・サーバー情報ページの共通言語対応', () => {
 		expect(source).toContain('{{ copy.basedOnMisskey }}');
 		expect(source).toContain('{{ copy.specialThanksMisskey }}');
 		expect(source).toContain('title: copy.title');
-		expect(locale('ja-JP').aboutMisskey).toBe('Hataskeyについて');
-		expect(locale('en-US').aboutMisskey).toBe('About Hataskey');
-		expect(locale('zh-CN').aboutMisskey).toBe('关于 Hataskey');
+		expect(locale('ja-JP').aboutMisskey).toBe('Hataskey Liteについて');
+		expect(locale('en-US').aboutMisskey).toBe('About Hataskey Lite');
+		expect(locale('zh-CN').aboutMisskey).toBe('关于 Hataskey Lite');
 	});
 
 	test('ローカル・連合先のサーバー情報に固定英語を残さない', () => {

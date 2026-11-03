@@ -15,11 +15,11 @@ describe('settings navigation IDs', () => {
 		const navigationIds = [...destinationsSource.matchAll(/destination\('([^']+)'/gu)].map(match => match[1]);
 		expect(navStart).toBeGreaterThan(-1);
 		expect(guardStart).toBeGreaterThan(navStart);
-		// コンカレント連携を独立した項目に追加した現在の destination は53件。
-		expect(navigationIds).toHaveLength(53);
+		// 現在の destination は45件（マスコットとフォント選択の2件を撤去）。
+		expect(navigationIds).toHaveLength(45);
 		expect(new Set(navigationIds).size).toBe(navigationIds.length);
 		expect(navigationIds).toContain('account-plugins');
-		expect(navigationIds).toContain('account-concrnt');
+		expect(navigationIds).not.toContain('account-concrnt');
 
 		expect(() => assertUniqueNavigationIds([
 			{ items: [{ id: 'settings.unique' }] },

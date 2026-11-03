@@ -39,7 +39,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		>
 			<template #item="{element: item, index}">
 				<div :class="[$style.row, isVisible(item) ? '' : $style.rowHidden]">
-					<button v-tooltip="copy.dragToReorder" :class="['sidebarDragHandle', $style.handle]" tabindex="-1">
+					<button :class="['sidebarDragHandle', $style.handle]" v-tooltip="copy.dragToReorder" tabindex="-1">
 						<i class="ti ti-grip-vertical"></i>
 					</button>
 					<div :class="$style.groupBadge" :data-group="groupOf(item)">{{ groupLabel(item) }}</div>
@@ -49,7 +49,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 						:class="$style.toggle"
 						@update:modelValue="setVisible(index, $event)"
 					/>
-					<span v-else v-tooltip="copy.alwaysVisible" :class="$style.requiredLock">
+					<span v-else :class="$style.requiredLock" v-tooltip="copy.alwaysVisible">
 						<i class="ti ti-lock"></i>
 					</span>
 					<i :class="[applyIconOverride(item), $style.icon]"></i>
@@ -79,14 +79,13 @@ import MkSwitch from '@/components/MkSwitch.vue';
 import { prefer } from '@/preferences.js';
 import { PREF_DEF } from '@/preferences/def.js';
 import { applySidebarIconOverride as applyIconOverride } from '@/utility/sidebar-icon-overrides.js';
-import { normalizeHatagoesSidebar } from '@/utility/hatagoes-sidebar.js';
 import * as os from '@/os.js';
 import { i18n } from '@/i18n.js';
 
 const copy = i18n.ts._hata._sidebarEditor;
 
 // 旗鯖fork: 常時表示 (ON/OFF 不可) な項目。並び替えは可能。
-const REQUIRED_IDS = new Set(['timeline', 'notifications', 'externalNotifications', 'announcements', 'followRequests', 'more']);
+const REQUIRED_IDS = new Set(['timeline', 'notifications', 'announcements', 'followRequests', 'more']);
 
 // 旗鯖fork: グループラベル (バッジ表示用)。group 越えドラッグで自動更新するため、idx に依らず item.group ベースで参照。
 const GROUP_LABELS: Record<string, string> = {
@@ -101,12 +100,10 @@ const ITEM_LABELS: Record<string, string> = {
 	timeline: copy.itemTimeline,
 	search: copy.itemSearch,
 	notifications: copy.itemNotifications,
-	externalNotifications: copy.itemExternalNotifications,
 	chat: copy.itemMessages,
 	announcements: copy.itemAnnouncements,
 	drive: copy.itemDrive,
 	favorites: copy.itemFavorites,
-	hatagoes: 'HataGoes',
 	uiSetup: copy.itemUiSetup,
 	explore: copy.itemExplore,
 	followRequests: copy.itemFollowRequests,
@@ -126,7 +123,7 @@ const emit = defineEmits<{
 const dialog = useTemplateRef('dialog');
 
 // 編集前の値を deep clone (キャンセル時の比較・破棄用)
-const initialSnapshot = JSON.stringify(normalizeHatagoesSidebar((prefer.s['simpleUi.sidebar'] ?? []).filter(item => !REMOVED_SIDEBAR_IDS.has(item?.id))));
+const initialSnapshot = JSON.stringify((prefer.s['simpleUi.sidebar'] ?? []).filter(item => !REMOVED_SIDEBAR_IDS.has(item?.id)));
 const editedItems = ref<any[]>(JSON.parse(initialSnapshot));
 
 const hasChanges = computed(() => JSON.stringify(editedItems.value) !== initialSnapshot);
@@ -134,7 +131,6 @@ const hasChanges = computed(() => JSON.stringify(editedItems.value) !== initialS
 function groupOf(item: any): string {
 	return (item?.group ?? 'basic') as string;
 }
-
 function groupLabel(item: any): string {
 	return GROUP_LABELS[groupOf(item)] ?? groupOf(item);
 }
@@ -142,16 +138,13 @@ function groupLabel(item: any): string {
 function itemDisplayLabel(item: any): string {
 	return ITEM_LABELS[item?.id] ?? item?.label ?? item?.id ?? '';
 }
-
 function isRequired(id: string): boolean {
 	return REQUIRED_IDS.has(id);
 }
-
 function isVisible(item: any): boolean {
 	if (isRequired(item.id)) return true;
 	return item.visible !== false;
 }
-
 function setVisible(index: number, visible: boolean) {
 	const item = editedItems.value[index];
 	if (isRequired(item.id)) return;
@@ -199,7 +192,7 @@ async function resetToDefault() {
 	});
 	if (c.canceled) return;
 	const def = PREF_DEF['simpleUi.sidebar'].default as any[];
-	editedItems.value = JSON.parse(JSON.stringify(normalizeHatagoesSidebar(def)));
+	editedItems.value = JSON.parse(JSON.stringify(def));
 }
 
 async function save() {
@@ -208,7 +201,7 @@ async function save() {
 		return;
 	}
 	try {
-		await prefer.commit('simpleUi.sidebar', JSON.parse(JSON.stringify(normalizeHatagoesSidebar(editedItems.value))));
+		prefer.commit('simpleUi.sidebar', JSON.parse(JSON.stringify(editedItems.value)));
 		os.toast(copy.saved);
 		emit('done', { saved: true });
 		dialog.value?.close();
@@ -233,7 +226,6 @@ async function closeWithoutSave() {
 	emit('done', { saved: false });
 	dialog.value?.close();
 }
-
 // 旗鯖fork: MkWindow の close ボタン (X) やエスケープキーで閉じられた時に呼ばれる。
 //   MkWindow は「開いたまま裏で作業できる」性質のため、閉じる際の未保存確認は行わない
 //   (ユーザーは意識的に閉じる)。done(saved: false) だけ emit する。

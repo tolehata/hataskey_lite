@@ -1,46 +1,20 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-only -->
 <template>
 <section v-if="destination != null && visibleControlGroups.length > 0" class="root" :data-bento-category="categoryId" :data-category-flow="categoryId != null && categoryFlow ? 'true' : undefined" :data-settings-destination-id="destination.id" :data-motion-enabled="motionEnabled ? 'true' : 'false'">
-	<header v-if="categoryId == null" class="heading" :class="{ sHero: destination.id === 'hataskey-ui-s' }">
+	<header v-if="categoryId == null" class="heading">
 		<!-- 旗鯖fork: カテゴリを移ると文章が左右に滑って入れ替わる。
 		     ⚠️key に行き先のidを与えないと差し替わらない。 -->
 		<Transition name="settings-heading" :css="motionEnabled" mode="out-in">
 			<div :key="destination.id" class="headingText">
-				<div v-if="destination.id === 'hataskey-ui-s'" class="sHeroLayout">
-					<div class="sHeroCopy">
-						<span v-if="ui === 'hataskey3'" class="sBadge">{{ i18n.ts.inUse }}</span>
-						<h2><span class="settingsBrand">{{ group.title }}</span></h2>
-						<p>{{ group.description }}</p>
-						<p class="sImmediate">{{ i18n.ts._hata._settingsRedesign.immediate.uiSImmediate }}</p>
-					</div>
-					<button type="button" class="sReset" @click="resetUi3ComposerPreferences"><i class="ti ti-restore" aria-hidden="true"></i>{{ i18n.ts.resetToDefaultValue }}</button>
-				</div>
-				<template v-else>
-					<p class="eyebrow">{{ destination.categoryId === 'cherrypick' ? 'CherryPick' : destination.label }}</p>
-					<h2>{{ group.title }}</h2>
-					<p>{{ group.description }}</p>
-				</template>
+				<p class="eyebrow">{{ destination.categoryId === 'cherrypick' ? 'CherryPick' : destination.label }}</p>
+				<h2>{{ group.title }}</h2>
+				<p>{{ group.description }}</p>
 			</div>
 		</Transition>
 	</header>
 	<section v-for="controlGroup in visibleControlGroups" :key="controlGroup.id" class="preferenceSection" :data-bento-section="categoryId == null ? undefined : controlGroup.id" :data-settings-section-anchor="categoryId == null ? undefined : `preference:${controlGroup.id}`" :data-settings-section-label="categoryId == null ? undefined : controlGroup.label" :data-settings-section-icon="controlGroup.sectionId == null ? undefined : bentoSectionIcon(controlGroup.sectionId)" :tabindex="categoryId == null ? undefined : -1">
 		<h3 v-if="categoryId != null" class="sectionTitle">{{ controlGroup.label }}</h3>
 		<SettingsSectionExplainer v-if="controlGroup.sectionId != null" :sectionId="controlGroup.sectionId" :motionEnabled="motionEnabled"/>
-		<template v-if="isUiSSection(controlGroup.id)">
-			<section v-if="destination.id === 'hataskey-ui-s' || categoryId === 'appearance'" class="auxiliary" role="list" :aria-label="group.title">
-				<article class="control" role="listitem" :data-settings-search-id="uiSDisplaySizeSearchId">
-					<MkRadios :modelValue="hataskeyUiSDisplaySize" @update:modelValue="setHataskeyUiSDisplaySize($event)">
-						<template #label>{{ i18n.ts._hata._hataskeyUi3._displaySize.title }}</template>
-						<template #caption>{{ i18n.ts._hata._hataskeyUi3._displaySize.caption }}</template>
-						<option value="standard">{{ i18n.ts._hata._hataskeyUi3._displaySize.standard }}</option>
-						<option value="small">{{ i18n.ts._hata._hataskeyUi3._displaySize.small }}</option>
-					</MkRadios>
-				</article>
-			</section>
-			<HataskeyUiSRssSettings v-if="destination.id === 'hataskey-ui-s' || categoryId === 'appearance'" class="embeddedUiSettings" :data-settings-section-anchor="categoryId == null ? undefined : 'preference:ui-s:rss'" :data-settings-section-label="i18n.ts._hata._hataskeyUi3._rss.settings" data-settings-section-icon="ti ti-rss" :tabindex="categoryId == null ? undefined : -1"/>
-			<HataskeyUiSBottomNavSettings v-if="destination.id === 'hataskey-ui-s' || categoryId === 'appearance'" class="embeddedUiSettings" :data-settings-section-anchor="categoryId == null ? undefined : 'preference:ui-s:bottom-nav'" :data-settings-section-label="i18n.ts._hata._hataskeyUi3._bottomNav.title" data-settings-section-icon="ti ti-layout-bottombar" :tabindex="categoryId == null ? undefined : -1"/>
-		</template>
-
 		<section v-if="showsAuxiliary('lang', controlGroup.id) || showsAuxiliary('overridedDeviceKind', controlGroup.id) || showsAuxiliary('realtimeMode', controlGroup.id)" class="auxiliary" role="list" :aria-label="group.title">
 			<article v-if="showsAuxiliary('lang', controlGroup.id)" class="control" role="listitem" :data-settings-search-id="searchIdFor('lang')">
 				<MkSelect :modelValue="models.lang.value ?? ''" :items="languageItems" @update:modelValue="models.lang.value = String($event)">
@@ -98,7 +72,6 @@
 						<span class="captionLine"><b>{{ i18n.ts._settings.ifOn }}:</b> {{ i18n.ts._chat.send }}: Enter / {{ i18n.ts._chat.newline }}: Shift + Enter</span>
 						<span class="captionLine"><b>{{ i18n.ts._settings.ifOff }}:</b> {{ i18n.ts._chat.send }}: Ctrl + Enter / {{ i18n.ts._chat.newline }}: Enter</span>
 					</template>
-					<template v-else-if="control.key === 'showFixedPostForm' && ui === 'hataskey3'" #caption><span class="captionLine">{{ i18n.ts._hata._customSettings._general.ui3ComposerUsePosition }}</span></template>
 					<template v-else-if="control.caption.length" #caption><span v-for="caption in control.caption" :key="caption" class="captionLine">{{ caption }}</span></template>
 				</MkSwitch>
 				<MkInput v-else-if="control.kind === 'color'" type="color" :modelValue="String(read(control.key) ?? '')" :disabled="isDisabled(control)" @update:modelValue="write(control.key, $event)">
@@ -159,17 +132,13 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 import { langs, ui } from '@@/js/config.js';
-import { canonicalSearchIdForPreferenceKey, controlsForPreferenceDestination, preferenceControls, parsePreferenceDestination, preferenceAuxiliaryControls, preferenceGroups, uiSDisplaySizeSearchId } from './settings-preferences-catalog.js';
+import { canonicalSearchIdForPreferenceKey, controlsForPreferenceDestination, preferenceControls, parsePreferenceDestination, preferenceAuxiliaryControls, preferenceGroups } from './settings-preferences-catalog.js';
 import { bentoPreferenceCategory, bentoPreferencePlacements, bentoSectionIcon, bentoSectionIds, bentoSectionLabel, settingsBentoCategories } from './settings-bento-catalog.js';
 import { emojiIndexLangs, createSettingsPreferenceModels } from './settings-preferences-models.js';
 import SettingsSectionExplainer from './SettingsSectionExplainer.vue';
-import HataskeyUiSRssSettings from './HataskeyUiSRssSettings.vue';
-import HataskeyUiSBottomNavSettings from './HataskeyUiSBottomNavSettings.vue';
 import type { DataSaverKey } from './settings-preferences-models.js';
 import type { PreferenceContainerKey, PreferenceControl, SettingsInventoryKey } from './settings-preferences-catalog.js';
 import type { SettingsBentoCategoryId } from './settings-bento-catalog.js';
-import type { Hk3ComposerToolId } from '@/components/hataskey3/hk3-composer-tools.js';
-import { HK3_COMPOSER_SHORTCUT_NONE, hk3ComposerToolLabel } from '@/components/hataskey3/hk3-composer-tools.js';
 import MkButton from '@/components/MkButton.vue';
 import MkInfo from '@/components/MkInfo.vue';
 import MkInput from '@/components/MkInput.vue';
@@ -183,7 +152,6 @@ import { $i } from '@/i.js';
 import { instance } from '@/instance.js';
 import { prefer } from '@/preferences.js';
 import { getInitialPrefValue } from '@/preferences/manager.js';
-import { hataskeyUiSDisplaySize, setHataskeyUiSDisplaySize } from '@/utility/hatasaba-device-prefs.js';
 import { store } from '@/store.js';
 import * as os from '@/os.js';
 
@@ -195,17 +163,13 @@ const group = computed(() => {
 	return category != null ? { title: category.label, description: category.description } : destination.value == null ? { title: i18n.ts.preferences, description: i18n.ts.preferences } : preferenceGroups[destination.value.id];
 });
 const visibleControls = computed(() => props.categoryId != null ? preferenceControls.filter(control => bentoPreferenceCategory(control.key) === props.categoryId) : destination.value == null ? [] : controlsForPreferenceDestination(destination.value.id));
-const visibleMountedControls = computed(() => visibleControls.value.filter(control => !control.key.startsWith('hataskeyUi3Rss') && isControlMounted(control)));
+const visibleMountedControls = computed(() => visibleControls.value.filter(control => isControlMounted(control)));
 const visibleControlGroups = computed(() => {
 	if (props.categoryId == null) return destination.value == null ? [] : [{ id: destination.value.id, sectionId: undefined, label: group.value.title, controls: visibleMountedControls.value }];
 	return bentoSectionIds.filter(id => id.startsWith(`${props.categoryId}.`)).map(id => ({
 		id, sectionId: id, label: bentoSectionLabel(id), controls: visibleMountedControls.value.filter(control => bentoPreferencePlacements[control.key] === id),
 	})).filter(section => section.controls.length > 0 || preferenceAuxiliaryControls.some(control => bentoPreferencePlacements[control.key] === section.id));
 });
-
-function isUiSSection(sectionId: string): boolean {
-	return props.categoryId == null || sectionId === 'appearance.section2';
-}
 
 function showsAuxiliary(key: SettingsInventoryKey, sectionId: string): boolean {
 	return props.categoryId != null ? bentoPreferencePlacements[key] === sectionId : preferenceAuxiliaryControls.some(control => control.key === key && control.destinationId === destination.value?.id);
@@ -223,22 +187,6 @@ function read(key: PreferenceContainerKey): unknown { return models.controls[key
 
 function write(key: PreferenceContainerKey, value: unknown): void { models.controls[key].value = value; }
 
-const ui3ComposerResetKeys = [
-	'hataskeyUi3ComposerShortcut1', 'hataskeyUi3ComposerShortcut2',
-	'hataskeyUi3ComposerEmojiPosition', 'hataskeyUi3ComposerPosition',
-] as const;
-
-async function resetUi3ComposerPreferences(): Promise<void> {
-	const { canceled } = await os.confirm({
-		type: 'warning',
-		title: i18n.ts.resetToDefaultValue,
-		text: `${group.value.title}: ${i18n.ts.areYouSure}`,
-	});
-	if (canceled) return;
-	for (const key of ui3ComposerResetKeys) write(key, getInitialPrefValue(key));
-	setHataskeyUiSDisplaySize('standard');
-}
-
 function noop(): void { /* the forced-on control intentionally has no setter */ }
 
 function writeDeviceKind(value: unknown): void { models.overridedDeviceKind.value = value === '' ? null : value; }
@@ -250,10 +198,6 @@ function auxiliaryLabel(key: string): string { return auxiliaryForKey(key).label
 function auxiliaryCaption(key: string): readonly string[] { return auxiliaryForKey(key).caption; }
 
 function optionLabel(key: PreferenceContainerKey, value: string): string {
-	if (key === 'hataskeyUi3GlassDensity') return value === 'dense' ? i18n.ts._hata._customSettings._general.ui3GlassDensityDense : i18n.ts._hata._customSettings._general.ui3GlassDensityLight;
-	if (key === 'hataskeyUi3ComposerShortcut1' || key === 'hataskeyUi3ComposerShortcut2') return value === HK3_COMPOSER_SHORTCUT_NONE ? i18n.ts._hata._customSettings._general.ui3ComposerShortcutNone : hk3ComposerToolLabel(value as Hk3ComposerToolId);
-	if (key === 'hataskeyUi3ComposerEmojiPosition') return value === 'beforeVisibility' ? i18n.ts._hata._customSettings._general.ui3ComposerEmojiBeforeVisibility : i18n.ts._hata._customSettings._general.ui3ComposerEmojiAfterShortcuts;
-	if (key === 'hataskeyUi3ComposerPosition') return value === 'top' ? i18n.ts._hata._customSettings._general.ui3ComposerPositionTop : i18n.ts._hata._customSettings._general.ui3ComposerPositionBottom;
 	if (key === 'contextMenu') return ({ app: i18n.ts._contextMenu.app, appWithShift: i18n.ts._contextMenu.appWithShift, native: i18n.ts._contextMenu.native }[value as 'app' | 'appWithShift' | 'native']);
 	if (key === 'instanceTicker') return ({ none: i18n.ts._instanceTicker.none, remote: i18n.ts._instanceTicker.remote, always: i18n.ts._instanceTicker.always }[value as 'none' | 'remote' | 'always']);
 	if (key === 'showingAnimatedImages') return i18n.ts._showingAnimatedImages[value as 'always' | 'interaction' | 'inactive'];
@@ -275,7 +219,6 @@ function rangeTextConverter(key: PreferenceContainerKey) { return key === 'polli
 function isDisabled(control: PreferenceControl): boolean {
 	const key = control.key;
 	if (key.startsWith('postFormVisibilityBorder.') && key !== 'postFormVisibilityBorder.enabled') return !read('postFormVisibilityBorder.enabled');
-	if (key === 'showFixedPostForm') return ui === 'hataskey3';
 	if (key === 'pollingInterval') return models.realtimeMode.value;
 	if (key === 'enableMarkByDate') return Boolean(read('enableAbsoluteTime'));
 	if (key === 'enableQuickAddMfmFunction' || key === 'animatedMfm') return !read('advancedMfm');
@@ -312,16 +255,6 @@ function emojiLanguageName(language: typeof emojiIndexLangs[number]): string { r
 .root[data-bento-category] .toolbox { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
 .heading, .toolbox { border: 1px solid color-mix(in srgb, var(--MI_THEME-divider) 76%, transparent); border-radius: 16px; background: var(--MI_THEME-panel); box-shadow: 0 1px 0 color-mix(in srgb, var(--MI_THEME-bg) 18%, transparent); }
 .heading { padding: 20px; }.heading h2 { margin: 0; font-size: 1.35rem; line-height: 1.35; }.heading p { margin: 8px 0 0; color: var(--MI_THEME-fgTransparentWeak); }
-.sHero { padding: clamp(20px, 6%, 32px); border-radius: 24px; background: var(--MI_THEME-panel); box-shadow: 0 2px 10px color-mix(in srgb, var(--MI_THEME-shadow) 5%, transparent); container-type: inline-size; }
-.sHeroLayout { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 20px 24px; min-width: 0; }
-.sHeroCopy { flex: 1 1 250px; min-width: 0; }
-.sHero h2 { margin: 12px 0 0; color: var(--MI_THEME-accent); font-size: clamp(1.8rem, 8cqi, 2.25rem); line-height: 1.18; }
-.sHero h2 .settingsBrand { white-space: normal; overflow-wrap: anywhere; }
-.sHero p { max-width: 60ch; line-height: 1.6; }
-.sHero .sImmediate { margin-top: 12px; color: var(--MI_THEME-accent); font-size: .8rem; font-weight: 700; }
-.sBadge { display: inline-flex; align-items: center; min-height: 24px; padding: 3px 12px; border-radius: 999px; background: var(--MI_THEME-accentedBg); color: var(--MI_THEME-accent); font-size: .72rem; font-weight: 800; }
-.sReset { display: inline-flex; flex: 0 1 auto; align-items: center; justify-content: center; gap: 7px; max-width: 100%; min-height: 44px; padding: 9px 18px; border: 1px solid color-mix(in srgb, var(--MI_THEME-accent) 42%, var(--MI_THEME-divider)); border-radius: 999px; background: transparent; color: var(--MI_THEME-accent); font: inherit; font-weight: 700; cursor: pointer; }
-.sReset:hover, .sReset:focus-visible { background: var(--MI_THEME-accentedBg); }
 /* 旗鯖fork: 見出しの入れ替え。⚠️mode="out-in" なので、出ていく側と入る側は重ならない。 */
 .settings-heading-enter-active, .settings-heading-leave-active { transition: opacity .22s ease, transform .26s cubic-bezier(.2, .9, .2, 1); }
 .settings-heading-enter-from { opacity: 0; transform: translateX(14px); }

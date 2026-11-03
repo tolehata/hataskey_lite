@@ -20,16 +20,14 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import type { entities } from 'cherrypick-js';
 import type { HataskeyNotificationToasts } from '@/utility/hataskey-notification-toast.js';
-import type { ConcrntNotification } from '@/utility/concrnt/types.js';
-import { CONCRNT_NOTIFICATION_EVENT } from '@/utility/concrnt/events.js';
-import { getNotificationPageContext, getToastDuration, hataskeyToastMotionEnabled } from '@/utility/hataskey-notification-toast.js';
+import { getNotificationPageContext, getToastDuration } from '@/utility/hataskey-notification-toast.js';
 import MkHataskeyNotificationToast from '@/components/MkHataskeyNotificationToast.vue';
 import MkNotificationToastRing from '@/components/MkNotificationToastRing.vue';
 import { notificationToastsSuppressed } from '@/utility/notification-toast-suppression.js';
 import { prefer } from '@/preferences.js';
 import { i18n } from '@/i18n.js';
 
-const props = withDefaults(defineProps<{ context: HataskeyNotificationToasts; receiveExternal?: boolean }>(), { receiveExternal: true });
+const props = defineProps<{ context: HataskeyNotificationToasts }>();
 const context = props.context;
 const target = computed(() => context.surface.value?.target.value ?? context.target.value);
 // Keep an outgoing card in its original Teleport host until its leave animation ends.
@@ -41,7 +39,7 @@ const integrated = computed<boolean>(previous => {
 const active = computed(() => context.items.value[0]);
 const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 const reducedMotion = ref(reducedMotionQuery.matches);
-const motion = computed(() => hataskeyToastMotionEnabled(context.surface.value, prefer.r.animation.value, reducedMotion.value));
+const motion = computed(() => prefer.r.animation.value && !reducedMotion.value && (context.surface.value?.animations.value ?? true));
 const paused = new Set<number>();
 const heights = new Map<number, number>();
 let frame = 0;
@@ -106,9 +104,6 @@ watch(integrated, value => {
 	if (value && context.items.value.length > 1) context.items.value = context.items.value.slice(0, 1);
 });
 watch(notificationToastsSuppressed, value => { if (value) context.clear(); });
-watch(() => prefer.r['external.disableNotificationToast'].value, value => {
-	if (value) context.items.value = context.items.value.filter(item => item.source !== 'external');
-});
 
 function onVisibilityChange() {
 	// Discard background time and replace any frame request interrupted by suspension.
@@ -120,26 +115,7 @@ function onVisibilityChange() {
 
 function onReducedMotion(event: MediaQueryListEvent) { reducedMotion.value = event.matches; }
 
-function onExternalNotification(event: Event) {
-	if (!props.receiveExternal || notificationToastsSuppressed.value || prefer.s['external.disableNotificationToast'] || window.document.hidden) return;
-	const pageContext = getNotificationPageContext();
-	if (pageContext && pageContext !== context) return;
-	const notification = (event as CustomEvent<entities.Notification>).detail;
-	if (notification) context.enqueue(notification, 'external', performance.now(), prefer.s['external.host'] ?? undefined);
-}
-
-// 旗鯖fork: コンカレントの通知も外部連携と同じ受け口で「外部」として出す（受け取り条件も外部通知に揃える）。
-function onConcrntNotification(event: Event) {
-	if (!props.receiveExternal || notificationToastsSuppressed.value || window.document.hidden) return;
-	const pageContext = getNotificationPageContext();
-	if (pageContext && pageContext !== context) return;
-	const notification = (event as CustomEvent<ConcrntNotification>).detail;
-	if (notification) context.enqueueConcrnt(notification, performance.now());
-}
-
 onMounted(() => {
-	window.addEventListener('external-notification', onExternalNotification);
-	window.addEventListener(CONCRNT_NOTIFICATION_EVENT, onConcrntNotification);
 	window.document.addEventListener('visibilitychange', onVisibilityChange);
 	reducedMotionQuery.addEventListener('change', onReducedMotion);
 });
@@ -148,8 +124,6 @@ onUnmounted(() => {
 	for (const el of leaveTimers.keys()) clearLeaveTimer(el);
 	context.clear();
 	context.height.value = 0;
-	window.removeEventListener('external-notification', onExternalNotification);
-	window.removeEventListener(CONCRNT_NOTIFICATION_EVENT, onConcrntNotification);
 	window.document.removeEventListener('visibilitychange', onVisibilityChange);
 	reducedMotionQuery.removeEventListener('change', onReducedMotion);
 });

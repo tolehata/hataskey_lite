@@ -88,43 +88,11 @@ export const ACHIEVEMENT_TYPES = [
 	'bubbleGameExplodingHead',
 	'bubbleGameDoubleExplodingHead',
 	'hatasabaDeckTutorial',
-	'welcomeToHatask',
-	'welcomeToHatady',
 	'hataSideStudioPioneer',
 	'hatacordingUiTutorial',
-	'utageSuccess10',
-	'utageSuccess20',
-	'utageSuccess30',
-	'utageSuccess40',
-	'utageSuccess50',
-	'utageSuccess60',
-	'utageSuccess70',
-	'utageSuccess80',
-	'utageSuccess90',
-	'utageSuccess100',
-	'utageInterruption10',
-	'utageInterruption20',
-	'utageInterruption30',
-	'utageInterruption40',
-	'utageInterruption50',
-	'utageInterruption60',
-	'utageInterruption70',
-	'utageInterruption80',
-	'utageInterruption90',
-	'utageInterruption100',
-	'utageInterruptionWithin5Seconds',
-	'ltlPunchVictory',
-	'ltlPunchDefeat',
 ] as const;
 
 export type AchievementType = typeof ACHIEVEMENT_TYPES[number];
-export type ServerOnlyAchievementType = Extract<AchievementType, `utage${string}` | `ltlPunch${string}`>;
-export type ClientClaimableAchievementType = Exclude<AchievementType, ServerOnlyAchievementType>;
-
-export const CLIENT_CLAIMABLE_ACHIEVEMENT_TYPES = ACHIEVEMENT_TYPES.filter(
-	(type): type is ClientClaimableAchievementType => !type.startsWith('utage') && !type.startsWith('ltlPunch'),
-);
-
 export const ACHIEVEMENT_BADGES = {
 	'notes1': {
 		img: '/fluent-emoji/1f4dd.png',
@@ -533,18 +501,6 @@ export const ACHIEVEMENT_BADGES = {
 		bg: 'linear-gradient(0deg, rgb(118 110 255), rgb(0 212 255))',
 		frame: 'silver',
 	},
-	// 旗鯖fork: Hataskを初めて開いた
-	'welcomeToHatask': {
-		img: '/fluent-emoji/1f44b.png',
-		bg: 'linear-gradient(0deg, rgb(59 187 116), rgb(0 212 255))',
-		frame: 'bronze',
-	},
-	// 旗鯖fork: Hatady(学習・読書記録)を初めて開いた
-	'welcomeToHatady': {
-		img: '/fluent-emoji/1f4d6.png',
-		bg: 'linear-gradient(0deg, rgb(217 130 74), rgb(240 169 78))',
-		frame: 'bronze',
-	},
 	// 旗鯖fork: HataSideStudioのチュートリアルを完了またはスキップした
 	'hataSideStudioPioneer': {
 		img: '/fluent-emoji/1f6e0.png',
@@ -556,121 +512,6 @@ export const ACHIEVEMENT_BADGES = {
 		img: '/fluent-emoji/1f4bb.png',
 		bg: 'linear-gradient(0deg, rgb(72 103 191), rgb(111 198 179))',
 		frame: 'silver',
-	},
-	'utageSuccess10': {
-		img: '/fluent-emoji/1f389.png',
-		bg: 'linear-gradient(0deg, rgb(187 126 59), rgb(255 190 112))',
-		frame: 'bronze',
-	},
-	'utageSuccess20': {
-		img: '/fluent-emoji/1f389.png',
-		bg: 'linear-gradient(0deg, rgb(187 126 59), rgb(255 190 112))',
-		frame: 'bronze',
-	},
-	'utageSuccess30': {
-		img: '/fluent-emoji/1f389.png',
-		bg: 'linear-gradient(0deg, rgb(187 126 59), rgb(255 190 112))',
-		frame: 'bronze',
-	},
-	'utageSuccess40': {
-		img: '/fluent-emoji/1f389.png',
-		bg: 'linear-gradient(0deg, rgb(220 223 225), rgb(172 192 207))',
-		frame: 'silver',
-	},
-	'utageSuccess50': {
-		img: '/fluent-emoji/1f389.png',
-		bg: 'linear-gradient(0deg, rgb(255 183 77), rgb(255 232 168))',
-		frame: 'gold',
-	},
-	'utageSuccess60': {
-		img: '/fluent-emoji/1f389.png',
-		bg: 'linear-gradient(0deg, rgb(118 110 255), rgb(0 212 255))',
-		frame: 'platinum',
-	},
-	'utageSuccess70': {
-		img: '/fluent-emoji/1f389.png',
-		bg: 'linear-gradient(0deg, rgb(118 110 255), rgb(0 212 255))',
-		frame: 'platinum',
-	},
-	'utageSuccess80': {
-		img: '/fluent-emoji/1f389.png',
-		bg: 'linear-gradient(0deg, rgb(118 110 255), rgb(0 212 255))',
-		frame: 'platinum',
-	},
-	'utageSuccess90': {
-		img: '/fluent-emoji/1f389.png',
-		bg: 'linear-gradient(0deg, rgb(255 183 77), rgb(255 232 168))',
-		frame: 'gold',
-	},
-	'utageSuccess100': {
-		img: '/fluent-emoji/1f389.png',
-		bg: 'linear-gradient(0deg, rgb(118 110 255), rgb(0 212 255))',
-		frame: 'platinum',
-	},
-	'utageInterruption10': {
-		img: '/fluent-emoji/1f6e1.png',
-		bg: 'linear-gradient(0deg, rgb(187 126 59), rgb(255 190 112))',
-		frame: 'bronze',
-	},
-	'utageInterruption20': {
-		img: '/fluent-emoji/1f6e1.png',
-		bg: 'linear-gradient(0deg, rgb(187 126 59), rgb(255 190 112))',
-		frame: 'bronze',
-	},
-	'utageInterruption30': {
-		img: '/fluent-emoji/1f6e1.png',
-		bg: 'linear-gradient(0deg, rgb(187 126 59), rgb(255 190 112))',
-		frame: 'bronze',
-	},
-	'utageInterruption40': {
-		img: '/fluent-emoji/1f6e1.png',
-		bg: 'linear-gradient(0deg, rgb(220 223 225), rgb(172 192 207))',
-		frame: 'silver',
-	},
-	'utageInterruption50': {
-		img: '/fluent-emoji/1f6e1.png',
-		bg: 'linear-gradient(0deg, rgb(255 183 77), rgb(255 232 168))',
-		frame: 'gold',
-	},
-	'utageInterruption60': {
-		img: '/fluent-emoji/1f6e1.png',
-		bg: 'linear-gradient(0deg, rgb(118 110 255), rgb(0 212 255))',
-		frame: 'platinum',
-	},
-	'utageInterruption70': {
-		img: '/fluent-emoji/1f6e1.png',
-		bg: 'linear-gradient(0deg, rgb(118 110 255), rgb(0 212 255))',
-		frame: 'platinum',
-	},
-	'utageInterruption80': {
-		img: '/fluent-emoji/1f6e1.png',
-		bg: 'linear-gradient(0deg, rgb(118 110 255), rgb(0 212 255))',
-		frame: 'platinum',
-	},
-	'utageInterruption90': {
-		img: '/fluent-emoji/1f6e1.png',
-		bg: 'linear-gradient(0deg, rgb(255 183 77), rgb(255 232 168))',
-		frame: 'gold',
-	},
-	'utageInterruption100': {
-		img: '/fluent-emoji/1f6e1.png',
-		bg: 'linear-gradient(0deg, rgb(118 110 255), rgb(0 212 255))',
-		frame: 'platinum',
-	},
-	'utageInterruptionWithin5Seconds': {
-		img: '/fluent-emoji/1f6d1.png',
-		bg: 'linear-gradient(0deg, rgb(255 77 77), rgb(255 183 77))',
-		frame: 'gold',
-	},
-	'ltlPunchVictory': {
-		img: '/twemoji/1f91c.svg',
-		bg: 'linear-gradient(0deg, rgb(118 110 255), rgb(0 212 255))',
-		frame: 'gold',
-	},
-	'ltlPunchDefeat': {
-		img: '/twemoji/1f44a.svg',
-		bg: null,
-		frame: 'bronze',
 	},
 /* @see <https://github.com/misskey-dev/misskey/pull/10365#discussion_r1155511107>
 } as const satisfies Record<typeof ACHIEVEMENT_TYPES[number], {
@@ -685,8 +526,7 @@ export const claimedAchievements: typeof ACHIEVEMENT_TYPES[number][] = ($i && $i
 
 const claimingQueue = new Set<string>();
 
-export async function claimAchievement(type: ClientClaimableAchievementType) {
-	if (!CLIENT_CLAIMABLE_ACHIEVEMENT_TYPES.includes(type)) return;
+export async function claimAchievement(type: typeof ACHIEVEMENT_TYPES[number]) {
 	if ($i == null) return;
 	if ($i.movedTo) return;
 	if (claimedAchievements.includes(type)) return;
@@ -701,7 +541,7 @@ export async function claimAchievement(type: ClientClaimableAchievementType) {
 
 if (_DEV_) {
 	(window as any).unlockAllAchievements = () => {
-		for (const t of CLIENT_CLAIMABLE_ACHIEVEMENT_TYPES) {
+		for (const t of ACHIEVEMENT_TYPES) {
 			claimAchievement(t);
 		}
 	};

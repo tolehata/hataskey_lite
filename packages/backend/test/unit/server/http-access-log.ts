@@ -78,34 +78,6 @@ afterEach(async () => {
 });
 
 describe('registerHttpAccessLog', () => {
-	test('omits only the two ephemeral vote routes, including errors, with body logging enabled', async () => {
-		const { manager, writeAccess } = createManager({ requestBody: true, responseBody: true });
-		const fastify = Fastify({ logger: false });
-		servers.push(fastify);
-		registerHttpAccessLog(fastify, manager);
-		for (const path of ['/api/hata/emoji-vote/show', '/api/hata/emoji-vote/vote']) {
-			fastify.post(path, async request => {
-				if (request.headers['x-test-error']) throw new Error('vote-private-body');
-				return { rankings: ['vote-private-body'], choice: request.body };
-			});
-		}
-		fastify.post('/api/notes/show', async request => ({ echo: request.body }));
-		fastify.post('/api/hata/emoji-vote/show-extra', async request => request.body);
-		for (const path of ['/api/hata/emoji-vote/show', '/api/hata/emoji-vote/vote']) {
-			for (const failure of [false, true]) {
-				const response = await fastify.inject({ method: 'POST', url: path, headers: failure ? { 'x-test-error': '1' } : {}, payload: { emojiId: 'vote-private-body' } });
-				expect(response.statusCode).toBe(failure ? 500 : 200);
-			}
-		}
-		// 同じフックと設定で通常APIが本文ごと記録されることを陽性対照にする。
-		await fastify.inject({ method: 'POST', url: '/api/notes/show', payload: { marker: 'ordinary-api-control' } });
-		await fastify.inject({ method: 'POST', url: '/api/hata/emoji-vote/show-extra', payload: { marker: 'prefix-control' } });
-		expect(writeAccess).toHaveBeenCalledTimes(2);
-		expect(writeAccess.mock.calls[0][0]).toMatchObject({ route: '/api/notes/show', requestBody: { marker: 'ordinary-api-control' }, responseBody: { echo: { marker: 'ordinary-api-control' } } });
-		expect(writeAccess.mock.calls[1][0]).toMatchObject({ route: '/api/hata/emoji-vote/show-extra', requestBody: { marker: 'prefix-control' } });
-		expect(JSON.stringify(writeAccess.mock.calls)).not.toContain('vote-private-body');
-	});
-
 	test('filters responses by configured status classes and keeps the route template', async () => {
 		const server = await createServer({ statusClasses: ['4xx', '5xx'] });
 		servers.push(server.fastify);

@@ -35,8 +35,8 @@ const loaded = runInNewContext(`${code}\n({ Harness, register })`, {
 	url: { query: () => '' },
 }) as { Harness: new () => Harness; register: (this: object, fastify: { get: (path: string, ...args: unknown[]) => void }) => void };
 
-function fixture(visible = false, deliveryAllowed = true) {
-	const note = { id: 'private-note', userId: 'author', userHost: null, visibility: 'public', localOnly: false };
+function fixture(deliveryAllowed = true) {
+	const note = { id: 'note', userId: 'author', userHost: null, visibility: 'public', localOnly: false };
 	const renderer = vi.fn().mockResolvedValue({ id: 'rendered-note' });
 	const service = Object.assign(new loaded.Harness(), {
 		config: { url: 'https://local.test' }, meta: { federation: 'all', enableFanoutTimeline: false },
@@ -44,10 +44,6 @@ function fixture(visible = false, deliveryAllowed = true) {
 		noteReactionsRepository: { findOneBy: async () => ({ id: 'reaction', noteId: note.id }) },
 		usersRepository: { findOneBy: async () => ({ id: 'author', notesCount: 1 }) },
 		userNotePiningsRepository: { find: async () => [{ noteId: note.id }] },
-		noteEntityService: {
-			isChannelVisibleForMe: vi.fn().mockResolvedValue(visible),
-			filterChannelVisibleNotes: vi.fn(async (notes: object[]) => visible ? notes : []),
-		},
 		activityPubAccessControlService: { checkNoteAccess: vi.fn().mockResolvedValue(deliveryAllowed) },
 		applyAccessControl: async () => false, setResponseType: vi.fn(), getUserNotesFromDb: async () => [note],
 		packActivity: renderer,
@@ -65,32 +61,23 @@ function fixture(visible = false, deliveryAllowed = true) {
 	return { service, route, reply, request, renderer, note };
 }
 
-describe('public ActivityPub private note access', () => {
-	test.each(paths)('%s returns 404 before rendering a private note or a private reference', async path => {
-		const f = fixture();
-		await f.route(path)(f.request, f.reply);
-		expect(f.reply.code).toHaveBeenCalledWith(404);
-		expect(f.service.noteEntityService.isChannelVisibleForMe).toHaveBeenCalledWith(f.note, null);
-		expect(f.renderer).not.toHaveBeenCalled();
-		expect(f.reply.header).not.toHaveBeenCalled();
-	});
-
+describe('public ActivityPub note access', () => {
 	test.each(paths)('%s still renders allowed public notes', async path => {
-		const f = fixture(true);
+		const f = fixture();
 		await f.route(path)(f.request, f.reply);
 		expect(f.renderer).toHaveBeenCalledOnce();
 		expect(f.service.activityPubAccessControlService.checkNoteAccess).toHaveBeenCalledWith(f.note, f.request);
 	});
 
-	test('preserves delivery-target rejection after channel visibility passes', async () => {
-		const f = fixture(true, false);
+	test('preserves delivery-target rejection', async () => {
+		const f = fixture(false);
 		await f.route('/notes/:note')(f.request, f.reply);
 		expect(f.reply.code).toHaveBeenCalledWith(404);
 		expect(f.renderer).not.toHaveBeenCalled();
 	});
 
 	test.each(['followers', 'specified'])('Like dereference does not expose %s-note relationship metadata', async visibility => {
-		const f = fixture(true);
+		const f = fixture();
 		f.note.visibility = visibility;
 		await f.route('/likes/:like')(f.request, f.reply);
 		expect(f.reply.code).toHaveBeenCalledWith(404);
@@ -99,7 +86,7 @@ describe('public ActivityPub private note access', () => {
 	});
 
 	test('Like dereference rejects local-only notes even when publicly visible locally', async () => {
-		const f = fixture(true);
+		const f = fixture();
 		f.note.localOnly = true;
 		await f.route('/likes/:like')(f.request, f.reply);
 		expect(f.reply.code).toHaveBeenCalledWith(404);
@@ -107,17 +94,10 @@ describe('public ActivityPub private note access', () => {
 	});
 
 	test.each(['public', 'home'])('Like dereference preserves %s federated notes', async visibility => {
-		const f = fixture(true);
+		const f = fixture();
 		f.note.visibility = visibility;
 		await f.route('/likes/:like')(f.request, f.reply);
 		expect(f.renderer).toHaveBeenCalledOnce();
 		expect(f.reply.code).not.toHaveBeenCalled();
-	});
-
-	test.each(['featured', 'outbox'] as const)('%s removes hidden references before rendering collections', async method => {
-		const f = fixture();
-		await f.service[method](f.request, f.reply);
-		expect(f.service.noteEntityService.filterChannelVisibleNotes).toHaveBeenCalledWith([f.note], null);
-		expect(f.renderer).not.toHaveBeenCalled();
 	});
 });

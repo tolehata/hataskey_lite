@@ -101,39 +101,6 @@ export class MiUserProfile {
 	})
 	public publicReactions: boolean;
 
-	// 旗鯖fork: ローカル限定のプロフィール実績バッジ。
-	// ActivityPub には載せず、UserEntityService が自鯖ユーザーにだけ返す。
-	@Column('boolean', {
-		default: true,
-	})
-	public showUtageSuccessCount: boolean;
-
-	@Column('boolean', {
-		default: true,
-	})
-	public showUtageInterruptionCount: boolean;
-
-	@Column('boolean', {
-		default: true,
-	})
-	public showHataskFlowerCount: boolean;
-
-	@Column('integer', {
-		default: 0,
-	})
-	public hataskFlowerCount: number;
-
-	// Hatask 花ギャラリーの公開範囲。通常のプロフィール設定 API では扱わず、専用 API だけで更新する。
-	@Column('varchar', {
-		length: 16,
-		default: 'public',
-	})
-	public hataskFlowerVisibility: 'public' | 'followers' | 'private';
-
-	/** Hatask ranking participation, controlled by its owner through the dedicated API. */
-	@Column('boolean', { default: true })
-	public hataskRankingParticipating: boolean;
-
 	@Column('enum', {
 		enum: followingVisibilities,
 		default: 'public',
@@ -317,101 +284,6 @@ export class MiUserProfile {
 		unlockedAt: number;
 	}[];
 
-	// ======== 旗鯖同意管理 ========
-	@Column('boolean', {
-		default: false,
-		comment: '外部TL使用同意フラグ',
-	})
-	public hataConsentExternalTl: boolean;
-
-	@Column('timestamp with time zone', {
-		nullable: true,
-		comment: '外部TL同意日時',
-	})
-	public hataConsentExternalTlDate: Date | null;
-
-	@Column('boolean', {
-		default: false,
-		comment: 'カスタムフォント免責同意フラグ',
-	})
-	public hataConsentCustomFont: boolean;
-
-	@Column('timestamp with time zone', {
-		nullable: true,
-		comment: 'カスタムフォント免責同意日時',
-	})
-	public hataConsentCustomFontDate: Date | null;
-
-	@Column('boolean', {
-		default: false,
-		comment: 'マスコット機能免責同意フラグ',
-	})
-	public hataConsentMascot: boolean;
-
-	@Column('timestamp with time zone', {
-		nullable: true,
-		comment: 'マスコット機能同意日時',
-	})
-	public hataConsentMascotDate: Date | null;
-
-	@Column('boolean', {
-		default: false,
-		comment: 'ノートチャーム利用条件への同意フラグ',
-	})
-	public hataConsentNoteCharm: boolean;
-
-	@Column('timestamp with time zone', {
-		nullable: true,
-		comment: 'チャーム機能同意日時',
-	})
-	public hataConsentNoteCharmDate: Date | null;
-
-	@Column('boolean', {
-		default: false,
-		comment: 'Hatadint投稿・ドライブ保存の利用規約同意フラグ',
-	})
-	public hataConsentDrawing: boolean;
-
-	@Column('timestamp with time zone', {
-		nullable: true,
-		comment: 'Hatadint初回同意日時',
-	})
-	public hataConsentDrawingDate: Date | null;
-
-	@Column('varchar', {
-		length: 32,
-		nullable: true,
-		comment: 'Hatadint初回同意時の文面版',
-	})
-	public hataConsentDrawingVersion: string | null;
-	// ======== 旗鯖同意管理ここまで ========
-
-	// 旗鯖fork: マスコット機能のデータ(キャラ/表情/文言の紐付け)。
-	// 画像はドライブのURL参照のみ保持し、画像本体はクライアントがDLしてローカルにキャッシュする。
-	// 上限・XSS・URL検証は hata/mascot/update エンドポイントで強制する。
-	@Column('jsonb', {
-		default: {},
-		comment: '旗鯖マスコット機能のデータ(キャラ・表情・文言)',
-	})
-	public hataMascotData: {
-		characters?: {
-			id: string;
-			name: string;
-			expressions?: { id: string; label: string; url: string; driveFileId?: string | null; bubbleX?: number; bubbleY?: number; bubbleScale?: number; bubbleTail?: string; motion?: string; motionIntensity?: number; questionEnabled?: boolean; qBubbleX?: number; qBubbleY?: number; qBubbleScale?: number; qBubbleTail?: string; textColor?: string | null; qTextColor?: string | null }[];
-			phrases?: { id: string; text: string; expressionId: string | null }[];
-			notifyExpression?: { url?: string | null; driveFileId?: string | null; label?: string; text?: string; motion?: string; motionIntensity?: number; bubbleX?: number; bubbleY?: number; bubbleScale?: number; bubbleTail?: string; exclaimEnabled?: boolean; eBubbleX?: number; eBubbleY?: number; eBubbleScale?: number; eBubbleTail?: string; textColor?: string | null; eTextColor?: string | null } | null;
-			notifyExpression2?: { url?: string | null; driveFileId?: string | null; label?: string; text?: string; motion?: string; motionIntensity?: number; bubbleX?: number; bubbleY?: number; bubbleScale?: number; bubbleTail?: string; exclaimEnabled?: boolean; eBubbleX?: number; eBubbleY?: number; eBubbleScale?: number; eBubbleTail?: string; textColor?: string | null; eTextColor?: string | null } | null;
-			birthdayExpression?: { url?: string | null; driveFileId?: string | null; label?: string; text?: string; motion?: string; motionIntensity?: number; bubbleX?: number; bubbleY?: number; bubbleScale?: number; bubbleTail?: string; textColor?: string | null } | null;
-			charBirthdayEnabled?: boolean;
-			charBirthdayMonth?: number | null;
-			charBirthdayDay?: number | null;
-			charBirthdayExpression?: { url?: string | null; driveFileId?: string | null; label?: string; text?: string; motion?: string; motionIntensity?: number; bubbleX?: number; bubbleY?: number; bubbleScale?: number; bubbleTail?: string; textColor?: string | null } | null;
-		}[];
-		activeCharacterId?: string | null;
-		showName?: boolean;
-		updatedAt?: number;
-	};
-
 	//#region Denormalized fields
 	@Index()
 	@Column('varchar', {
@@ -512,39 +384,8 @@ export const ACHIEVEMENT_TYPES = [
 	'bubbleGameExplodingHead',
 	'bubbleGameDoubleExplodingHead',
 	'hatasabaDeckTutorial',
-	'welcomeToHatask',
-	'welcomeToHatady',
 	'hataSideStudioPioneer',
 	'hatacordingUiTutorial',
-	'utageSuccess10',
-	'utageSuccess20',
-	'utageSuccess30',
-	'utageSuccess40',
-	'utageSuccess50',
-	'utageSuccess60',
-	'utageSuccess70',
-	'utageSuccess80',
-	'utageSuccess90',
-	'utageSuccess100',
-	'utageInterruption10',
-	'utageInterruption20',
-	'utageInterruption30',
-	'utageInterruption40',
-	'utageInterruption50',
-	'utageInterruption60',
-	'utageInterruption70',
-	'utageInterruption80',
-	'utageInterruption90',
-	'utageInterruption100',
-	'utageInterruptionWithin5Seconds',
-	'ltlPunchVictory',
-	'ltlPunchDefeat',
 ] as const;
 
 export type AchievementType = typeof ACHIEVEMENT_TYPES[number];
-export type ServerOnlyAchievementType = Extract<AchievementType, `utage${string}` | `ltlPunch${string}`>;
-export type ClientClaimableAchievementType = Exclude<AchievementType, ServerOnlyAchievementType>;
-
-export const CLIENT_CLAIMABLE_ACHIEVEMENT_TYPES = ACHIEVEMENT_TYPES.filter(
-	(type): type is ClientClaimableAchievementType => !type.startsWith('utage') && !type.startsWith('ltlPunch'),
-);

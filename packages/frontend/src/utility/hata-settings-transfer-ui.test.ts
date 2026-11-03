@@ -47,31 +47,6 @@ describe('旗鯖独自設定の入出力UI', () => {
 		expect(transfer).toContain('categories.hataSideStudio =');
 	});
 
-	test('HatadyとHataFeedの利用データは設定ファイルへ混ぜず専用画面から書き出す', () => {
-		const modal = source('src/components/MkHataSettingsTransfer.vue');
-		const hatadyExport = source('src/components/HatadyExportDialog.vue');
-		expect(modal).toContain('{{ copy.dedicatedExportTitle }}');
-		expect(transferCopy.dedicatedExportTitle).toBe('利用データを個別に書き出す');
-		expect(modal).toContain("import('@/components/HatadyExportDialog.vue')");
-		expect(modal).toContain("import('@/components/HataFeedExportWindow.vue')");
-		expect(modal).toContain("misskeyApi('hata/feedback/available', {})");
-		expect(modal).toContain('mine: !availability.isStaff');
-		expect(modal).toContain("const projectId = selection.result === '__official__' ? null : (project?.id ?? null)");
-		expect(modal).toContain('{{ copy.privacyDescription }}');
-		expect(transferCopy.privacyDescription).toContain('Hatadyの学習記録とHataFeedのイシューは、下の専用ボタンから個別に保存できます');
-		const hatadyDialog = source('src/components/HyDialog.vue');
-		const hatadyTheme = source('src/components/hatady-ui.css');
-		expect(hatadyExport).toContain('import HyDialog from \'@/components/HyDialog.vue\'');
-		expect(hatadyExport).toContain('<HyDialog ');
-		expect(hatadyDialog).toContain('\'hatady-scope\'');
-		expect(hatadyDialog).toContain(':data-hatady-theme="props.theme ?? theme"');
-		expect(hatadyDialog).toContain('import \'@/components/hatady-ui.css\'');
-		for (const theme of ['paper', 'espresso', 'hataskey']) {
-			expect(hatadyTheme).toContain(`.hatady-scope[data-hatady-theme='${theme}']`);
-		}
-		expect(hatadyDialog).toContain('background: var(--hy-surface)');
-	});
-
 	test('操作後も上下を維持するリサイズ可能な専用ウィンドウを使う', () => {
 		const modal = source('src/components/MkHataSettingsTransfer.vue');
 		// ⚠️設定画面の右ペインへ埋め込めるよう、窓は差し替え式になった。

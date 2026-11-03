@@ -26,8 +26,6 @@ import { MiAvatarDecoration } from '@/models/AvatarDecoration.js';
 import { MiAuthSession } from '@/models/AuthSession.js';
 import { MiBlocking } from '@/models/Blocking.js';
 import { MiChannelFollowing } from '@/models/ChannelFollowing.js';
-import { MiChannelMember } from '@/models/ChannelMember.js';
-import { MiChannelInvitation } from '@/models/ChannelInvitation.js';
 import { MiChannelFavorite } from '@/models/ChannelFavorite.js';
 import { MiClip } from '@/models/Clip.js';
 import { MiClipNote } from '@/models/ClipNote.js';
@@ -79,41 +77,6 @@ import { MiUserPending } from '@/models/UserPending.js';
 import { MiUserProfile } from '@/models/UserProfile.js';
 import { MiUserPublickey } from '@/models/UserPublickey.js';
 import { MiRegistrationApplication } from '@/models/RegistrationApplication.js';
-import { MiHataskEvent } from '@/models/HataskEvent.js';
-import { MiHataskRsvp } from '@/models/HataskRsvp.js';
-import { MiHataskDropWallet, MiHataskDropLedger, MiHataskFlowerTodo, MiHataskFlowerHarvest, MiHataskFlowerDiscovery, MiHataskFlowerFestival, MiHataskFlowerParticipant, MiHataskFlowerRequest, MiHataskFlowerNotice } from '@/models/HataskFlowerV2.js';
-import { MiHataskFlower } from '@/models/HataskFlower.js';
-import { MiHataskRecipe } from '@/models/HataskRecipe.js';
-import { MiHataskCookingRecord } from '@/models/HataskCookingRecord.js';
-import { MiHataskRecordReview } from '@/models/HataskRecordReview.js';
-import { MiUtageSession } from '@/models/UtageSession.js';
-import { MiFeedbackIssue } from '@/models/FeedbackIssue.js';
-import { MiFeedbackAgree } from '@/models/FeedbackAgree.js';
-import { MiFeedbackComment } from '@/models/FeedbackComment.js';
-import { MiFeedbackCommentReaction } from '@/models/FeedbackCommentReaction.js';
-import { MiFeedbackIssueModerator } from '@/models/FeedbackIssueModerator.js';
-import { MiFeedbackEmojiRequest } from '@/models/FeedbackEmojiRequest.js';
-import { MiFeedbackEmojiChangeRequest } from '@/models/FeedbackEmojiChangeRequest.js';
-import { MiFeedbackNotification } from '@/models/FeedbackNotification.js';
-import { MiFeedbackProject } from '@/models/FeedbackProject.js';
-import { MiEarthquakeNotification } from '@/models/EarthquakeNotification.js';
-import { MiHatadyBook } from '@/models/HatadyBook.js';
-import { MiHatadyLog } from '@/models/HatadyLog.js';
-import { MiHatadyComment } from '@/models/HatadyComment.js';
-import { MiHatadyReaction } from '@/models/HatadyReaction.js';
-import { MiHatadyNotification } from '@/models/HatadyNotification.js';
-import { MiHatadyFollowing } from '@/models/HatadyFollowing.js';
-import { MiHatadyUserProfile } from '@/models/HatadyUserProfile.js';
-import { MiHatadyBookmark } from '@/models/HatadyBookmark.js';
-import { MiHatadyBookMemo } from '@/models/HatadyBookMemo.js';
-import { MiHatadySubject } from '@/models/HatadySubject.js';
-import { MiHatadyGoal } from '@/models/HatadyGoal.js';
-import { MiHatadyMediaWork } from '@/models/HatadyMediaWork.js';
-import { MiHatadyMediaSession } from '@/models/HatadyMediaSession.js';
-import { MiHatadyMediaComment } from '@/models/HatadyMediaComment.js';
-import { MiHatadyMediaReaction } from '@/models/HatadyMediaReaction.js';
-import { MiHatadyModerationReview } from '@/models/HatadyModerationReview.js';
-import { MiHataskEmotionAnalysis } from '@/models/HataskEmotionAnalysis.js';
 import { MiUserSecurityKey } from '@/models/UserSecurityKey.js';
 import { MiWebhook } from '@/models/Webhook.js';
 import { MiSystemWebhook } from '@/models/SystemWebhook.js';
@@ -130,8 +93,6 @@ import { MiChatRoomMembership } from '@/models/ChatRoomMembership.js';
 import { MiChatRoomInvitation } from '@/models/ChatRoomInvitation.js';
 import { MiBubbleGameRecord } from '@/models/BubbleGameRecord.js';
 import { MiReversiGame } from '@/models/ReversiGame.js';
-import { MiHataigoGame } from '@/models/HataigoGame.js';
-import { MiHataigoChatMessage } from '@/models/HataigoChatMessage.js';
 import { MiChatApproval } from '@/models/ChatApproval.js';
 import { MiSystemAccount } from '@/models/SystemAccount.js';
 import { NoteHistory } from '@/models/NoteHistory.js';
@@ -246,50 +207,7 @@ export const entities = [
 	MiUserKeypair,
 	MiUserPublickey,
 	MiRegistrationApplication,
-	MiHataskEvent,
-	MiHataskRsvp,
-	MiHataskFlower,
-	MiHataskDropWallet,
-	MiHataskDropLedger,
-	MiHataskFlowerTodo,
-	MiHataskFlowerHarvest,
-	MiHataskFlowerDiscovery,
-	MiHataskFlowerFestival,
-	MiHataskFlowerParticipant,
-	MiHataskFlowerRequest,
-	MiHataskFlowerNotice,
 
-	MiHataskRecipe,
-	MiHataskCookingRecord,
-	MiHataskRecordReview,
-	MiUtageSession,
-	MiFeedbackIssue,
-	MiFeedbackAgree,
-	MiFeedbackComment,
-	MiFeedbackCommentReaction,
-	MiFeedbackIssueModerator,
-	MiFeedbackEmojiRequest,
-	MiFeedbackEmojiChangeRequest,
-	MiFeedbackNotification,
-	MiFeedbackProject,
-	MiEarthquakeNotification,
-	MiHatadyBook,
-	MiHatadyLog,
-	MiHatadyComment,
-	MiHatadyReaction,
-	MiHatadyNotification,
-	MiHatadyFollowing,
-	MiHatadyUserProfile,
-	MiHatadyBookmark,
-	MiHatadyBookMemo,
-	MiHatadySubject,
-	MiHatadyGoal,
-	MiHatadyMediaWork,
-	MiHatadyMediaSession,
-	MiHatadyMediaComment,
-	MiHatadyMediaReaction,
-	MiHatadyModerationReview,
-	MiHataskEmotionAnalysis,
 	MiUserList,
 	MiUserListFavorite,
 	MiUserListMembership,
@@ -337,8 +255,6 @@ export const entities = [
 	MiRelay,
 	MiChannel,
 	MiChannelFollowing,
-	MiChannelMember,
-	MiChannelInvitation,
 	MiChannelFavorite,
 	MiRegistryItem,
 	MiAd,
@@ -360,8 +276,6 @@ export const entities = [
 	MiChatApproval,
 	MiBubbleGameRecord,
 	MiReversiGame,
-	MiHataigoGame,
-	MiHataigoChatMessage,
 	NoteHistory,
 	...charts,
 ];

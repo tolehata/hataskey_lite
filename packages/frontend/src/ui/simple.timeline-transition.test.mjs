@@ -59,12 +59,12 @@ test.each([
 		tab: 'local', withRenotes: true, withSensitive: true, onlyFiles: false,
 		newNotesMotionEnabled: motionEnabled, isPageView: false, deckActive: false,
 		showFixedPostForm: true, isExternalTab: false, isHatadyTab: false, timelineSlideDirection: 1,
-		timelineGlassBg: false, punchBusy: false, normalLtlVoteActive: false,
+		timelineGlassBg: false,
 		nativeNavbarVisible: false, ltlEmojiVoteEffects: null, ltlEmojiVoteNavbarTarget: null,
-		externalHost: null, externalToken: null, isConcrntTab: false, concrntMounted: false,
+		externalHost: null, externalToken: null,
 		$style: {
 			timelineEnterActive: 'enter', timelineLeaveActive: 'leave', timelineEnterFrom: 'from',
-			timelineEnterTo: 'to', timelineLeaveFrom: 'to', timelineLeaveTo: 'from', timelineContainer: 'tl', timelineContainerConcrntHidden: 'ctl-hidden',
+			timelineEnterTo: 'to', timelineLeaveFrom: 'to', timelineLeaveTo: 'from', timelineContainer: 'tl',
 		},
 		prepareTimelineLeave: () => {}, onTouchStart: () => {}, onTouchMove: () => {},
 		onTouchEnd: () => {}, onTouchCancel: () => {},
@@ -104,15 +104,6 @@ test.each([
 		assert.equal(host.querySelector('[data-mounted-timeline]')?.textContent, 'notes');
 		assert.equal(host.querySelector('[data-mounted-timeline]')?.getAttribute('data-src'), 'local');
 		textarea.value = 'unfinished draft';
-		state.tab = 'hatady'; state.isHatadyTab = true;
-		await new Promise(resolve => setTimeout(resolve, 500));
-		await Vue.nextTick();
-		assert.equal(host.querySelector('textarea'), textarea, 'Hatady keeps the fixed composer mounted');
-		assert.equal(textarea.value, 'unfinished draft');
-		assert.equal(textarea.closest('[inert]') != null, true, 'Hatady cannot focus the hidden note composer');
-		state.tab = 'local'; state.isHatadyTab = false;
-		await new Promise(resolve => setTimeout(resolve, 500));
-		await Vue.nextTick();
 		const mountedBeforeHide = mounted;
 		for (const key of ['isPageView', 'deckActive']) {
 			state[key] = true;
@@ -126,16 +117,6 @@ test.each([
 			assert.equal(textarea.value, 'unfinished draft');
 			assert.equal(mounted, mountedBeforeHide, `${key} does not remount the timeline`);
 		}
-		// The CTL tab hides the normal timeline by class (never v-show on the keyed child) and keeps it mounted.
-		state.isConcrntTab = true;
-		await Vue.nextTick();
-		const container = host.querySelector('[data-hata-collapse-items]');
-		assert.ok(container?.classList.contains('ctl-hidden'), 'CTL hides the normal timeline');
-		state.isConcrntTab = false;
-		await Vue.nextTick();
-		assert.ok(!host.querySelector('[data-hata-collapse-items]')?.classList.contains('ctl-hidden'), 'leaving CTL shows it again');
-		assert.equal(host.querySelector('textarea'), textarea);
-		assert.equal(mounted, mountedBeforeHide, 'switching to and from CTL does not remount the timeline');
 		// Motion preferences can change while the UI is mounted (OS setting or
 		// another tab syncing preferences). Filters replace the same keyed root.
 		for (const enabled of [true, false, true, false]) {

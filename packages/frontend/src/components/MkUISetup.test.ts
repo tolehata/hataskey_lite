@@ -23,7 +23,7 @@ vi.mock('@/i18n.js', () => ({ i18n: {
 		close: '閉じる', recommended: '推奨', inUse: '使用中', goBack: '戻る',
 		_hata: { _uiSetup: {
 			title: 'UIを切り替える', hint: '使いたいUIを選んで切り替え', standardDescription: 'HataskeyのデフォルトUIで、使う楽しさを追求します',
-			ui3Description: '美しさと利便性を追求、S(Special)な体験を', otherUis: 'その他のUI', conflictNote: '競合する場合があります',
+			otherUis: 'その他のUI', conflictNote: '競合する場合があります',
 			notRecommended: '非推奨', legacyDeck: '従来のデッキUI', deprecatedWarning: 'このUIは非推奨です。',
 			switchAction: '切り替える',
 		} },
@@ -107,18 +107,20 @@ describe('UI切り替えモーダル', () => {
 	});
 
 	test('アニメーション終了まで保存を待ち、連続選択でも一度だけ切り替える', async () => {
+		state.storage.set('ui', 'default');
 		await mount();
-		button('Hataskey UI S').click();
-		button('Hataskey UI S').click();
+		button('Hataskey UI').click();
+		button('Hataskey UI').click();
 		expect(animate).toHaveBeenCalledTimes(1);
-		expect(state.storage.get('ui')).toBe('simple');
-		expect(assign).not.toHaveBeenCalled();
+		expect(state.storage.get('ui')).toBe('default');
+		expect(reload).not.toHaveBeenCalled();
 		finishExit();
 		await settle();
-		expect(state.storage.get('ui')).toBe('hataskey3');
-		expect(assign).toHaveBeenCalledExactlyOnceWith('/');
-		button('Hataskey UI S').click();
-		expect(assign).toHaveBeenCalledTimes(1);
+		expect(state.storage.get('ui')).toBe('simple');
+		expect(assign).not.toHaveBeenCalled();
+		expect(reload).toHaveBeenCalledTimes(1);
+		button('Hataskey UI').click();
+		expect(reload).toHaveBeenCalledTimes(1);
 	});
 
 	test('ガラス表示はぼかし設定に従い、背景のぼかしは共通モーダルへ任せる', async () => {
@@ -126,7 +128,7 @@ describe('UI切り替えモーダル', () => {
 		expect(host.querySelector('[role="dialog"]')?.getAttribute('data-glass')).toBe('true');
 		expect(host.querySelector('[data-modal]')?.getAttribute('data-disable-bg-blur')).toBe('false');
 		expect(host.textContent).toContain('HataskeyのデフォルトUIで、使う楽しさを追求します');
-		expect(host.textContent).toContain('美しさと利便性を追求、S(Special)な体験を');
+		expect(host.textContent).not.toContain('Hataskey UI S');
 		expect(host.textContent).not.toContain('Beta');
 		unmountCurrent();
 		state.prefer.s.useBlurEffectForModal = false;
@@ -162,11 +164,12 @@ describe('UI切り替えモーダル', () => {
 	test.each(['preference', 'system'])('動きを減らす設定（%s）ではアニメーションを待たない', async mode => {
 		if (mode === 'preference') state.prefer.s.animation = false;
 		else vi.mocked(window.matchMedia).mockReturnValue({ matches: true } as MediaQueryList);
+		state.storage.set('ui', 'default');
 		await mount();
-		button('Hataskey UI S').click();
+		button('Hataskey UI').click();
 		await settle();
 		expect(animate).not.toHaveBeenCalled();
-		expect(assign).toHaveBeenCalledTimes(1);
+		expect(reload).toHaveBeenCalledTimes(1);
 	});
 
 	test('同じUIの選択でも初回セットアップを完了し、リロードしない', async () => {
@@ -180,23 +183,25 @@ describe('UI切り替えモーダル', () => {
 	});
 
 	test('退出中にアンマウントされたら保存やナビゲーションを中止する', async () => {
+		state.storage.set('ui', 'default');
 		await mount();
-		button('Hataskey UI S').click();
+		button('Hataskey UI').click();
 		app?.unmount();
 		app = undefined;
 		await settle();
 		expect(cancelExit).toHaveBeenCalledTimes(1);
-		expect(state.storage.get('ui')).toBe('simple');
-		expect(assign).not.toHaveBeenCalled();
+		expect(state.storage.get('ui')).toBe('default');
+		expect(reload).not.toHaveBeenCalled();
 	});
 
 	test('埋め込み表示で選択クリックが閉じる操作に伝播しない', async () => {
+		state.storage.set('ui', 'default');
 		await mount(true);
-		button('Hataskey UI S').click();
+		button('Hataskey UI').click();
 		expect(closed).not.toHaveBeenCalled();
 		finishExit();
 		await settle();
-		expect(assign).toHaveBeenCalledTimes(1);
+		expect(reload).toHaveBeenCalledTimes(1);
 	});
 
 	test('モーダルの外枠にフォーカスがあってもEscで閉じる', async () => {

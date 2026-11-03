@@ -21,7 +21,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</div>
 		<!-- 旗鯖fork: CherryPick ロゴを Hataskey ブランドロゴ(テキスト)に置換 -->
 		<div v-flip :class="$style.brandLogo" @click="deviceMotionPermissionNeeded ? requestDeviceMotion() : null">
-			<div :class="$style.brandLogoText">Hataskey</div>
+			<div :class="$style.brandLogoText">Hataskey Lite</div>
 		</div>
 	</div>
 </div>

@@ -95,7 +95,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 					.select('note.id')
 					.where('note.id IN (:...topNoteIds)', { topNoteIds });
 				if (me == null) this.queryService.generateUgcVisibilityQueryForVisitor(query);
-				await this.queryService.generateChannelVisibilityQuery(query, me);
 				const visibleIds = new Set((await query.getMany()).map(note => note.id));
 				topNoteIds = topNoteIds.filter(id => visibleIds.has(id));
 			}

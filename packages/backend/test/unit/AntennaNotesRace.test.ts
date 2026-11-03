@@ -46,7 +46,6 @@ function fixture(initialActive: boolean) {
 	query.limit.mockReturnValue(query);
 	const createQueryBuilder = vi.fn().mockReturnValue(query);
 	const generateVisibilityQuery = vi.fn();
-	const generateChannelVisibilityQuery = vi.fn(async () => {});
 	const generateBaseNoteFilteringQuery = vi.fn();
 	const packMany = vi.fn(async (notes: { id: string }[]) => notes.map(note => note.id));
 	const endpoint = new AntennaNotesEndpoint(
@@ -54,13 +53,13 @@ function fixture(initialActive: boolean) {
 		{ findOneBy, update } as never,
 		{ gen: vi.fn() } as never,
 		{ packMany } as never,
-		{ generateVisibilityQuery, generateChannelVisibilityQuery, generateBaseNoteFilteringQuery } as never,
+		{ generateVisibilityQuery, generateBaseNoteFilteringQuery } as never,
 		{ get } as never,
 		{ publishInternalEvent } as never,
 	);
 	return {
 		endpoint, firstRead, findOneBy, update, publishInternalEvent, get, query,
-		generateVisibilityQuery, generateChannelVisibilityQuery, generateBaseNoteFilteringQuery, packMany,
+		generateVisibilityQuery, generateBaseNoteFilteringQuery, packMany,
 		get row() { return row; },
 		set row(value: AntennaRow | null) { row = value; },
 		exec: (actor = 'owner1', params: Record<string, unknown> = {}) => endpoint.exec({ antennaId: 'antenna1', ...params }, { id: actor } as never, null, null),
@@ -125,7 +124,6 @@ describe('antennas/notes activity update', () => {
 		expect(f.query.where).toHaveBeenCalledWith('note.id IN (:...noteIds)', { noteIds: ['note1', 'note2', 'note3'] });
 		expect(f.query.orderBy).toHaveBeenCalledWith('note.id', 'DESC');
 		expect(f.query.limit).toHaveBeenCalledWith(2);
-		expect(f.generateChannelVisibilityQuery).toHaveBeenCalledWith(f.query, expect.objectContaining({ id: 'owner1' }));
 		expect(f.generateVisibilityQuery).toHaveBeenCalledOnce();
 		expect(f.generateBaseNoteFilteringQuery).toHaveBeenCalledOnce();
 		expect(f.packMany).toHaveBeenCalledWith([{ id: 'note2' }, { id: 'note1' }], expect.objectContaining({ id: 'owner1' }));

@@ -23,9 +23,6 @@ export const meta = {
 			type: 'object',
 			optional: false, nullable: false,
 			properties: {
-				requiresHataskFlowerCompletion: { type: 'boolean', optional: false, nullable: false },
-				availableFrom: { type: 'string', format: 'date-time', optional: false, nullable: true },
-				availableUntil: { type: 'string', format: 'date-time', optional: false, nullable: true },
 				id: {
 					type: 'string',
 					optional: false, nullable: false,
@@ -97,9 +94,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				name: avatarDecoration.name,
 				description: avatarDecoration.description,
 				url: avatarDecoration.url,
-				requiresHataskFlowerCompletion: avatarDecoration.requiresHataskFlowerCompletion,
-				availableFrom: avatarDecoration.availableFrom?.toISOString() ?? null,
-				availableUntil: avatarDecoration.availableUntil?.toISOString() ?? null,
 				roleIdsThatCanBeUsedThisDecoration: avatarDecoration.roleIdsThatCanBeUsedThisDecoration,
 			}));
 		});

@@ -16,7 +16,7 @@ vi.mock('@/preferences.js', async () => {
 beforeEach(() => { vi.resetModules(); vi.clearAllMocks(); });
 
 describe('horizontal swipe preference scope', () => {
-	it.each(['simple', 'hataskey3', null])('uses one device setting in %s without writing the profile', async ui => {
+	it.each(['simple', null])('uses one device setting in %s without writing the profile', async ui => {
 		mocks.ui = ui;
 		const subject = await import('./horizontal-swipe-preference.js');
 		const device = await import('./hatasaba-device-prefs.js');

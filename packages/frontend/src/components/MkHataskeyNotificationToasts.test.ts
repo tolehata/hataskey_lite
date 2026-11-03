@@ -5,7 +5,7 @@ import * as Vue from 'vue';
 import { compileTemplate, parse } from '@vue/compiler-sfc';
 import type { App } from 'vue';
 import type { entities } from 'cherrypick-js';
-import { createHataskeyNotificationToasts, hataskeyNotificationToastsKey, hataskeyToastMotionEnabled, registerNotificationPageContext } from '@/utility/hataskey-notification-toast.js';
+import { createHataskeyNotificationToasts, hataskeyNotificationToastsKey, registerNotificationPageContext } from '@/utility/hataskey-notification-toast.js';
 import { notificationToastsSuppressed } from '@/utility/notification-toast-suppression.js';
 import { prefer } from '@/preferences.js';
 import { $i } from '@/i.js';
@@ -49,15 +49,6 @@ function createApp(...args: Parameters<typeof createVueApp>) {
 	application.component('MkCustomEmoji', { props: ['name', 'url'], template: '<img :src="url" :alt="`:${name}:`" data-test-emoji/>' });
 	return application;
 }
-
-it('limits forced toast motion to the surface that explicitly opts in', () => {
-	const regular = { active: ref(true), target: ref<HTMLElement | null>(null), outline: ref<HTMLElement | null>(null), animations: ref(true) };
-	const goes = { ...regular, forceAnimations: ref(true) };
-	expect(hataskeyToastMotionEnabled(regular, false, true)).toBe(false);
-	expect(hataskeyToastMotionEnabled(regular, true, false)).toBe(true);
-	expect(hataskeyToastMotionEnabled({ ...regular, animations: ref(false) }, true, false)).toBe(false);
-	expect(hataskeyToastMotionEnabled(goes, false, true)).toBe(true);
-});
 
 beforeEach(() => {
 	frameCallback = undefined;
@@ -505,73 +496,6 @@ describe('Hataskey notification host', () => {
 			pageBar.remove();
 		}
 	});
-	it('delivers external events only to the active page renderer and restores the native receiver on release', async () => {
-		const { context: native } = mount();
-		const page = createHataskeyNotificationToasts(computed(() => true), computed(() => true));
-		const receiveExternal = ref(true);
-		const release = registerNotificationPageContext(page, () => receiveExternal.value);
-		const nativeEnqueue = vi.spyOn(native, 'enqueue');
-		const pageEnqueue = vi.spyOn(page, 'enqueue');
-		const root = window.document.createElement('div');
-		window.document.body.append(root);
-		const pageApp = createApp({ render: () => h(MkHataskeyNotificationToasts, { context: page, receiveExternal: receiveExternal.value }) });
-		try {
-			pageApp.mount(root);
-			window.dispatchEvent(new CustomEvent('external-notification', { detail: note('page-owned') }));
-			await nextTick();
-			expect(nativeEnqueue).not.toHaveBeenCalled();
-			expect(native.items.value).toEqual([]);
-			expect(pageEnqueue).toHaveBeenCalledExactlyOnceWith(note('page-owned'), 'external', 0, 'external.test');
-			expect(page.items.value).toHaveLength(1);
-			expect(window.document.querySelectorAll('article')).toHaveLength(1);
-
-			// An offscreen page keeps its renderer for status notices, but yields receipt.
-			receiveExternal.value = false;
-			release();
-			await nextTick();
-			window.dispatchEvent(new CustomEvent('external-notification', { detail: note('native-again') }));
-			await nextTick();
-			expect(nativeEnqueue).toHaveBeenCalledExactlyOnceWith(note('native-again'), 'external', 0, 'external.test');
-			expect(native.items.value).toHaveLength(1);
-			expect(pageEnqueue).toHaveBeenCalledTimes(1);
-			expect(page.items.value[0]).toMatchObject({ source: 'external', notification: { id: 'page-owned' } });
-		} finally {
-			release();
-			pageApp.unmount();
-			root.remove();
-		}
-	});
-
-	it('moves the same live toast into Hatask and back without restarting its clock or duplicating receipt', async () => {
-		const { context, target: nativeTarget } = mount(true);
-		context.enqueue(note('surface'), 'local', 0);
-		await nextTick();
-		const article = nativeTarget.querySelector('article');
-		expect(article).not.toBeNull();
-		context.tick(2100, new Set());
-		const pageBar = window.document.createElement('header');
-		const pageTarget = window.document.createElement('div'); pageBar.append(pageTarget); window.document.body.append(pageBar);
-		const active = ref(true);
-		const release = context.registerSurface({ active, target: ref(pageTarget), outline: ref(pageBar), animations: ref(false) });
-		await nextTick();
-		expect(pageTarget.querySelector('article')).toBe(article);
-		expect(nativeTarget.querySelector('article')).toBeNull();
-		expect(context.items.value[0].elapsed).toBe(2100);
-		active.value = false; await nextTick();
-		expect(nativeTarget.querySelector('article')).toBe(article);
-		active.value = true; await nextTick();
-		window.dispatchEvent(new CustomEvent('external-notification', { detail: note('external-surface') }));
-		await nextTick();
-		expect(context.items.value).toHaveLength(1);
-		expect(context.items.value[0].source).toBe('external');
-		expect(pageTarget.querySelectorAll('article')).toHaveLength(1);
-		release(); await nextTick();
-		expect(pageTarget.querySelector('article')).toBeNull();
-		expect(nativeTarget.querySelectorAll('article')).toHaveLength(1);
-		context.tick(5000, new Set()); await nextTick();
-		expect(nativeTarget.querySelector('article')).toBeNull();
-	});
-
 	it.each([true, false])('expires at five seconds even without animation frames (mobile=%s)', async (mobile) => {
 		prefer.r.animation.value = true;
 		const start = Date.now();
@@ -767,21 +691,6 @@ describe('Hataskey notification host', () => {
 		await nextTick();
 		expect(context.items.value).toHaveLength(0);
 		expect(window.document.querySelector('article')).toBeNull();
-	});
-	it('keeps mobile notifications integrated even away from a timeline and replaces local with external', async () => {
-		const { context, target } = mount(true, false);
-		context.enqueue(note('flower'), 'local', 0);
-		await nextTick();
-		window.dispatchEvent(new CustomEvent('external-notification', { detail: note('remote') }));
-		await nextTick();
-		expect(context.items.value.map(item => item.source)).toEqual(['external']);
-		expect(target.querySelectorAll('article')).toHaveLength(1);
-		expect(target.textContent).toContain('外部通知');
-		expect(target.textContent).toContain('external.test');
-		(target.querySelector('[role=link]') as HTMLElement).dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-		await nextTick();
-		expect(mainRouter.push).toHaveBeenCalledWith('/my/external-notifications');
-		expect(context.items.value).toHaveLength(0);
 	});
 	it('pauses on hover and focus, then resumes with the remaining time', async () => {
 		const { context, target } = mount();

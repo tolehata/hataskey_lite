@@ -26,7 +26,7 @@ SPDX-License-Identifier: AGPL-3.0-only  Created                             0.1s
 	     して左右スワイプによるタブ切替を復活させる (ウィンドウモード含む)。無効時は素の div。
 	     swiperBinds は MkSwiper の時だけ v-model:tab / tabs を渡し、div の時は空 (余分な属性を出さない)。 -->
 	<component :is="swiperEnabled ? MkSwiper : 'div'" v-bind="swiperBinds">
-	<div class="_spacer" :class="$style.channelContent" style="--MI_SPACER-w: 700px;">
+	<div class="_spacer" style="--MI_SPACER-w: 700px;">
 		<div v-if="channel && tab === 'overview'" class="_gaps">
 			<div class="_panel" :class="$style.bannerContainer">
 				<XChannelFollowButton :channel="channel" :full="true" :class="$style.subscribe"/>
@@ -45,41 +45,20 @@ SPDX-License-Identifier: AGPL-3.0-only  Created                             0.1s
 				</div>
 			</div>
 
-			<!-- 旗鯖fork: プライベートチャンネル -->
-			<div v-if="channel.isPrivate" class="_panel" :class="$style.privatePanel">
-				<div :class="$style.privateHead"><i class="ti ti-lock"></i> {{ copy.privateChannel }}</div>
-				<div v-if="canViewContent" :class="$style.privateNote">{{ copy.membersOnlyYouCanView }}</div>
-				<template v-else>
-					<div :class="$style.privateNote">{{ copy.membersOnly }}</div>
-					<div v-if="channel.hasPassword && $i" class="_buttonsCenter" :class="$style.joinBox">
-						<MkButton primary rounded :disabled="joining" @click="joinByPassword()"><i class="ti ti-door-enter"></i> {{ copy.enterWithPassphrase }}</MkButton>
-					</div>
-					<div v-else-if="!$i" :class="$style.privateNote">{{ copy.loginRequired }}</div>
-					<div v-else :class="$style.privateNote">{{ copy.invitationRequired }}</div>
-				</template>
-			</div>
-
-			<MkFoldableSection v-if="canViewContent">
+			<MkFoldableSection>
 				<template #header><i class="ti ti-pin ti-fw" style="margin-right: 0.5em;"></i>{{ i18n.ts.pinnedNotes }}</template>
 				<div v-if="channel.pinnedNotes && channel.pinnedNotes.length > 0" class="_gaps">
-					<MkNote v-for="note in channel.pinnedNotes" :key="note.id" class="_panel" :class="$style.pinnedNote" :note="note"/>
+					<MkNote v-for="note in channel.pinnedNotes" :key="note.id" class="_panel" :note="note"/>
 				</div>
 			</MkFoldableSection>
 		</div>
 		<div v-if="channel && tab === 'timeline'" class="_gaps">
 			<MkInfo v-if="channel.isArchived" warn>{{ i18n.ts.thisChannelArchived }}</MkInfo>
 
-			<!-- 旗鯖fork: プライベートチャンネルの非メンバーには内容を出さず、入室導線を案内 -->
-			<div v-if="channel.isPrivate && !canViewContent" class="_panel" :class="$style.privatePanel">
-				<div :class="$style.privateHead"><i class="ti ti-lock"></i> {{ copy.privateChannel }}</div>
-				<div :class="$style.privateNote">{{ privateTimelineNotice }}</div>
-			</div>
-			<template v-else>
-				<!-- スマホ・タブレットの場合、キーボードが表示されると 投稿が見づらくなるので、デスクトップ場合のみ自動でフォーカスを当てる -->
-				<MkPostForm v-if="$i && prefer.r.showFixedPostFormInChannel.value" :channel="channel" class="post-form _panel" fixed :autofocus="deviceKind === 'desktop'"/>
+			<!-- スマホ・タブレットの場合、キーボードが表示されると 投稿が見づらくなるので、デスクトップ場合のみ自動でフォーカスを当てる -->
+			<MkPostForm v-if="$i && prefer.r.showFixedPostFormInChannel.value" :channel="channel" class="post-form _panel" fixed :autofocus="deviceKind === 'desktop'"/>
 
-				<MkStreamingNotesTimeline :key="channelId" src="channel" :channel="channelId"/>
-			</template>
+			<MkStreamingNotesTimeline :key="channelId" src="channel" :channel="channelId"/>
 		</div>
 		<div v-else-if="tab === 'featured'">
 			<MkNotesTimeline :paginator="featuredPaginator"/>
@@ -125,7 +104,7 @@ SPDX-License-Identifier: AGPL-3.0-only  Created                             0.1s
 	</div>
 	</component>
 	<template #footer>
-		<div v-if="canViewContent" :class="$style.footer">
+		<div :class="$style.footer">
 			<div class="_spacer" style="--MI_SPACER-w: 700px; --MI_SPACER-min: 16px; --MI_SPACER-max: 16px;">
 				<div class="_buttonsCenter">
 					<MkButton inline rounded primary gradate @click="openPostForm()"><i class="ti ti-pencil"></i> {{ i18n.ts.postToTheChannel }}</MkButton>
@@ -137,7 +116,7 @@ SPDX-License-Identifier: AGPL-3.0-only  Created                             0.1s
 </template>
 
 <script lang="ts" setup>
-import { computed, watch, ref, markRaw, shallowRef, defineAsyncComponent, useTemplateRef } from 'vue';
+import { computed, watch, ref, markRaw, shallowRef, useTemplateRef } from 'vue';
 import * as Misskey from 'cherrypick-js';
 import { url } from '@@/js/config.js';
 import { useInterval } from '@@/js/use-interval.js';
@@ -167,7 +146,6 @@ import { useRouter } from '@/router.js';
 import { Paginator } from '@/utility/paginator.js';
 
 const router = useRouter();
-const copy = i18n.ts._hata._privateChannels;
 
 const props = defineProps<{
 	channelId: string;
@@ -177,15 +155,6 @@ const tab = ref('overview');
 
 const channel = ref<Misskey.entities.Channel | null>(null);
 const favorited = ref(false);
-// 旗鯖fork: プライベートチャンネル
-const joining = ref(false);
-const canViewContent = computed(() => {
-	const c = channel.value;
-	if (c == null) return false;
-	if (!c.isPrivate) return true;
-	return (c.isMember ?? false) || (c.canManage ?? false);
-});
-const privateTimelineNotice = computed(() => channel.value?.hasPassword ? copy.membersOnlyWithPassphrase : copy.membersOnlyByInvitation);
 const searchQuery = ref('');
 const searchQueryEl = useTemplateRef('searchQueryEl');
 
@@ -296,43 +265,6 @@ function openPostForm() {
 	});
 }
 
-// 旗鯖fork: 合言葉(キーフレーズ)で入室する
-async function joinByPassword() {
-	if (!channel.value) return;
-	const { canceled, result: password } = await os.inputText({
-		title: copy.enterWithPassphrase,
-		text: copy.passphrasePrompt,
-		placeholder: copy.passphraseExample,
-		default: '',
-	});
-	if (canceled || password == null || password === '') return;
-
-	joining.value = true;
-	try {
-		const updated = await misskeyApi('channels/join', {
-			channelId: channel.value.id,
-			password,
-		});
-		channel.value = updated;
-		os.success();
-		tab.value = 'timeline';
-	} catch (err) {
-		os.alert({ type: 'error', text: copy.incorrectPassphrase });
-	} finally {
-		joining.value = false;
-	}
-}
-
-// 旗鯖fork: メンバー管理ダイアログを開く
-function manageMembers() {
-	if (!channel.value) return;
-	const { dispose } = os.popup(defineAsyncComponent(() => import('@/components/MkPrivateChannelMembersDialog.vue')), {
-		channelId: channel.value.id,
-	}, {
-		closed: () => dispose(),
-	});
-}
-
 function favorite() {
 	if (!channel.value) return;
 
@@ -422,15 +354,6 @@ const headerActions = computed(() => {
 			});
 		}
 
-		// 旗鯖fork: プライベートチャンネルのメンバー管理
-		if (channel.value.isPrivate && (channel.value.canManage || iAmModerator)) {
-			headerItems.push({
-				icon: 'ti ti-users',
-				text: copy.membersTitle,
-				handler: manageMembers,
-			});
-		}
-
 		return headerItems.length > 0 ? headerItems : null;
 	} else {
 		return null;
@@ -456,42 +379,12 @@ const headerTabs = computed(() => [{
 }]);
 
 definePage(() => ({
-	// 旗鯖fork: プライベートチャンネルは名前の横に鍵マークを表示。
-	title: channel.value ? `${channel.value.isPrivate ? '🔒 ' : ''}${channel.value.name}` : i18n.ts.channel,
-	icon: channel.value?.isPrivate ? 'ti ti-lock' : 'ti ti-device-tv',
+	title: channel.value ? channel.value.name : i18n.ts.channel,
+	icon: 'ti ti-device-tv',
 }));
 </script>
 
 <style lang="scss" module>
-:global(html[data-hk3-ui]) .channelContent {
-	--MI-notes-canvas: transparent;
-	--MI-notes-surface: var(--hk3-glass-note, color-mix(in srgb, var(--MI_THEME-panel) 70%, transparent));
-	--MI-notes-backdrop-filter: var(--MI-blur, blur(20px)) saturate(1.3);
-}
-
-:global(html[data-hk3-ui]) .channelContent .pinnedNote {
-	background: var(--MI-notes-surface);
-	-webkit-backdrop-filter: var(--MI-notes-backdrop-filter);
-	backdrop-filter: var(--MI-notes-backdrop-filter);
-}
-
-// The shared bubble layout paints its own body; keep just that glass surface.
-:global(html[data-hk3-ui]) .channelContent :global([data-bubble="on"] article > div) {
-	background: transparent !important;
-}
-
-:global(html[data-hk3-ui]) .channelContent :global([data-bubble="on"] [data-note-content]) {
-	background: var(--MI-notes-surface) !important;
-}
-
-:global(html[data-hk3-ui]) .channelContent :global([data-bubble="on"] [data-note-content]::after) {
-	border-right-color: var(--MI-notes-surface) !important;
-}
-
-:global(html[data-hk3-ui]) .channelContent :global([data-streaming-notes]:not([data-bubble="on"]) article) {
-	background: transparent !important;
-}
-
 /* 旗鯖fork: Hataskey UI 統一ピル型タブ (channels.vue と同一デザイン) */
 .htkPillTabs {
 	position: sticky;
@@ -607,32 +500,6 @@ definePage(() => ({
 
 	&:hover { filter: brightness(1.08); }
 	&:active { transform: scale(0.96); }
-}
-
-/* 旗鯖fork: プライベートチャンネル */
-.privatePanel {
-	padding: 16px;
-}
-
-.privateHead {
-	font-weight: 700;
-	display: flex;
-	align-items: center;
-	gap: 6px;
-
-	> i {
-		color: var(--MI_THEME-accent);
-	}
-}
-
-.privateNote {
-	margin-top: 6px;
-	font-size: 0.9em;
-	opacity: 0.85;
-}
-
-.joinBox {
-	margin-top: 12px;
 }
 
 .footer {

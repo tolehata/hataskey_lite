@@ -5,7 +5,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <template>
 <PageWithHeader>
-	<div :class="$style.root" :data-goes-host="inHataGoes ? 'true' : undefined" :style="rootVars">
+	<div :class="$style.root" :style="rootVars">
 		<main :class="$style.shell">
 			<header :class="$style.productBar">
 				<div :class="$style.productIdentity">
@@ -18,14 +18,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</div>
 			</header>
 
-			<Transition :enterActiveClass="$style.gateEnterActive" :enterFromClass="$style.gateEnterFrom" :leaveActiveClass="$style.gateLeaveActive" :leaveToClass="$style.gateLeaveTo"><section v-if="inHataGoes && !privacyAcknowledged" :class="$style.privacyGate" :aria-label="copy.privacyTitle">
-				<i class="ti ti-shield-lock" aria-hidden="true"></i>
-				<h1>{{ copy.privacyTitle }}</h1>
-				<p>{{ copy.privacyDescription }}</p>
-				<p>公開プロフィールの表示名・アバター・バナー・ユーザー名・登録日を使い、画像はこの端末で生成します。</p>
-				<button type="button" class="_button" :class="$style.saveButton" @click="privacyAcknowledged = true">{{ i18n.ts.ok }}</button>
-			</section></Transition>
-			<Transition :enterActiveClass="$style.gateEnterActive" :enterFromClass="$style.gateEnterFrom" :leaveActiveClass="$style.gateLeaveActive" :leaveToClass="$style.gateLeaveTo"><div v-show="!inHataGoes || privacyAcknowledged" :class="$style.workspace">
+			<div :class="$style.workspace">
 				<section :class="$style.editor" :aria-label="copy.appearanceSettings">
 					<header :class="$style.panelHeading">
 						<span>DESIGN</span>
@@ -145,19 +138,18 @@ SPDX-License-Identifier: AGPL-3.0-only
 						</button>
 					</div>
 				</section>
-			</div></Transition>
+			</div>
 		</main>
 	</div>
 </PageWithHeader>
 </template>
 
 <script lang="ts" setup>
-import { computed, inject, nextTick, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
 import QRCodeStyling from 'qr-code-styling';
 import tinycolor from 'tinycolor2';
 import { host, url } from '@@/js/config.js';
 import type { HataCardStyle } from '@/utility/hata-card-maker.js';
-import { HATA_GOES_HOST } from '@/utility/hatagoes-context.js';
 import { definePage } from '@/page.js';
 import { ensureSignin } from '@/i.js';
 import { instance } from '@/instance.js';
@@ -167,14 +159,10 @@ import { versatileLang } from '@/utility/intl-const.js';
 import { getProxiedImageUrl, getStaticImageUrl } from '@/utility/media-proxy.js';
 import { calculateHataCardDecorationOffset, calculateHataCardDeviceTilt, isHataCardGoldUnlocked, makeHataCardFileName, normalizeHataCardGlassOpacity } from '@/utility/hata-card-maker.js';
 import * as os from '@/os.js';
-import { useHataGoesDialogs } from '@/utility/hatagoes-dialogs.js';
 
-const dialogs = useHataGoesDialogs();
 const $i = ensureSignin();
 const copy = i18n.ts._hata._hatask._cardMaker;
 const copyx = i18n.tsx._hata._hatask._cardMaker;
-const inHataGoes = inject(HATA_GOES_HOST, null) != null;
-const privacyAcknowledged = ref(false);
 
 definePage(() => ({ title: copy.title, icon: 'ti ti-id-badge-2' }));
 
@@ -408,7 +396,7 @@ async function generateProfileCodeImage() {
 		profileCode.value = await generateProfileCode();
 	} catch (error) {
 		console.error(error);
-		dialogs.alert({ type: 'error', title: copy.qrFailedTitle, text: copy.qrFailed });
+		os.alert({ type: 'error', title: copy.qrFailedTitle, text: copy.qrFailed });
 	}
 }
 
@@ -602,7 +590,6 @@ async function renderCardCanvas(): Promise<HTMLCanvasElement> {
 }
 
 async function saveCard() {
-	if (inHataGoes && !privacyAcknowledged.value) return;
 	if (saving.value || profileCode.value == null) return;
 	saving.value = true;
 	resetTilt();
@@ -622,7 +609,7 @@ async function saveCard() {
 		os.toast(copy.saved);
 	} catch (error) {
 		console.error(error);
-		dialogs.alert({ type: 'error', title: copy.saveFailedTitle, text: copy.saveFailed });
+		os.alert({ type: 'error', title: copy.saveFailedTitle, text: copy.saveFailed });
 	} finally {
 		saving.value = false;
 	}
@@ -642,13 +629,6 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" module>
-.privacyGate { display:grid;justify-items:center;gap:14px;max-width:560px;margin:42px auto;padding:30px;text-align:center;border:1px solid var(--MI_THEME-divider);border-radius:22px;background:var(--MI_THEME-panel); }
-.privacyGate > i { font-size:2.2rem;color:var(--MI_THEME-accent); }
-.privacyGate h1 { margin:0;font-size:1.3rem; }
-.privacyGate p { margin:0;line-height:1.7; }
-.privacyGate button { margin-top:8px;min-width:120px; }
-.root[data-goes-host="true"] .gateEnterActive,.root[data-goes-host="true"] .gateLeaveActive { transition:opacity .2s ease,transform .2s ease !important; }
-.root[data-goes-host="true"] .gateEnterFrom,.root[data-goes-host="true"] .gateLeaveTo { opacity:0;transform:translateY(8px); }
 .root {
 	position: relative;
 	min-height: 100dvh;
@@ -825,8 +805,8 @@ onUnmounted(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.root:not([data-goes-host="true"]) .ambient, .root:not([data-goes-host="true"]) .qrLoader, .root:not([data-goes-host="true"]) .saveButton i { animation: none !important; }
-	.root:not([data-goes-host="true"]) .tilt { transition: none !important; transform: none !important; }
+	.ambient, .qrLoader, .saveButton i { animation: none !important; }
+	.tilt { transition: none !important; transform: none !important; }
 }
 
 /* ===== HataCardMaker modern workspace ===== */
@@ -1311,11 +1291,11 @@ onUnmounted(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.root:not([data-goes-host="true"]) .segmented button,
-	.root:not([data-goes-host="true"]) .swatches button,
-	.root:not([data-goes-host="true"]) .deviceTiltButton,
-	.root:not([data-goes-host="true"]) .resetButton,
-	.root:not([data-goes-host="true"]) .saveButton {
+	.segmented button,
+	.swatches button,
+	.deviceTiltButton,
+	.resetButton,
+	.saveButton {
 		transition: none !important;
 	}
 }

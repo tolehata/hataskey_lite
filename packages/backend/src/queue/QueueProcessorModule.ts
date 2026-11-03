@@ -10,13 +10,10 @@ import { QueueLoggerService } from './QueueLoggerService.js';
 import { QueueProcessorService } from './QueueProcessorService.js';
 import { DeliverProcessorService } from './processors/DeliverProcessorService.js';
 import { EndedPollNotificationProcessorService } from './processors/EndedPollNotificationProcessorService.js';
-import { UtageResolveProcessorService } from './processors/UtageResolveProcessorService.js';
 import { PostScheduledNoteProcessorService } from './processors/PostScheduledNoteProcessorService.js';
 import { InboxProcessorService } from './processors/InboxProcessorService.js';
 import { UserWebhookDeliverProcessorService } from './processors/UserWebhookDeliverProcessorService.js';
 import { SystemWebhookDeliverProcessorService } from './processors/SystemWebhookDeliverProcessorService.js';
-import { CheckHataskFlowersProcessorService } from './processors/CheckHataskFlowersProcessorService.js';
-import { CheckHataskMoodRemindersProcessorService } from './processors/CheckHataskMoodRemindersProcessorService.js';
 import { CheckExpiredMutingsProcessorService } from './processors/CheckExpiredMutingsProcessorService.js';
 import { ArchiveAnnouncementProcessorService } from './processors/ArchiveAnnouncementProcessorService.js';
 import { BakeBufferedReactionsProcessorService } from './processors/BakeBufferedReactionsProcessorService.js';
@@ -60,8 +57,6 @@ import { RebuildTrendingProcessorService } from './processors/RebuildTrendingPro
 	],
 	providers: [
 		QueueLoggerService,
-		CheckHataskFlowersProcessorService,
-		CheckHataskMoodRemindersProcessorService,
 		TickChartsProcessorService,
 		ResyncChartsProcessorService,
 		CleanChartsProcessorService,
@@ -94,7 +89,6 @@ import { RebuildTrendingProcessorService } from './processors/RebuildTrendingPro
 		UserWebhookDeliverProcessorService,
 		SystemWebhookDeliverProcessorService,
 		EndedPollNotificationProcessorService,
-		UtageResolveProcessorService,
 		PostScheduledNoteProcessorService,
 		DeliverProcessorService,
 		InboxProcessorService,

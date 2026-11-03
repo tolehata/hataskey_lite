@@ -145,7 +145,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> {
 				throw err;
 			});
 
-			if (note.userId !== me.id || !await this.noteEntityService.isChannelVisibleForMe(note, me.id)) {
+			if (note.userId !== me.id) {
 				throw new ApiError(meta.errors.noSuchNote);
 			}
 

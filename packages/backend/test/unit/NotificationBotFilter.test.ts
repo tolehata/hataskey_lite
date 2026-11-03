@@ -20,13 +20,11 @@ describe('notification bot filter', () => {
 			notification({ id: 'bot-reaction', type: 'reaction', notifierId: 'bot', noteId: 'note', reaction: ':bot:' }),
 			notification({ id: 'person-reaction', type: 'reaction', notifierId: 'person', noteId: 'note', reaction: ':person:' }),
 			notification({ id: 'system', type: 'app', customBody: 'body', customHeader: null, customIcon: null, customLink: null, appAccessTokenId: null }),
-			notification({ id: 'channel-system', type: 'addedToPrivateChannel', notifierId: null, customBody: 'body', customHeader: null, customIcon: null, customLink: null }),
 		];
 
 		expect(filterNotificationsFromBotIds(notifications, new Set(['bot'])).map(item => item.id)).toEqual([
 			'person-reaction',
 			'system',
-			'channel-system',
 		]);
 	});
 });

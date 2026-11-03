@@ -64,10 +64,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				throw err;
 			});
 
-			if (!await this.noteEntityService.isChannelVisibleForMe(note, me?.id ?? null)) {
-				throw new ApiError(meta.errors.noSuchNote);
-			}
-
 			const clipNotes = await this.clipNotesRepository.findBy({
 				noteId: note.id,
 			});

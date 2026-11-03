@@ -7,7 +7,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { ref } from 'vue';
 import { deepClone } from '@/utility/clone.js';
 import type { PostFormProps } from '@/types/post-form.js';
-import { hk3CanAdoptPostForm } from './hataskey3/hk3-state.js';
 import { createPostFormRecipients } from './post-form-recipients.js';
 import type * as Misskey from 'cherrypick-js';
 
@@ -61,18 +60,11 @@ describe('explicit full composer initial state', () => {
 		expect(restored.text.value).toBe('unrelated saved text');
 		expect(restored.files.value).toEqual([{ id: 'saved' }]);
 	});
-	it('falls back to the full form for advanced explicit inputs that the compact adopter cannot preserve', () => {
-		for (const advanced of [{ initialPoll: { choices: ['', ''], multiple: false, expiresAt: null, expiredAfter: 1234 } }, { initialEvent: null }, { initialReactionAcceptance: null }, { restoreDraft: false }]) {
-			expect(hk3CanAdoptPostForm({ channel: null, ...advanced })).toBe(false);
-		}
-		expect(hk3CanAdoptPostForm({ channel: null })).toBe(true);
-	});
 });
 
 describe('direct reply standard-form fallback', () => {
 	it.each(['author', 'me'])('hydrates the original audience asynchronously for a reply to %s', async authorId => {
 		const reply = { id: 'direct', visibility: 'specified', userId: authorId, visibleUserIds: ['me', authorId, 'recipient'] } as NonNullable<PostFormProps['reply']>;
-		expect(hk3CanAdoptPostForm({ reply })).toBe(false);
 		const inheritance = ast.statements.find(node => ts.isIfStatement(node) && node.expression.getText(ast).startsWith("replyTargetNote.value && ['home', 'followers', 'specified']"));
 		expect(inheritance).toBeDefined();
 		const visibility = ref('public');

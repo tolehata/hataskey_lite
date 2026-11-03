@@ -7,23 +7,15 @@ import * as Misskey from 'cherrypick-js';
 import { inject, isRef, onActivated, onBeforeUnmount, provide, ref, toValue, watch } from 'vue';
 import { DI } from './di.js';
 import type { MaybeRefOrGetter, Ref } from 'vue';
-import { hataAppNames } from '@/utility/hata-app-brand.js';
-import type { HataApp } from '@/utility/hata-app-brand.js';
 
 export type PageMetadata = {
 	title: string;
 	subtitle?: string;
 	icon?: string | null;
-	hataApp?: HataApp;
 	avatar?: Misskey.entities.User | null;
 	userName?: Misskey.entities.User | null;
 	needWideArea?: boolean;
 };
-
-export function isExactHataAppTitle(metadata: PageMetadata): boolean {
-	const app = metadata.hataApp;
-	return app != null && metadata.title === `${hataAppNames[app].head}${hataAppNames[app].tail}`;
-}
 
 type PageMetadataGetter = () => PageMetadata;
 type PageMetadataReceiver = (getter: PageMetadataGetter) => void;

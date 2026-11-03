@@ -7,24 +7,22 @@ SPDX-License-Identifier: AGPL-3.0-only
 <div
 	role="menu"
 	:data-viewport-constrained="maxWidth != null"
-	:data-hk3-composer-menus="menuAppearance ? true : undefined"
 	:class="{
 		[$style.root]: true,
 		[$style.center]: align === 'center',
 		[$style.big]: big,
 		[$style.asDrawer]: asDrawer,
 		[$style.widthSpecified]: width != null,
-		[$style.composerGlass]: menuAppearance === 'uiS-composer',
 	}"
 	@focusin.passive.stop="() => {}"
 >
 	<div
+		class="_shadow"
 		:class="[
 			$style.menu,
 			{
-				_shadow: !menuAppearance,
-				_popup: !menuAppearance && (!prefer.s.useBlurEffect || !prefer.s.useBlurEffectForModal || !prefer.s.removeModalBgColorForBlur),
-				_popupAcrylic: !menuAppearance && prefer.s.useBlurEffect && prefer.s.useBlurEffectForModal && prefer.s.removeModalBgColorForBlur,
+				_popup: !prefer.s.useBlurEffect || !prefer.s.useBlurEffectForModal || !prefer.s.removeModalBgColorForBlur,
+				_popupAcrylic: prefer.s.useBlurEffect && prefer.s.useBlurEffectForModal && prefer.s.removeModalBgColorForBlur,
 			}
 		]"
 		:style="{
@@ -198,8 +196,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</button>
 
 				<button
-				v-else
-				role="menuitem"
+					v-else
+					role="menuitem"
 					tabindex="0"
 					:class="['_button', $style.item, { [$style.danger]: item.danger, [$style.active]: unref(item.active) }]"
 					@click.prevent="unref(item.active) ? close(false) : clicked(item.action, $event)"
@@ -210,7 +208,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<MkAvatar v-if="item.avatar" :user="item.avatar" :class="$style.avatar"/>
 					<div :class="$style.item_content">
 						<div :class="$style.item_content_text">
-							<div :class="[$style.item_content_text_title, item.textFont === 'righteous' && $style.wordmark]">{{ item.text }}</div>
+							<div :class="$style.item_content_text_title">{{ item.text }}</div>
 							<div v-if="item.caption" :class="$style.item_content_text_caption">{{ item.caption }}</div>
 						</div>
 						<span v-if="item.indicate" :class="$style.indicator" class="_blink"><i class="_indicatorCircle"></i></span>
@@ -223,23 +221,18 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</span>
 		</div>
 	</div>
-	<Transition :enterActiveClass="goesMotion ? $style.transition_child_enterActive : ''" :leaveActiveClass="goesMotion ? $style.transition_child_leaveActive : ''" :enterFromClass="goesMotion ? $style.transition_child_enterFrom : ''" :leaveToClass="goesMotion ? $style.transition_child_leaveTo : ''" :duration="goesMotion ? { enter: 160, leave: 120 } : 0">
-		<div v-if="childMenu">
-			<XChild ref="child" :items="childMenu" :anchorElement="childTarget!" :rootElement="itemsEl!" @actioned="childActioned" @closed="closeChild"/>
-		</div>
-	</Transition>
+	<div v-if="childMenu">
+		<XChild ref="child" :items="childMenu" :anchorElement="childTarget!" :rootElement="itemsEl!" @actioned="childActioned" @closed="closeChild"/>
+	</div>
 </div>
 </template>
 
 <script lang="ts">
-import { computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMounted, provide, ref, useTemplateRef, unref, watch, shallowRef } from 'vue';
-import type { Ref } from 'vue';
-import type { Hk3ComposerMenuAppearance } from '@/components/hataskey3/hk3-composer-menu.js';
+import { computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, unref, watch, shallowRef } from 'vue';
 import type { MenuItem, InnerMenuItem, MenuPending, MenuAction, MenuSwitch, MenuRadio, MenuRadioOption, MenuParent } from '@/types/menu.js';
 import type { Keymap } from '@/utility/hotkey.js';
 import MkSwitchButton from '@/components/MkSwitch.button.vue';
-import { HATA_GOES_HOST } from '@/utility/hatagoes-context.js';
-import { useHataGoesPopupMenu } from '@/utility/hatagoes-popup.js';
+import * as os from '@/os.js';
 import { i18n } from '@/i18n.js';
 import { isTouchUsing } from '@/utility/touch.js';
 import { isFocusable } from '@/utility/focus.js';
@@ -251,25 +244,15 @@ const childrenCache = new WeakMap<MenuParent, MenuItem[]>();
 
 <script lang="ts" setup>
 const XChild = defineAsyncComponent(() => import('./MkMenu.child.vue'));
-const hataGoesHost = inject(HATA_GOES_HOST, null);
 
 const props = defineProps<{
-	forceMotion?: boolean;
 	items: MenuItem[];
 	asDrawer?: boolean;
 	align?: 'center' | string;
 	width?: number;
 	maxWidth?: number;
 	maxHeight?: number;
-	appearance?: Hk3ComposerMenuAppearance;
 }>();
-const goesMotion = computed(() => props.forceMotion === true || hataGoesHost != null);
-const popupMenu = useHataGoesPopupMenu(goesMotion.value);
-
-// Child menus retain the opt-in without changing their positioning component.
-const inheritedAppearance = inject<Ref<Hk3ComposerMenuAppearance | undefined>>('hk3ComposerMenuAppearance', ref());
-const menuAppearance = computed(() => props.appearance ?? inheritedAppearance.value);
-provide('hk3ComposerMenuAppearance', menuAppearance);
 
 const emit = defineEmits<{
 	(ev: 'close', actioned?: boolean): void;
@@ -363,7 +346,7 @@ async function showRadioOptions(item: MenuRadio, ev: Event) {
 	});
 
 	if (props.asDrawer) {
-		popupMenu(children, ev.currentTarget ?? ev.target).finally(() => {
+		os.popupMenu(children, ev.currentTarget ?? ev.target).finally(() => {
 			close(false);
 		});
 		emit('hide');
@@ -395,7 +378,7 @@ async function showChildren(item: MenuParent, ev: Event) {
 	if (disposed || !target.isConnected) return;
 
 	if (props.asDrawer) {
-		popupMenu(children, target).finally(() => {
+		os.popupMenu(children, target).finally(() => {
 			close(false);
 		});
 		emit('hide');
@@ -500,11 +483,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" module>
-@use './hataskey3/hk3-glass';
-
-.transition_child_enterActive { transition: opacity 160ms ease !important; }
-.transition_child_leaveActive { transition: opacity 120ms ease !important; }
-.transition_child_enterFrom, .transition_child_leaveTo { pointer-events: none; opacity: 0; }
 .root {
 	&.center {
 		> .menu {
@@ -578,32 +556,6 @@ onBeforeUnmount(() => {
 	&:focus-visible {
 		outline: none;
 	}
-}
-
-.root.composerGlass {
-	color: var(--hk3-text, var(--MI_THEME-fg));
-	--menuFg: var(--hk3-text, var(--MI_THEME-fg));
-	--menuHoverFg: var(--hk3-accent-800, var(--MI_THEME-accent));
-	--menuHoverBg: color-mix(in srgb, var(--hk3-accent, var(--MI_THEME-accent)) 12%, transparent);
-	--menuActiveFg: var(--hk3-accent-800, var(--MI_THEME-accent));
-	--menuActiveBg: color-mix(in srgb, var(--hk3-accent, var(--MI_THEME-accent)) 16%, transparent);
-	font-size: 14px;
-
-	> .menu {
-		@include hk3-glass.menu;
-		isolation: isolate;
-	}
-
-	&.asDrawer > .menu {
-		border-bottom-right-radius: 0;
-		border-bottom-left-radius: 0;
-	}
-
-	.item { font-family: inherit; font-weight: 700; }
-	.item.radio, .item.parent { --menuActiveBg: color-mix(in srgb, var(--hk3-accent, var(--MI_THEME-accent)) 16%, transparent); }
-	.item::before { border-radius: 10px; }
-	.item_content_text_caption, .label { opacity: 0.85; }
-	.divider { border-color: var(--hk3-divider, var(--MI_THEME-divider)); }
 }
 
 /* Only viewport-bounded child menus reflow long labels. Top-level menus and
@@ -743,12 +695,6 @@ onBeforeUnmount(() => {
 .item_content_text_title {
 	text-overflow: ellipsis;
 	overflow: hidden;
-}
-
-.wordmark {
-	font-family: 'Righteous', system-ui, sans-serif;
-	font-weight: 400;
-	font-synthesis: none;
 }
 
 .item_content_text_caption {

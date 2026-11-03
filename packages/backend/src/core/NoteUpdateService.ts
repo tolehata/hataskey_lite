@@ -25,7 +25,6 @@ import { ApDeliverManagerService } from '@/core/activitypub/ApDeliverManagerServ
 import { bindThis } from '@/decorators.js';
 import { DB_MAX_NOTE_TEXT_LENGTH } from '@/const.js';
 import { SearchService } from '@/core/SearchService.js';
-import { UtageService } from '@/core/UtageService.js';
 import { normalizeTag } from '@/misc/normalize-tag.js';
 import { MiDriveFile } from '@/models/_.js';
 import { MiPoll, IPoll } from '@/models/Poll.js';
@@ -71,7 +70,6 @@ export class NoteUpdateService implements OnApplicationShutdown {
 		private searchService: SearchService,
 		private activeUsersChart: ActiveUsersChart,
 		private noteHistoryService: NoteHistorySerivce,
-		private utageService: UtageService,
 	) { }
 
 	@bindThis
@@ -170,15 +168,11 @@ export class NoteUpdateService implements OnApplicationShutdown {
 			]);
 
 			// Start transaction for any poll or event changes
-			const utageCandidate = this.utageService.isCandidate(note);
-			let utageChange: Awaited<ReturnType<UtageService['onNoteUpdatedInTransaction']>> = null;
-			const needsTransaction = note.hasPoll || values.hasPoll || note.hasEvent || values.hasEvent || utageCandidate;
+			const needsTransaction = note.hasPoll || values.hasPoll || note.hasEvent || values.hasEvent;
 
 			if (needsTransaction) {
 				await this.db.transaction(async transactionalEntityManager => {
-					const utageSession = utageCandidate ? await this.utageService.lock(transactionalEntityManager, note.id) : null;
 					await transactionalEntityManager.update(MiNote, { id: note.id }, values);
-					utageChange = await this.utageService.onNoteUpdatedInTransaction(transactionalEntityManager, note, { ...note, text: values.text, cw: values.cw }, utageSession);
 
 					if (note.hasPoll && values.hasPoll) {
 						const old_poll = await transactionalEntityManager.findOneBy(MiPoll, { noteId: note.id });
@@ -254,7 +248,6 @@ export class NoteUpdateService implements OnApplicationShutdown {
 				await this.notesRepository.update({ id: note.id }, values);
 			}
 
-			if (utageChange) await this.utageService.afterCommit([utageChange]);
 			await this.noteHistoryService.recordHistory(values, note, originalPoll, originalEvent, { updatedAt: data.updatedAt });
 
 			return await this.notesRepository.findOneBy({ id: note.id });

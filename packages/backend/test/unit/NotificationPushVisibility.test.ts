@@ -7,18 +7,14 @@ vi.mock('node:timers/promises', () => ({
 	setTimeout: vi.fn(() => ({ then: (run: () => Promise<void>) => { delayed.run = run; } })),
 }));
 
-function fixture(type: 'hatady' | 'follow' | 'receiveFollowRequest' = 'hatady') {
+function fixture(type: 'follow' | 'receiveFollowRequest' = 'follow') {
 	let retained = true;
 	let revision = 0;
-	const packed = {
-		id: 'standard', createdAt: new Date().toISOString(), type,
-		...(type === 'hatady' ? { title: 'Private current title', body: 'Private body' } : {}),
-	};
+	const packed = { id: 'standard', createdAt: new Date().toISOString(), type };
 	const notificationEntityService = { pack: vi.fn().mockResolvedValue(packed) };
 	const globalEventService = { publishMainStream: vi.fn() };
 	const pushNotificationService = { pushNotification: vi.fn().mockResolvedValue(undefined) };
 	const usersRepository = { findOneByOrFail: vi.fn().mockRejectedValue(new Error('Notifier is gone')) };
-	const hatadyNotificationsRepository = { findOneBy: vi.fn().mockResolvedValue({ isRead: false, deletedAt: null }) };
 	const redisClient = {
 		hget: vi.fn().mockResolvedValue(null),
 		hlen: vi.fn().mockResolvedValue(0),
@@ -26,7 +22,7 @@ function fixture(type: 'hatady' | 'follow' | 'receiveFollowRequest' = 'hatady') 
 		get: vi.fn(async (key: string) => key.startsWith('notificationRevision:') ? String(revision) : null),
 		incr: vi.fn(async () => ++revision),
 		xrange: vi.fn(async (_key: string, start: string) => start === '1000-1' && retained
-			? [['1000-1', ['data', JSON.stringify({ id: 'standard', type, ...(type === 'hatady' ? { sourceNotificationId: 'source' } : { notifierId: 'sender' }) })]]]
+			? [['1000-1', ['data', JSON.stringify({ id: 'standard', type, notifierId: 'sender' })]]]
 			: []),
 		xadd: vi.fn().mockResolvedValue('1000-1'),
 		eval: vi.fn().mockResolvedValue('1000-1'),
@@ -35,8 +31,6 @@ function fixture(type: 'hatady' | 'follow' | 'receiveFollowRequest' = 'hatady') 
 		{ perUserNotificationsMaxCount: 50 } as never,
 		redisClient as never,
 		usersRepository as never,
-		hatadyNotificationsRepository as never,
-		{} as never,
 		notificationEntityService as never,
 		{ gen: vi.fn().mockReturnValue('standard'), parseFull: vi.fn().mockReturnValue({ date: 1000, additional: 1n }) } as never,
 		globalEventService as never,
@@ -53,21 +47,10 @@ function fixture(type: 'hatady' | 'follow' | 'receiveFollowRequest' = 'hatady') 
 
 afterEach(() => { delayed.run = null; });
 
-describe('Hatady standard notification delayed push', () => {
-	test('the OS payload omits the current title and body while the live list can show them', async () => {
-		const f = fixture();
-		await f.service.createNotificationAsync('owner', 'hatady', { sourceNotificationId: 'source', subtype: 'comment', targetType: 'comment', targetId: 'target' });
-		expect(f.globalEventService.publishMainStream).toHaveBeenCalledWith('owner', 'notification', expect.objectContaining({ title: 'Private current title' }));
-		await delayed.run?.();
-		const payload = (f.pushNotificationService.pushNotification.mock.calls as unknown[][])[0]?.[2];
-		expect(payload).toMatchObject({ type: 'hatady', sourceNotificationId: 'source' });
-		expect(payload).not.toHaveProperty('title');
-		expect(payload).not.toHaveProperty('body');
-	});
-
+describe('standard notification delayed push', () => {
 	test('a notification trimmed during the delay is not pushed or announced unread', async () => {
 		const f = fixture();
-		await f.service.createNotificationAsync('owner', 'hatady', { sourceNotificationId: 'source', subtype: 'comment', targetType: 'comment', targetId: 'target' });
+		await f.service.createNotificationAsync('owner', 'follow', {}, 'sender');
 		f.trim();
 		await delayed.run?.();
 		expect(f.notificationEntityService.pack).toHaveBeenCalledOnce();

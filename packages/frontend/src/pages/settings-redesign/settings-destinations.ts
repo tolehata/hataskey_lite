@@ -15,7 +15,7 @@ export type SettingsDestination = SettingsSearchNavigationTargetV2 & {
 	categoryId?: string;
 	description?: string;
 	legacyGroup?: string;
-	brand?: 'Hataskey' | 'Hatask' | 'Hatady' | 'HataFeed';
+	brand?: 'Hataskey';
 	/**
 	 * 旗鯖fork: Tabler の代わりに出す絵。⚠️これがあるときは icon を描かない。
 	 *   ⚠️icon は空にしないこと。検索索引が icon を持つ前提で並べている。
@@ -39,17 +39,12 @@ const destination = (id: string, label: string, route: string, icon: string, ext
  * ⚠️項目のidは `preferenceDestinationIds` が参照している。消すと起動時に例外になる。
  */
 export const settingsDestinationSections: SettingsDestinationSection[] = [{
-	id: 'hataskey-ui', label: 'hataskeyUI / S', description: copy.nav.appearanceDescription, icon: 'ti ti-sparkles', brand: 'Hataskey', items: [
+	id: 'hataskey-ui', label: 'Hataskey UI', description: copy.nav.appearanceDescription, icon: 'ti ti-sparkles', brand: 'Hataskey', items: [
 		destination('hataskey-ui', 'Hataskey UI', '/settings/hata-custom', 'ti ti-sparkles', { brand: 'Hataskey', primary: true, showCount: true, activation: { kind: 'hata-custom-category', category: 'glassUi' } }),
-		destination('hataskey-ui-s', 'Hataskey UI S', pref, 'ti ti-pencil', { brand: 'Hataskey', categoryId: 'hataskey-ui', description: i18n.ts._hata._uiSetup.ui3SettingsDescription }),
+		destination('hataskey-ui-s', i18n.ts._hata._settingsRedesign.postFormBorderTitle, pref, 'ti ti-pencil', { brand: 'Hataskey', categoryId: 'hataskey-ui', description: i18n.ts._hata._settingsRedesign.postFormBorderDescription }),
 	],
 }, {
 	id: 'hataskey-tools', label: copy.nav.hataTools, description: copy.nav.hataToolsDescription, icon: 'ti ti-flag', brand: 'Hataskey', items: [
-		destination('hata-hatask', 'Hatask', '/settings/hata-custom', 'ti ti-checklist', { brand: 'Hatask', activation: { kind: 'popup', category: 'hatask', popup: 'hatask' } }),
-		destination('hata-hatady', 'Hatady', '/settings/hata-custom', 'ti ti-book-2', { brand: 'Hatady', activation: { kind: 'popup', category: 'hatady', popup: 'hatady' } }),
-		destination('hata-hatafeed', 'HataFeed', '/settings/hatafeed', 'ti ti-message-heart', { brand: 'HataFeed', primary: true, showCount: true }),
-		destination('hata-earthquake', copy.nav.weatherViewer, '/settings/hata-custom', 'ti ti-activity', { activation: { kind: 'popup', category: 'earthquake', popup: 'earthquake' } }),
-		destination('hata-mascot', copy.nav.mascotHatakyu, '/settings/hata-custom', 'ti ti-mood-smile-beam', { activation: { kind: 'popup', category: 'mascot', popup: 'mascot' } }),
 		destination('hata-settings-transfer', copy.nav.settingsTransfer, '/settings/hata-custom', 'ti ti-package', { activation: { kind: 'popup', category: 'general', popup: 'settings-transfer' } }),
 	],
 }, {
@@ -57,7 +52,6 @@ export const settingsDestinationSections: SettingsDestinationSection[] = [{
 		// 旗鯖fork: テーマは1項目にまとめる。管理とインストールは /settings/theme の
 		// 中から辿れる(FormLinkが置いてある)ので、左ペインを3つに割らない。
 		destination('display-theme', i18n.ts.theme, '/settings/theme', 'ti ti-palette', { primary: true, showCount: true, categoryId: 'theme-font' }),
-		destination('hataskey-ui-font', copy.nav.font, '/settings/hata-custom', 'ti ti-typography', { activation: { kind: 'hata-custom-category', category: 'font' } }),
 		destination('display-css', i18n.ts.customCss, '/settings/custom-css', 'ti ti-code', { primary: true, showCount: true, categoryId: 'theme-font' }),
 		destination('display-emoji', copy.nav.emojiPalette, '/settings/emoji-palette', 'ti ti-mood-happy', { primary: true, showCount: true, categoryId: 'reactions' }),
 		destination('display-general', i18n.ts.preferences, pref, 'ti ti-adjustments', { legacyGroup: 'general', categoryId: 'display-notes' }),
@@ -109,8 +103,6 @@ export const settingsDestinationSections: SettingsDestinationSection[] = [{
 	],
 }, {
 	id: 'connections', label: copy.nav.externalServices, description: copy.nav.externalServicesDescription, icon: 'ti ti-link', items: [
-		destination('account-external', copy.nav.externalAccount, '/settings/external-account', 'ti ti-user-share', { primary: true, showCount: true }),
-		destination('account-concrnt', 'コンカレント連携(BETA)', '/settings/concrnt', 'concrnt-icon', { primary: true, showCount: true }),
 		destination('account-connect', copy.nav.serviceConnect, '/settings/connect', 'ti ti-link', { primary: true, showCount: true }),
 		destination('account-apps', copy.nav.linkedApps, '/settings/apps', 'ti ti-apps', { primary: true, showCount: true }),
 		destination('account-plugins', copy.nav.plugins, '/settings/plugin', 'ti ti-plug', { primary: true, showCount: true }),

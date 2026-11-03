@@ -43,8 +43,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			const query = this.channelsRepository.createQueryBuilder('channel')
 				.where('channel.lastNotedAt IS NOT NULL')
 				.andWhere('channel.isArchived = FALSE')
-				// 旗鯖fork: プライベートチャンネルは注目に出さない(存在を漏らさない)。
-				.andWhere('channel.isPrivate = FALSE')
 				.orderBy('channel.lastNotedAt', 'DESC');
 
 			const channels = await query.limit(10).getMany();

@@ -93,7 +93,6 @@ globalThis.addEventListener('push', ev => {
 			case 'notification':
 			case 'unreadAntennaNote':
 			case 'newChatMessage':
-			case 'hatadyNotification':
 				// 1日以上経過している場合は無視
 				if (Date.now() - data.dateTime > 1000 * 60 * 60 * 24) break;
 
@@ -185,22 +184,10 @@ globalThis.addEventListener('notificationclick', (ev: ServiceWorkerGlobalScopeEv
 							case 'reaction':
 								client = await swos.openNote(data.body.note.id, loginId);
 								break;
-							case 'hatady':
-								client = await swos.openClient('push', `/hatady?notificationId=${encodeURIComponent(data.body.id)}`, loginId);
-								break;
 							case 'chatRoomInvitationReceived':
 								client = await swos.openClient('push', '/chat', loginId);
 								break;
 							case 'app':
-							case 'hataFeed':
-							case 'hataskFlowerReady':
-							case 'hataskFlowerBloomed':
-							case 'hataskZukanUpdated':
-							case 'hataskFestivalBloomed':
-							case 'hataskDecorationUnlocked':
-							case 'earthquake':
-							case 'addedToPrivateChannel':
-							case 'removedFromPrivateChannel':
 								// customLink は backend で「/」始まりの相対パスだけに検証済み。
 								if (data.body.link) client = await swos.openClient('push', data.body.link, loginId);
 								break;
@@ -219,9 +206,6 @@ globalThis.addEventListener('notificationclick', (ev: ServiceWorkerGlobalScopeEv
 				break;
 			case 'newChatMessage':
 				client = await swos.openChat(data.body, loginId);
-				break;
-			case 'hatadyNotification':
-				client = await swos.openClient('push', '/hatady', loginId);
 				break;
 			default:
 				switch (action) {

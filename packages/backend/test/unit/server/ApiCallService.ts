@@ -13,7 +13,6 @@ import { meta as voteMeta } from '@/server/api/endpoints/admin/vote-registration
 import { meta as approveMeta } from '@/server/api/endpoints/admin/approve-registration.js';
 import { meta as rejectMeta } from '@/server/api/endpoints/admin/reject-registration.js';
 import { meta as cleanupMeta } from '@/server/api/endpoints/admin/cleanup-legacy-rejected-registrations.js';
-import { meta as hatagoesSearchMeta } from '@/server/api/endpoints/hata/hatagoes/search.js';
 import Logger from '@/logger.js';
 import { envOption } from '@/env.js';
 import { logManager } from '@/logging/logging-runtime.js';
@@ -69,7 +68,7 @@ function createService() {
 	return { service, telemetryService, authenticateService, roleService };
 }
 
-describe('HataGoes native Registry search authorization', () => {
+describe('secure endpoint authorization', () => {
 	test.each(['native', 'app', 'flash', 'anonymous'])('%s credentials cannot escape their Registry domain', async actor => {
 		const { service, authenticateService } = createService();
 		try {
@@ -78,9 +77,9 @@ describe('HataGoes native Registry search authorization', () => {
 				actor === 'app' ? { permission: ['read:account'] } : null,
 				actor === 'flash' ? { permissions: ['read:account'] } : null,
 			]);
-			const endpoint = { name: 'hata/hatagoes/search', meta: hatagoesSearchMeta, params: {}, exec: vi.fn().mockResolvedValue({ items: ['private-record'] }) };
+			const endpoint = { name: 'i/registry/get-all', meta: { requireCredential: true, secure: true, kind: 'read:account' }, params: {}, exec: vi.fn().mockResolvedValue({ items: ['private-record'] }) };
 			const reply = createReply();
-			await service.handleRequest(endpoint as never, { method: 'POST', body: { i: 'credential', query: 'memo' }, query: {}, headers: {}, ip: '127.0.0.1' } as never, reply as never);
+			await service.handleRequest(endpoint as never, { method: 'POST', body: { i: 'credential', scope: ['client'] }, query: {}, headers: {}, ip: '127.0.0.1' } as never, reply as never);
 			if (actor === 'native') {
 				expect(endpoint.exec).toHaveBeenCalledOnce();
 				expect(reply.send).toHaveBeenCalledWith({ items: ['private-record'] });
@@ -93,31 +92,6 @@ describe('HataGoes native Registry search authorization', () => {
 });
 
 describe('ApiCallService structured error logging', () => {
-	test.each(['hata/emoji-vote/show', 'hata/emoji-vote/vote'])('keeps diagnostics but no vote content for %s', async name => {
-		const write = vi.fn<LogBackend['write']>();
-		logManager.setBackend({ write });
-		const previousQuiet = envOption.quiet;
-		envOption.quiet = false;
-		const { service, telemetryService } = createService();
-		try {
-			const secret = 'private-vote-sentinel';
-			const error = Object.assign(new Error(secret), { name: secret, parameters: [secret], query: secret });
-			const endpoint = { name, meta: {}, params: {}, exec: vi.fn().mockRejectedValue(error) };
-			const request = { method: 'POST', body: { roundId: secret, emojiId: secret }, query: {}, headers: {}, ip: '127.0.0.1' };
-			await service.handleRequest(endpoint as never, request as never, createReply() as never);
-			const record = write.mock.calls[0][0] as LogRecord;
-			expect(record).toMatchObject({ eventName: 'api.endpoint.failed', attributes: { 'api.endpoint': name }, error: { type: 'Error', message: 'Ephemeral emoji vote operation failed' } });
-			expect(record.attributes).not.toHaveProperty('api.params');
-			expect(JSON.stringify(write.mock.calls)).not.toContain(secret);
-			expect(JSON.stringify(telemetryService.captureMessage.mock.calls)).not.toContain(secret);
-			expect(telemetryService.captureMessage.mock.calls[0][1]).not.toHaveProperty('userId');
-		} finally {
-			service.dispose();
-			envOption.quiet = previousQuiet;
-			logManager.setBackend(new PrettyConsoleBackend({ output: () => undefined }));
-		}
-	});
-
 	test('removes API credentials and serializes the endpoint error', async () => {
 		const write = vi.fn<LogBackend['write']>();
 		logManager.setBackend({ write });
@@ -172,7 +146,7 @@ describe('ApiCallService structured error logging', () => {
 		const { service } = createService();
 		try {
 			const endpoint = {
-				name: 'hata/hatask/emotion-analysis/create',
+				name: 'i/update',
 				meta: {},
 				params: {},
 				exec: vi.fn().mockResolvedValue({ ok: true }),

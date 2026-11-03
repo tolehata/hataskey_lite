@@ -95,20 +95,6 @@ describe('通知ウィジェットの設定確定', () => {
 		expect(fixture.readSaved()).toMatchObject({ excludeBots: true, height: 480, excludeTypes: ['follow'] });
 	});
 
-	test('詳細フィルタを確定すると保存され、タイムラインと次のダイアログに反映される', async () => {
-		const fixture = mountWidget();
-		const dialog = fixture.openDialog();
-		const filterDetails = { ...dialog.initial.filterDetails, includeBrands: ['hatady'], includeHataskApp: false, excludeHatadySubtypes: ['reaction'] };
-		await dialog.done({ ...dialog.initial, filterDetails });
-		await nextTick();
-		expect(fixture.readSaved().notificationFilterDetails).toEqual(filterDetails);
-		const timeline = fixture.container.querySelector('[data-include-brands]');
-		expect(timeline?.getAttribute('data-include-brands')).toBe('["hatady"]');
-		expect(timeline?.getAttribute('data-include-hatask-app')).toBe('false');
-		expect(timeline?.getAttribute('data-exclude-hatady-subtypes')).toContain('reaction');
-		expect(fixture.openDialog().initial.filterDetails).toEqual(filterDetails);
-	});
-
 	test('詳細フィルタを触らない間に親が更新された場合は親の変更を残す', async () => {
 		const fixture = mountWidget();
 		const dialog = fixture.openDialog();

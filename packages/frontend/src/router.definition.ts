@@ -84,10 +84,6 @@ export const ROUTE_DEF = [{
 		name: 'profile',
 		component: page(() => import('@/pages/settings/profile.vue')),
 	}, {
-		path: '/note-charm',
-		name: 'note-charm',
-		component: page(() => import('@/pages/settings/note-charm.vue')),
-	}, {
 		path: '/avatar-decoration',
 		name: 'avatarDecoration',
 		component: page(() => import('@/pages/settings/avatar-decoration.vue')),
@@ -207,18 +203,6 @@ export const ROUTE_DEF = [{
                 path: '/hata-custom',
                 name: 'hata-custom',
                 component: page(() => import('@/pages/settings/hata-custom.vue')),
-	}, {
-		path: '/hatafeed',
-		name: 'hatafeed-settings',
-		component: page(() => import('@/pages/settings-redesign/HataFeedSettingsSurface.vue')),
-	}, {
-		path: '/external-account',
-		name: 'external-account',
-		component: page(() => import('@/pages/settings/external-account.vue')),
-	}, {
-		path: '/concrnt',
-		name: 'concrnt-settings',
-		component: page(() => import('@/pages/settings/concrnt.vue')),
 	}, {
 		path: '/hidden-reactions',
 		name: 'hidden-reactions',
@@ -453,10 +437,6 @@ export const ROUTE_DEF = [{
 		name: 'avatarDecorations',
 		component: page(() => import('@/pages/avatar-decorations.vue')),
 	}, {
-		path: '/hatask',
-		name: 'hatask',
-		component: iAmAdmin ? page(() => import('@/pages/admin/hatask.vue')) : page(() => import('@/pages/not-found.vue')),
-	}, {
 		path: '/federation-job-queue',
 		name: 'federationJobQueue',
 		component: page(() => import('@/pages/admin/federation-job-queue.vue')),
@@ -562,14 +542,6 @@ export const ROUTE_DEF = [{
 		name: 'update',
 		component: page(() => import('@/pages/admin/update.vue')),
 	}, {
-		path: '/consent-manager',
-		name: 'consent-manager',
-		component: page(() => import('@/pages/admin/consent-manager.vue')),
-	}, {
-		path: '/support',
-		name: 'support',
-		component: iAmAdmin ? page(() => import('@/pages/admin/support.vue')) : page(() => import('@/pages/not-found.vue')),
-	}, {
 		path: '/registration-applications',
 		name: 'registration-applications',
 		component: page(() => import('@/pages/admin/registration-applications.vue')),
@@ -581,18 +553,6 @@ export const ROUTE_DEF = [{
 	path: '/my/notifications',
 	name: 'my-notifications',
 	component: page(() => import('@/pages/notifications.vue')),
-	query: { tab: 'initialTab' },
-	loginRequired: true,
-}, {
-	// 旗鯖fork: 外部アカウント連携時に表示される、外部通知専用ページ
-	path: '/my/external-notifications',
-	name: 'my-external-notifications',
-	component: page(() => import('@/pages/external-notifications.vue')),
-	loginRequired: true,
-}, {
-	path: '/concrnt',
-	name: 'concrnt',
-	component: page(() => import('@/pages/concrnt.vue')),
 	query: { tab: 'initialTab' },
 	loginRequired: true,
 }, {
@@ -673,16 +633,6 @@ export const ROUTE_DEF = [{
 	component: page(() => import('@/pages/drop-and-fusion.vue')),
 	loginRequired: true,
 }, {
-	// 旗鯖fork: HataIgo — 削除時は pages/hataigo/ + components/hataigo/ + utility/hataigo/ + assets/hataigo/ + 本ブロック
-	path: '/hataigo',
-	component: page(() => import('@/pages/hataigo/index.vue')),
-	loginRequired: true,
-}, {
-	// HataIgo: 対局リンク。閲覧可否はサーバーが確認する。
-	path: '/hataigo/:gameId',
-	component: page(() => import('@/pages/hataigo/index.vue')),
-	loginRequired: true,
-}, {
 	path: '/reversi',
 	component: page(() => import('@/pages/reversi/index.vue')),
 	loginRequired: false,
@@ -710,73 +660,9 @@ export const ROUTE_DEF = [{
 	redirect: $i ? `@${$i.username}` : '/',
 	loginRequired: true,
 }, {
-	// Keep internal location out of route props so changing it retains the shell.
-	path: '/hatagoes',
-	component: page(() => import('@/pages/hatagoes.vue')),
-	loginRequired: true,
-}, {
-	path: '/hatask',
-	query: {
-		tab: 'tab',
-		notice: 'notice',
-		from: 'from',
-		action: 'action',
-		// Hataskey UI 3 の右ペインから、選んだ気分・食事の枠を記録欄で選択済みにして開く。
-		mood: 'mood',
-		meal: 'meal',
-	},
-	component: page(() => import('@/pages/hatask.vue')),
-	loginRequired: true,
-}, {
-	path: '/hatask/intro',
-	component: page(() => import('@/pages/hata-intro.vue')),
-	loginRequired: true,
-}, {
 	path: '/hatask/card-maker',
 	component: page(() => import('@/pages/hata-card-maker.vue')),
 	loginRequired: true,
-}, {
-	path: '/hatask/emotion-analysis',
-	component: page(() => import('@/pages/hata-emotion-analysis.vue')),
-	loginRequired: true,
-}, {
-	path: '/mascot',
-	component: page(() => import('@/pages/mascot.vue')),
-	loginRequired: true,
-}, {
-	path: '/hatafeed/beta',
-	component: page(() => import('@/pages/hatafeed-beta.vue')),
-	loginRequired: true,
-}, {
-	// 旗鯖fork: 廃止した HataSNSCordUI の旧入口。ブックマーク等から来ても行き止まりにしない。
-	path: '/hatafeed/hatacording-ui',
-	redirect: '/',
-}, {
-	path: '/earthquake',
-	component: page(() => import('@/pages/earthquake.vue')),
-	loginRequired: true,
-}, {
-	path: '/hatafeed/n/:number',
-	component: page(() => import('@/pages/hatafeed.vue')),
-	loginRequired: true,
-}, {
-	path: '/hatafeed/:issueId',
-	component: page(() => import('@/pages/hatafeed.vue')),
-	loginRequired: true,
-}, {
-	path: '/hatafeed',
-	component: page(() => import('@/pages/hatafeed.vue')),
-	query: { emojiRequestId: 'emojiRequestId', emojiChangeRequestId: 'emojiChangeRequestId' },
-	loginRequired: true,
-}, {
-	// 旗鯖fork: Hatady(学習・読書記録ツール)。
-	path: '/hatady',
-	component: page(() => import('@/pages/hatady.vue')),
-	loginRequired: true,
-}, {
-	path: '/hata-docs',
-	component: page(() => import('@/pages/hata-docs.vue')),
-	loginRequired: false,
 }, {
 	path: '/:(*)',
 	component: page(() => import('@/pages/not-found.vue')),

@@ -33,7 +33,7 @@
 				<small v-if="category.id === activeCategoryId">{{ category.description }}<template v-if="!smartphone && category.count != null"> ・ {{ i18n.tsx._hata._settingsBento.itemCount({ count: category.count }) }}</template></small>
 			</span>
 		</button>
-		<button v-if="smartphone && navigationCategories.length < 5" type="button" :class="$style.categoryTile" data-overview-shortcut @click="emit('overview')"><i class="ti ti-layout-grid" aria-hidden="true"></i><strong>{{ copy.allCategories }}</strong></button>
+		<button v-if="smartphone && navigationCategories.length < 5" type="button" :class="$style.categoryTile" data-overview-shortcut :data-overview-span="5 - navigationCategories.length" @click="emit('overview')"><i class="ti ti-layout-grid" aria-hidden="true"></i><strong>{{ copy.allCategories }}</strong></button>
 	</div>
 </nav>
 </template>
@@ -176,6 +176,8 @@ function select(id: string): void {
 .root[data-smartphone='true'] .categoryTile[data-active='true'] { padding: 14px 16px; gap: 6px; }
 .root[data-smartphone='true'] .categoryTile[data-active='true'] strong { font-size: 1.13em; }
 .root[data-smartphone='true'] .categoryTile[data-overview-shortcut] { grid-column: span 2; }
+/* The large tile leaves a 2x2 block beside it; a three-sibling group leaves only one cell for the shortcut. */
+.root[data-smartphone='true'] .categoryTile[data-overview-shortcut][data-overview-span='1'] { grid-column: span 1; }
 
 @container settings-bento (max-width: 720px) {
 	.groups { grid-template-columns: minmax(0, 1fr); }

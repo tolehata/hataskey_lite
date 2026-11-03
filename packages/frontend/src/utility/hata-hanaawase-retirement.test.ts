@@ -59,7 +59,6 @@ describe('花常のソース保管と実行・配信からの切り離し', () =
 		'packages/frontend/src/router.definition.ts',
 		'packages/frontend/src/pages/games.vue',
 		'packages/frontend/src/pages/admin/index.vue',
-		'packages/frontend/src/pages/hata-docs.vue',
 		'packages/frontend/src/utility/hata-settings-transfer.ts',
 		'packages/frontend/src/utility/hata-icon-motion.ts',
 		'packages/frontend/src/utility/hata-whats-new.ts',

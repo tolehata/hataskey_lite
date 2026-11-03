@@ -7,7 +7,6 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { NoteEntityService } from '@/core/entities/NoteEntityService.js';
 import { GetterService } from '@/server/api/GetterService.js';
-import { PrivateChannelNoteVisibilityError } from '@/misc/private-channel-note-visibility-error.js';
 import { DI } from '@/di-symbols.js';
 import { MiMeta } from '@/models/Meta.js';
 import { ApiError } from '../../error.js';
@@ -67,11 +66,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				throw err;
 			});
 
-			// 退会後の投稿者本人と、返信・引用先の閲覧権限も共通判定へ揃える。
-			if (!await this.noteEntityService.isChannelVisibleForMe(note, me?.id ?? null)) {
-				throw new ApiError(meta.errors.noSuchNote);
-			}
-
 			if (note.user!.requireSigninToViewContents && me == null) {
 				throw new ApiError(meta.errors.contentRestrictedByUser);
 			}
@@ -86,9 +80,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 			return await this.noteEntityService.pack(note, me, {
 				detail: true,
-			}).catch(error => {
-				if (error instanceof PrivateChannelNoteVisibilityError) throw new ApiError(meta.errors.noSuchNote);
-				throw error;
 			});
 		});
 	}

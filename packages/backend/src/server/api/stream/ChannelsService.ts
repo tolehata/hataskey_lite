@@ -6,8 +6,6 @@
 import { Injectable } from '@nestjs/common';
 import { bindThis } from '@/decorators.js';
 import { HybridTimelineChannelService } from './channels/hybrid-timeline.js';
-import { LtlPunchChannelService } from './channels/ltl-punch.js';
-import { HatadyTimelineChannelService } from './channels/hatady-timeline.js';
 import { LocalTimelineChannelService } from './channels/local-timeline.js';
 import { HomeTimelineChannelService } from './channels/home-timeline.js';
 import { GlobalTimelineChannelService } from './channels/global-timeline.js';
@@ -26,9 +24,7 @@ import { RoleTimelineChannelService } from './channels/role-timeline.js';
 import { ChatUserChannelService } from './channels/chat-user.js';
 import { ChatRoomChannelService } from './channels/chat-room.js';
 import { ReversiChannelService } from './channels/reversi.js';
-import { HataigoChannelService } from './channels/hataigo.js';
 import { ReversiGameChannelService } from './channels/reversi-game.js';
-import { HataigoGameChannelService } from './channels/hataigo-game.js';
 import { type MiChannelService } from './channel.js';
 
 @Injectable()
@@ -37,8 +33,6 @@ export class ChannelsService {
 		private mainChannelService: MainChannelService,
 		private homeTimelineChannelService: HomeTimelineChannelService,
 		private localTimelineChannelService: LocalTimelineChannelService,
-		private ltlPunchChannelService: LtlPunchChannelService,
-		private hatadyTimelineChannelService: HatadyTimelineChannelService,
 		private hybridTimelineChannelService: HybridTimelineChannelService,
 		private globalTimelineChannelService: GlobalTimelineChannelService,
 		private bubbleTimelineChannelService: BubbleTimelineChannelService,
@@ -55,9 +49,7 @@ export class ChannelsService {
 		private chatUserChannelService: ChatUserChannelService,
 		private chatRoomChannelService: ChatRoomChannelService,
 		private reversiChannelService: ReversiChannelService,
-		private hataigoChannelService: HataigoChannelService,
 		private reversiGameChannelService: ReversiGameChannelService,
-		private hataigoGameChannelService: HataigoGameChannelService,
 	) {
 	}
 
@@ -67,8 +59,6 @@ export class ChannelsService {
 			case 'main': return this.mainChannelService;
 			case 'homeTimeline': return this.homeTimelineChannelService;
 			case 'localTimeline': return this.localTimelineChannelService;
-			case 'ltlPunch': return this.ltlPunchChannelService;
-			case 'hatadyTimeline': return this.hatadyTimelineChannelService;
 			case 'hybridTimeline': return this.hybridTimelineChannelService;
 			case 'globalTimeline': return this.globalTimelineChannelService;
 			case 'bubbleTimeline': return this.bubbleTimelineChannelService;
@@ -85,9 +75,7 @@ export class ChannelsService {
 			case 'chatUser': return this.chatUserChannelService;
 			case 'chatRoom': return this.chatRoomChannelService;
 			case 'reversi': return this.reversiChannelService;
-			case 'hataigo': return this.hataigoChannelService;
 			case 'reversiGame': return this.reversiGameChannelService;
-			case 'hataigoGame': return this.hataigoGameChannelService;
 
 			default:
 				throw new Error(`no such channel: ${name}`);

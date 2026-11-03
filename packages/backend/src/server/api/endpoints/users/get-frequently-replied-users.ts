@@ -76,7 +76,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			});
 
 			// Fetch recent notes
-			// 旗鯖のプライベートチャンネル認可も集計元・返信先の双方へ適用する。
 			const recentNotesQuery = this.notesRepository.createQueryBuilder('note')
 				.select(['note.id', 'note.replyId', 'note.channelId'])
 				.leftJoinAndSelect('note.channel', 'channel')
@@ -91,7 +90,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			if (!isSelf) {
 				this.queryService.generateVisibilityQuery(recentNotesQuery, me);
 			}
-			await this.queryService.generateChannelVisibilityQuery(recentNotesQuery, me);
 
 			const recentNotes = await recentNotesQuery.getMany();
 
@@ -107,7 +105,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				.where('note.id IN (:...replyIds)', { replyIds: recentNotes.map(p => p.replyId) });
 
 			this.queryService.generateVisibilityQuery(replyTargetNotesQuery, me);
-			await this.queryService.generateChannelVisibilityQuery(replyTargetNotesQuery, me);
 
 			const replyTargetNotes = await replyTargetNotesQuery.getMany();
 

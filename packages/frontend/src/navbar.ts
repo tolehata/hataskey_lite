@@ -56,23 +56,6 @@ export const navbarItemDef = reactive({
 		indicated: computed(() => $i != null && $i.hasPendingReceivedFollowRequest),
 		to: '/my/follow-requests',
 	},
-	hatagoes: {
-		title: 'HataGoes',
-		icon: 'ti ti-sparkles',
-		show: computed(() => $i != null),
-		to: '/hatagoes',
-	},
-	mascot: {
-		title: i18n.ts._hata._common.mascot,
-		icon: 'ti ti-mood-smile',
-		show: computed(() => $i != null),
-		to: '/mascot',
-	},
-	earthquake: {
-		title: '地震・津波情報',
-		icon: 'ti ti-activity',
-		to: '/earthquake',
-	},
 	explore: {
 		title: i18n.ts.explore,
 		icon: 'ti ti-hash',
@@ -197,11 +180,6 @@ export const navbarItemDef = reactive({
 				icon: 'ti ti-bulb',
 				href: 'https://misskey-hub.net/docs/for-users/',
 				target: '_blank',
-			}, {
-				type: 'link',
-				text: i18n.ts._hata._common.featureGuide,
-				icon: 'ti ti-book',
-				to: '/hatask/intro',
 			}, {
 				type: 'link',
 				text: i18n.ts._mfc.cheatSheet,

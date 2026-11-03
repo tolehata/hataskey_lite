@@ -14,7 +14,6 @@ import { miLocalStorage } from '@/local-storage.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { $i } from '@/i.js';
 import { i18n } from '@/i18n.js';
-import { isHataskMoodReminderTimeZone } from '@/utility/hatask-mood-reminder.js';
 
 export const HATA_SETTINGS_TRANSFER_FORMAT = 'hataskey-custom-settings';
 export const HATA_SETTINGS_TRANSFER_VERSION = 3;
@@ -23,7 +22,7 @@ const copy = i18n.ts._hata._settingsTransfer._utility;
 const copyx = i18n.tsx._hata._settingsTransfer._utility;
 
 type PreferenceKey = keyof typeof PREF_DEF;
-export type HataSettingsCategoryId = 'general' | 'hatasabaUi' | 'hataSideStudio' | 'hatask' | 'hatady' | 'hatafeed' | 'mascot' | 'earthquake';
+export type HataSettingsCategoryId = 'general' | 'hatasabaUi' | 'hataSideStudio';
 
 type RegistryTarget = {
 	id: string;
@@ -40,8 +39,6 @@ type CategoryDefinition = {
 	preferenceKeys?: readonly PreferenceKey[];
 	localKeys?: readonly LocalStorageKey[];
 	registry?: readonly RegistryTarget[];
-	profileBadges?: boolean;
-	earthquakeNotifications?: boolean;
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> => value != null && typeof value === 'object' && !Array.isArray(value);
@@ -50,7 +47,6 @@ const isString = (value: unknown) => typeof value === 'string';
 const isBoolean = (value: unknown) => typeof value === 'boolean';
 const isFiniteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
 const isStringArray = (value: unknown) => Array.isArray(value) && value.every(isString);
-const isPollSeconds = (value: unknown) => typeof value === 'string' && ['10', '30', '60', '300', '600'].includes(value);
 const isPostDelaySeconds = (value: unknown) => typeof value === 'string' && ['3', '5', '10'].includes(value);
 // HataSideStudio 本体は読み込み時に端末設定を初期化するため、設定転送の構文検査からは
 // import しない。ここではファイルを開くだけで現在のサイドバー状態へ触れない純粋検査にする。
@@ -72,28 +68,20 @@ const localValidators: Partial<Record<LocalStorageKey, (value: unknown) => boole
 	hataHideMutedReactions: isBooleanString,
 	hataGlassUi: isBooleanString,
 	hataGlassUiBubble: isBooleanString,
-	hatadyTheme: value => value === 'paper' || value === 'espresso' || value === 'hataskey',
-	// 旧形式の設定ファイルを安全に読み取るため検証器だけ残す。新規の書き出し・読み込み対象にはしない。
-	hatadyLang: value => value === 'ja' || value === 'en' || value === 'auto',
-	hataEarthquakePref: isString,
-	hataEarthquakePollSec: isPollSeconds,
 	hataPostDelayEnabled: isBooleanString,
 	hataPostDelaySeconds: isPostDelaySeconds,
 	hataSideStudio: isHataSideStudioStorageString,
-	hataSideStudioUiS: isHataSideStudioStorageString,
 };
 
 const generalPreferenceKeys = [
-	'showHashtagButtonInPostForm', 'showDrawingButtonInPostForm', 'showLoginBonusPopup', 'timelineAnimationDirection',
+	'showHashtagButtonInPostForm', 'timelineAnimationDirection',
 	'postFormVisibilityBorder.enabled', 'postFormVisibilityBorder.width', 'postFormVisibilityBorder.color.public',
 	'postFormVisibilityBorder.color.home', 'postFormVisibilityBorder.color.followers', 'postFormVisibilityBorder.color.specified',
-	'weatherEffect.enabled', 'weatherEffect.scope', 'weatherEffect.duration', 'weatherEffect.intensity', 'weatherEffect.respectReducedMotion',
-	'hataFont.id', 'hataFont.customUrl', 'hataFont.customName', 'hataFont.customFontConsent',
 ] as const satisfies readonly PreferenceKey[];
 
 // お知らせ既読・チュートリアル完了などの進行状態は「設定」ではないため含めない。
 const hatasabaUiPreferenceKeys = [
-	'simpleUi.showTrendingTab', 'simpleUi.showHatadyTab', 'simpleUi.topNav', 'simpleUi.bottomNav', 'simpleUi.sidebar', 'simpleUi.widgetBorder',
+	'simpleUi.showTrendingTab', 'simpleUi.topNav', 'simpleUi.bottomNav', 'simpleUi.sidebar', 'simpleUi.widgetBorder',
 	'simpleUi.glassEffect', 'simpleUi.showPageHeader', 'simpleUi.deckMode', 'simpleUi.sidebarCollapsed',
 	'simpleUi.topNavMode', 'simpleUi.deckNoBannerBg', 'simpleUi.normalNoBannerBg', 'simpleUi.profileNoBannerBg',
 	'simpleUi.deckLatestNoteText', 'simpleUi.glassUiCardOpacity', 'simpleUi.showLegacyChannelPostButton',
@@ -107,7 +95,7 @@ const hatasabaUiPreferenceKeys = [
 export const HATA_SETTINGS_CATEGORIES: readonly CategoryDefinition[] = [
 	{
 		id: 'general', label: copy.categories.generalLabel, description: copy.categories.generalDescription,
-		preferenceKeys: generalPreferenceKeys, localKeys: ['hataHideMutedReactions'], profileBadges: true,
+		preferenceKeys: generalPreferenceKeys, localKeys: ['hataHideMutedReactions', 'hataPostDelayEnabled', 'hataPostDelaySeconds'],
 	},
 	{
 		id: 'hatasabaUi', label: copy.categories.hatasabaUiLabel, description: copy.categories.hatasabaUiDescription,
@@ -116,53 +104,7 @@ export const HATA_SETTINGS_CATEGORIES: readonly CategoryDefinition[] = [
 	},
 	{
 		id: 'hataSideStudio', label: copy.categories.hataSideStudioLabel, description: copy.categories.hataSideStudioDescription,
-		localKeys: ['hataSideStudio', 'hataSideStudioUiS'],
-	},
-	{
-		id: 'hatask', label: copy.categories.hataskLabel, description: copy.categories.hataskDescription,
-		registry: [{
-			id: 'settings', scope: ['client', 'hatask'], key: 'settings', validate: isRecord,
-			fields: {
-				darkMode: isBoolean, autoTheme: isBoolean, weekStart: value => value === 'mon' || value === 'sun',
-				showClock: isBoolean, showEvents: isBoolean, showFlower: isBoolean, showMoodSummary: isBoolean,
-				showMealSection: isBoolean, showFeedbackNotif: isBoolean, showEarthquake: isBoolean,
-				moodRemind: isBoolean, moodRemindTimes: isStringArray, moodRemindTimeZone: isHataskMoodReminderTimeZone,
-				showMealSummary: isBoolean, theme: isString, animations: isBoolean,
-			},
-		}],
-	},
-	{
-		id: 'hatady', label: copy.categories.hatadyLabel, description: copy.categories.hatadyDescription,
-		localKeys: ['hatadyTheme'],
-		registry: [{
-			id: 'display', scope: ['client', 'hatady'], key: 'display', validate: isRecord,
-			fields: {
-				theme: value => value === 'paper' || value === 'espresso' || value === 'hataskey',
-			},
-		}],
-	},
-	{
-		id: 'hatafeed', label: copy.categories.hatafeedLabel, description: copy.categories.hatafeedDescription,
-		preferenceKeys: ['hatafeed.leaves'],
-		localKeys: ['hataPostDelayEnabled', 'hataPostDelaySeconds'],
-	},
-	{
-		id: 'mascot', label: copy.categories.mascotLabel, description: copy.categories.mascotDescription,
-		registry: [{
-			id: 'displaySettings', scope: ['client', 'hataMascot'], key: 'displaySettings', validate: isRecord,
-			fields: {
-				tellBirthday: isBoolean, tellNotifications: isBoolean, tellRandomPhrases: isBoolean,
-				tellUnreadOnLogin: isBoolean, tellHataskNotifications: isBoolean, suppressStandardToast: isBoolean,
-				notifyDurationSec: isFiniteNumber, floatingEnabledDesktop: isBoolean, floatingEnabledMobile: isBoolean,
-				floatingX: isFiniteNumber, floatingY: isFiniteNumber, floatingBackdropOpacity: isFiniteNumber,
-				floatingBackdropColor: isString, floatingFlip: isBoolean, floatingOpacity: isFiniteNumber,
-				floatingMinimizeCorner: value => value === 'left' || value === 'right', idleMinSec: isFiniteNumber, idleMaxSec: isFiniteNumber,
-			},
-		}],
-	},
-	{
-		id: 'earthquake', label: '地震・津波情報', description: '地域、更新間隔、通知条件',
-		localKeys: ['hataEarthquakePref', 'hataEarthquakePollSec'], earthquakeNotifications: true,
+		localKeys: ['hataSideStudio'],
 	},
 ] as const;
 
@@ -170,8 +112,6 @@ type CategoryPayload = {
 	device?: Record<string, string>;
 	preferences?: Record<string, unknown>;
 	registry?: Record<string, unknown>;
-	profileBadges?: Record<string, boolean>;
-	earthquakeNotifications?: Record<string, unknown>;
 };
 
 export type HataSettingsTransferFile = {
@@ -229,16 +169,6 @@ const sidebarItemSchema: NestedSchema = {
 	},
 };
 
-const notificationFilterDetailsSchema: NestedSchema = {
-	type: 'object',
-	fields: {
-		includeBrands: optional({ type: 'nullable', value: { type: 'array', item: stringSchema(128, 1), maxItems: 100 } }),
-		includeHataskApp: optional({ type: 'boolean' }),
-		excludeHatadySubtypes: optional({ type: 'array', item: stringSchema(128, 1), maxItems: 100 }),
-		knownHatadySubtypes: optional({ type: 'array', item: stringSchema(128, 1), maxItems: 100 }),
-	},
-};
-
 const deckColumnSchema: NestedSchema = {
 	type: 'object',
 	fields: {
@@ -254,7 +184,6 @@ const deckColumnSchema: NestedSchema = {
 		fullHeight: optional({ type: 'boolean' }),
 		excludeTypes: optional({ type: 'array', item: stringSchema(128, 1), maxItems: 100 }),
 		notificationFilterKnownTypes: optional({ type: 'array', item: stringSchema(128, 1), maxItems: 100 }),
-		notificationFilterDetails: optional(notificationFilterDetailsSchema),
 		excludeBots: optional({ type: 'boolean' }),
 	},
 };
@@ -271,7 +200,6 @@ const deckTabSchema: NestedSchema = {
 		tabColor: optional(nullableStringSchema),
 		excludeTypes: optional({ type: 'array', item: stringSchema(128, 1), maxItems: 100 }),
 		notificationFilterKnownTypes: optional({ type: 'array', item: stringSchema(128, 1), maxItems: 100 }),
-		notificationFilterDetails: optional(notificationFilterDetailsSchema),
 		excludeBots: optional({ type: 'boolean' }),
 	},
 };
@@ -471,11 +399,6 @@ export async function createHataSettingsTransfer(selected: readonly HataSettings
 			const value = miLocalStorage.getItem(key);
 			if (value != null) (payload.device ??= {})[key] = value;
 		}
-		// UI Sをまだ開いていない端末でも、旧UIの構成を移行前の初期値として持ち運ぶ。
-		if (definition.id === 'hataSideStudio' && payload.device?.hataSideStudioUiS == null && payload.device?.hataSideStudio != null) {
-			payload.device ??= {};
-			payload.device.hataSideStudioUiS = payload.device.hataSideStudio;
-		}
 		for (const key of definition.preferenceKeys ?? []) {
 			(payload.preferences ??= {})[key] = cloneJson(preferAny.s[key]);
 		}
@@ -483,22 +406,6 @@ export async function createHataSettingsTransfer(selected: readonly HataSettings
 			const value = await registryGet(target);
 			const filtered = value === undefined ? undefined : filterRegistryFields(value, target);
 			if (filtered !== undefined) (payload.registry ??= {})[target.id] = filtered;
-		}
-		if (definition.profileBadges && $i) {
-			const user = $i as unknown as {
-				showUtageSuccessCount?: boolean;
-				showUtageInterruptionCount?: boolean;
-				showHataskFlowerCount?: boolean;
-			};
-			payload.profileBadges = {
-				showUtageSuccessCount: user.showUtageSuccessCount ?? true,
-				showUtageInterruptionCount: user.showUtageInterruptionCount ?? true,
-				showHataskFlowerCount: user.showHataskFlowerCount ?? true,
-			};
-		}
-		if (definition.earthquakeNotifications) {
-			const value = await misskeyApi('hata/earthquake/notification-settings', {}).catch(() => undefined) as unknown;
-			if (isRecord(value)) payload.earthquakeNotifications = cloneJson(value);
 		}
 		categories[definition.id] = payload;
 	}
@@ -533,9 +440,9 @@ export async function applyHataSettingsTransfer(file: HataSettingsTransferFile, 
 			if (!validator(value)) { result.skipped.push({ category: definition.id, key, reason: copy.validation.valueFormatMismatch }); continue; }
 			// HataSideStudio は共有refでサイドバーへ即時反映する。静的importすると設定転送を
 			// 開いただけで端末設定を初期化するため、実際に読み込んだ時だけ遅延反映する。
-			if (key === 'hataSideStudio' || key === 'hataSideStudioUiS') {
+			if (key === 'hataSideStudio') {
 				const { applyHataSideStudioStore, sanitizeHataSideStudioStore } = await import('@/utility/hata-side-studio.js');
-				applyHataSideStudioStore(sanitizeHataSideStudioStore(JSON.parse(value as string)), key);
+				applyHataSideStudioStore(sanitizeHataSideStudioStore(JSON.parse(value as string)));
 			} else miLocalStorage.setItem(key, value as string);
 			result.applied++;
 		}
@@ -580,38 +487,7 @@ export async function applyHataSettingsTransfer(file: HataSettingsTransferFile, 
 			}
 		}
 
-		if (definition.profileBadges && isRecord(payload.profileBadges)) {
-			const keys = ['showUtageSuccessCount', 'showUtageInterruptionCount', 'showHataskFlowerCount'] as const;
-			const updates: Partial<Record<(typeof keys)[number], boolean>> = {};
-			for (const key of keys) {
-				if (!Object.hasOwn(payload.profileBadges, key)) continue;
-				if (typeof payload.profileBadges[key] !== 'boolean') { result.skipped.push({ category: definition.id, key, reason: copy.validation.typeMismatch }); continue; }
-				updates[key] = payload.profileBadges[key];
-			}
-			if (Object.keys(updates).length > 0) {
-				try { await misskeyApi('i/update', updates); result.applied += Object.keys(updates).length; } catch {
-					result.skipped.push({ category: definition.id, key: 'profileBadges', reason: copy.validation.serverSaveFailed });
-				}
-			}
-		}
 
-		if (definition.earthquakeNotifications && isRecord(payload.earthquakeNotifications)) {
-			const source = payload.earthquakeNotifications;
-			const enabled = typeof source.enabled === 'boolean' ? source.enabled : undefined;
-			const mode = source.mode === 'pref' || source.mode === 'intensity' ? source.mode : undefined;
-			const threshold = typeof source.threshold === 'number' && [30, 40, 45, 50, 55, 60, 70].includes(source.threshold) ? source.threshold : undefined;
-			if (enabled === undefined || mode === undefined || threshold === undefined) {
-				result.skipped.push({ category: definition.id, key: 'notifications', reason: copy.validation.notificationSettingsFormatMismatch });
-			} else {
-				try {
-					await misskeyApi('hata/earthquake/notification-settings-update', {
-						enabled, mode, threshold,
-						pref: enabled && mode === 'pref' ? (miLocalStorage.getItem('hataEarthquakePref') ?? null) : null,
-					});
-					result.applied++;
-				} catch { result.skipped.push({ category: definition.id, key: 'notifications', reason: copy.validation.serverSaveFailed }); }
-			}
-		}
 	}
 	return result;
 }

@@ -58,128 +58,22 @@ describe('retired HataSNSCordUI tutorial achievement', () => {
 	});
 });
 
-describe('Utage achievement propagation', () => {
-	const successTitles = [
-		'いい感じ',
-		'板についてきたね',
-		'宴ブロンズ',
-		'宴シルバー',
-		'宴ゴールド',
-		'宴ダイヤモンド',
-		'宴プラチナ',
-		'宴マイスター',
-		'あと少し',
-		'前代未聞',
-	];
-	const interruptionTitles = [
-		'慣れてきた？',
-		'もうこんなにも？',
-		'隙がない',
-		'どこに隙が？',
-		'強すぎないか？',
-		'TLの番人',
-		'いつ寝てるの？',
-		'たまには見過ごしてみよう',
-		'長い道のり',
-		'宴ブロッカー',
-	];
-
-	test('registers all milestone and quick-interruption achievements in both allowlists and the badge catalog', () => {
-		for (let count = 10; count <= 100; count += 10) {
-			for (const id of [`utageSuccess${count}`, `utageInterruption${count}`]) {
-				expect(frontendAchievements.match(new RegExp(`'${id}'`, 'g')), id).toHaveLength(2);
-				expect(backendUserProfile.match(new RegExp(`'${id}'`, 'g')), id).toHaveLength(1);
-			}
-		}
-		const quickId = 'utageInterruptionWithin5Seconds';
-		expect(frontendAchievements.match(new RegExp(`'${quickId}'`, 'g'))).toHaveLength(2);
-		expect(backendUserProfile.match(new RegExp(`'${quickId}'`, 'g'))).toHaveLength(1);
-		expect(existsSync(resolve(repositoryRoot, 'fluent-emojis/dist/1f389.png'))).toBe(true);
-		expect(existsSync(resolve(repositoryRoot, 'fluent-emojis/dist/1f6e1.png'))).toBe(true);
-		expect(existsSync(resolve(repositoryRoot, 'fluent-emojis/dist/1f6d1.png'))).toBe(true);
-	});
-
-	test('keeps the requested Japanese titles and count descriptions', () => {
-		for (let index = 0; index < 10; index++) {
-			const count = (index + 1) * 10;
-			expect(jaLocale).toContain(`    _utageSuccess${count}:\n      title: "${successTitles[index]}"\n      description: "宴を${count}回成功させた"`);
-			expect(jaLocale).toContain(`    _utageInterruption${count}:\n      title: "${interruptionTitles[index]}"\n      description: "宴を${count}回阻止した"`);
-		}
-		expect(jaLocale).toContain('    _utageInterruptionWithin5Seconds:\n      title: "早すぎる宴の終わり"\n      description: "ほかの人の宴を開始から5秒以内に阻止した"');
-	});
-
-	test('provides fallback translations for every new achievement', () => {
-		for (let count = 10; count <= 100; count += 10) {
-			for (const id of [`utageSuccess${count}`, `utageInterruption${count}`]) {
-				expect(enLocale).toContain(`    _${id}:`);
-				expect(zhLocale).toContain(`    _${id}:`);
-			}
-		}
-		expect(enLocale).toContain('    _utageInterruptionWithin5Seconds:');
-		expect(zhLocale).toContain('    _utageInterruptionWithin5Seconds:');
-	});
-
-	test('keeps generated locale and SDK types synchronized while excluding server-only IDs from claim requests', () => {
-		const achievementNameStart = sdkTypes.indexOf('AchievementName:');
-		const achievementNameEnd = sdkTypes.indexOf(';', achievementNameStart);
-		const achievementNameSchema = sdkTypes.slice(achievementNameStart, achievementNameEnd);
-		const claimStart = sdkTypes.indexOf('    \'i___claim-achievement\': {');
-		const claimEnd = sdkTypes.indexOf('    \'i___delete-account\': {', claimStart);
-		const claimSchema = sdkTypes.slice(claimStart, claimEnd);
-		const serverOnlyIds = [
-			...Array.from({ length: 10 }, (_, index) => `utageSuccess${(index + 1) * 10}`),
-			...Array.from({ length: 10 }, (_, index) => `utageInterruption${(index + 1) * 10}`),
-			'utageInterruptionWithin5Seconds',
-		];
-
-		expect(achievementNameStart).toBeGreaterThan(-1);
-		expect(claimStart).toBeGreaterThan(-1);
-		expect(claimSchema).toContain('name: \'notes1\''); // 陽性対照: client claimable ID は生成済み
-		for (const id of serverOnlyIds) {
-			expect(achievementNameSchema, id).toContain(`'${id}'`);
-			expect(claimSchema, id).not.toContain(`'${id}'`);
-			expect(localeTypes, id).toContain(`"_${id}": {`);
-		}
-	});
-});
-
-
-describe('LTL punch server-only achievements', () => {
-	const punchIds = ['ltlPunchVictory', 'ltlPunchDefeat'];
-
-	test('registers badges, locale types and SDK result types without enabling client claims', () => {
-		const achievementSchema = sdkTypes.slice(sdkTypes.indexOf('AchievementName:'), sdkTypes.indexOf(';', sdkTypes.indexOf('AchievementName:')));
-		const claimSchema = sdkTypes.slice(sdkTypes.indexOf("    'i___claim-achievement': {"), sdkTypes.indexOf("    'i___delete-account': {"));
-		expect(claimSchema).toContain("name: 'notes1'");
-		for (const id of punchIds) {
-			expect(frontendAchievements.match(new RegExp(`'${id}'`, 'g')), id).toHaveLength(2);
-			expect(backendUserProfile.match(new RegExp(`'${id}'`, 'g')), id).toHaveLength(1);
-			expect(achievementSchema, id).toContain(`'${id}'`);
-			expect(claimSchema, id).not.toContain(`'${id}'`);
-			expect(localeTypes, id).toContain(`"_${id}": {`);
+describe('Utage and LTL punch achievements are removed in hataskey Lite', () => {
+	test('no removed achievement remains in allowlists, badges, locales or SDK types', () => {
+		for (const [name, source] of [['frontend', frontendAchievements], ['backend', backendUserProfile], ['ja', jaLocale], ['en', enLocale], ['zh', zhLocale], ['locale types', localeTypes], ['sdk', sdkTypes]] as const) {
+			expect(source.includes('utageSuccess') || source.includes('utageInterruption'), name).toBe(false);
+			expect(source.includes('ltlPunch'), name).toBe(false);
+			// 陽性対照: 残している実績は同じ探し方で各所に見つかる。
+			expect(source.includes('hatacordingUiTutorial'), name).toBe(true);
 		}
 	});
 
-	test('excludes punch and existing Utage achievements from frontend and backend claim allowlists', () => {
-		for (const source of [frontendAchievements, backendUserProfile]) {
-			expect(source).toContain('Extract<AchievementType, `utage${string}` | `ltlPunch${string}`>');
-			expect(source).toContain("=> !type.startsWith('utage') && !type.startsWith('ltlPunch')");
-		}
+	test('every achievement can be claimed by the client again', () => {
 		const claimEndpoint = read('packages/backend/src/server/api/endpoints/i/claim-achievement.ts');
-		expect(claimEndpoint).toContain("enum: CLIENT_CLAIMABLE_ACHIEVEMENT_TYPES");
-		expect(frontendAchievements).toMatch(/claimAchievement\(type: ClientClaimableAchievementType\) \{\s*if \(!CLIENT_CLAIMABLE_ACHIEVEMENT_TYPES.includes\(type\)\) return;/);
-	});
-
-	test('preserves the requested Japanese copy', () => {
-		expect(jaLocale).toContain('    _ltlPunchVictory:\n      title: "パンチは消えた..."\n      description: "そもそも何この手は？"');
-		expect(jaLocale).toContain('    _ltlPunchDefeat:\n      title: "TLはパンチされた..."\n      description: "パンチがあるゲームだったね..."');
-	});
-
-	test('credits the existing Twemoji graphics and presentation changes', () => {
-		const about = read('packages/frontend/src/pages/about.overview.vue');
-		expect(about).toContain('© Twitter, Inc. and other contributors');
-		expect(about).toContain('https://creativecommons.org/licenses/by/4.0/');
-		expect(about).toContain('https://github.com/discord/twemoji');
-		expect(about).toContain('元のSVGは変更していません。');
+		expect(claimEndpoint).toContain('enum: ACHIEVEMENT_TYPES');
+		expect(frontendAchievements).toContain('claimAchievement(type: typeof ACHIEVEMENT_TYPES[number]) {');
+		for (const source of [frontendAchievements, backendUserProfile, claimEndpoint]) {
+			expect(source).not.toContain('CLIENT_CLAIMABLE_ACHIEVEMENT_TYPES');
+		}
 	});
 });

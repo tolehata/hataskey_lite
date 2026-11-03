@@ -16,7 +16,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<template v-for="item in menu">
 				<div v-if="item === '-'" class="divider"></div>
 				<component :is="navbarItemDef[item].to ? 'MkA' : 'button'" v-else-if="navbarItemDef[item] && (navbarItemDef[item].show !== false)" v-click-anime v-tooltip="navbarItemDef[item].title" class="item _button" :class="item" activeClass="active" :to="navbarItemDef[item].to" v-on="navbarItemDef[item].action ? { click: navbarItemDef[item].action } : {}">
-					<HataAppNavIcon v-if="hataAppForMenuIcon(item)" :app="hataAppForMenuIcon(item)!" :size="22" :monochrome="store.r.darkMode.value"/><i v-else class="ti-fw" :class="navbarItemDef[item].icon"></i>
+					<i class="ti-fw" :class="navbarItemDef[item].icon"></i>
 					<span v-if="navbarItemDef[item].indicated" class="indicator _blink"><i class="_indicatorCircle"></i></span>
 				</component>
 			</template>
@@ -61,10 +61,6 @@ import { getAccountMenu } from '@/accounts.js';
 import { $i } from '@/i.js';
 import { getHTMLElementOrNull } from '@/utility/get-dom-node-or-null.js';
 import { haptic } from '@/utility/haptic.js';
-import HataAppNavIcon from '@/components/HataAppNavIcon.vue';
-import { hataAppForMenuIcon } from '@/utility/hata-app-brand.js';
-import { normalizeHatagoesMenu } from '@/utility/hatagoes-sidebar.js';
-import { store } from '@/store.js';
 
 const WINDOW_THRESHOLD = 1400;
 
@@ -75,7 +71,7 @@ const handleResize = () => {
 window.addEventListener('resize', handleResize, { passive: true });
 
 const settingsWindowed = ref(window.innerWidth > WINDOW_THRESHOLD);
-const menu = computed(() => normalizeHatagoesMenu(prefer.r.menu.value));
+const menu = ref(prefer.s.menu);
 // const menuDisplay = computed(store.makeGetterSetter('menuDisplay'));
 const otherNavItemIndicated = computed<boolean>(() => {
 	for (const def in navbarItemDef) {

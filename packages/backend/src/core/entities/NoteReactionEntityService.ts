@@ -9,7 +9,6 @@ import type { NoteReactionsRepository } from '@/models/_.js';
 import type { Packed } from '@/misc/json-schema.js';
 import { bindThis } from '@/decorators.js';
 import { IdService } from '@/core/IdService.js';
-import { PrivateChannelNoteVisibilityError } from '@/misc/private-channel-note-visibility-error.js';
 import type { OnModuleInit } from '@nestjs/common';
 import type { } from '@/models/Blocking.js';
 import type { MiUser } from '@/models/User.js';
@@ -116,10 +115,6 @@ export class NoteReactionEntityService implements OnModuleInit {
 		const _users = reactions.map(({ user, userId }) => user ?? userId);
 		const _userMap = await this.userEntityService.packMany(_users, me)
 			.then(users => new Map(users.map(u => [u.id, u])));
-		const packed = await Promise.all(reactions.map(reaction => this.packWithNote(reaction, me, opts, { packedUser: _userMap.get(reaction.userId) }).catch(error => {
-			if (error instanceof PrivateChannelNoteVisibilityError) return null;
-			throw error;
-		})));
-		return packed.filter((reaction): reaction is Packed<'NoteReactionWithNote'> => reaction != null);
+		return Promise.all(reactions.map(reaction => this.packWithNote(reaction, me, opts, { packedUser: _userMap.get(reaction.userId) })));
 	}
 }

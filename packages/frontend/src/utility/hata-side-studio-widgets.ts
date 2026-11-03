@@ -103,11 +103,6 @@ export const HATA_SIDE_NATIVE_WIDGET_REGISTRY = {
 		normal: { minHeight: 220, data: { showHeader: true, height: 220 } },
 		large: { minHeight: 340, data: { showHeader: true, height: 340 } },
 	} }),
-	externalNotifications: defineWidget('外部通知', 'ti ti-bell-ringing', { sizes: {
-		small: { minHeight: 88, data: { showHeader: false, height: 88 } },
-		normal: { minHeight: 168, data: { showHeader: true, height: 168 } },
-		large: { minHeight: 264, data: { showHeader: true, height: 264 } },
-	} }),
 	timeline: defineWidget('タイムライン', 'ti ti-home', { sizes: {
 		small: { minHeight: 160, data: { showHeader: false, height: 160 } },
 		normal: { minHeight: 300, data: { showHeader: true, height: 300 } },
@@ -242,21 +237,6 @@ export const HATA_SIDE_NATIVE_WIDGET_REGISTRY = {
 		normal: { minHeight: 220, data: { showSurfacePressure: false, show12Hours: true } },
 		large: { minHeight: 340, data: { showSurfacePressure: true, show12Hours: true } },
 	} }),
-	mascot: defineWidget('マスコット', 'ti ti-paw', { sizes: {
-		small: { minHeight: 92, data: { showHeader: false, size: 'small', showPhrase: false } },
-		normal: { minHeight: 150, data: { showHeader: false, size: 'small', showPhrase: true } },
-		large: { minHeight: 220, data: { showHeader: true, size: 'medium', showPhrase: true } },
-	} }),
-	earthquake: defineWidget('地震・津波情報', 'ti ti-activity-heartbeat', { sizes: {
-		small: { minHeight: 94, data: { showHeader: false, maxItems: 1 } },
-		normal: { minHeight: 140, data: { showHeader: true, maxItems: 1 } },
-		large: { minHeight: 190, data: { showHeader: true, maxItems: 1 } },
-	} }),
-	hataskFlowers: defineWidget('Hatask お花', 'ti ti-flower', { sizes: {
-		small: { minHeight: 84, data: { showHeader: false, maxItems: '3' } },
-		normal: { minHeight: 132, data: { showHeader: false, maxItems: '3' } },
-		large: { minHeight: 190, data: { showHeader: true, maxItems: '5' } },
-	} }),
 	seasonalTree: defineWidget('季節の木', 'ti ti-tree', { sizes: {
 		small: { minHeight: 180, data: { showHeader: false, height: 180, season: 'auto', timeOfDay: 'auto', animated: true, windStrength: 60, showCaption: true } },
 		normal: { minHeight: 240, data: { showHeader: true, height: 240, season: 'auto', timeOfDay: 'auto', animated: true, windStrength: 60, showCaption: true } },
@@ -274,10 +254,8 @@ export const HATA_SIDE_NATIVE_WIDGET_REGISTRY = {
 	} }),
 } as const satisfies Record<string, HataSideWidgetDefinition>;
 
-// 旧HataSideStudioだけが持っていた種類。flowers は native の hataskFlowers へ
-// 無損失で移せるが、announcements には対応する native component がまだ無いため残す。
+// 旧HataSideStudioだけが持っていた種類。announcements には対応する native component がまだ無いため残す。
 export const HATA_SIDE_LEGACY_WIDGET_REGISTRY = {
-	flowers: defineWidget('育てたお花', 'ti ti-flower', { legacy: true }),
 	announcements: defineWidget('お知らせ', 'ti ti-speakerphone', { legacy: true }),
 } as const satisfies Record<string, HataSideWidgetDefinition>;
 
@@ -285,10 +263,6 @@ export const HATA_SIDE_WIDGET_REGISTRY = {
 	...HATA_SIDE_NATIVE_WIDGET_REGISTRY,
 	...HATA_SIDE_LEGACY_WIDGET_REGISTRY,
 } as const satisfies Record<string, HataSideWidgetDefinition>;
-
-export const HATA_SIDE_WIDGET_LEGACY_ALIASES = {
-	flowers: 'hataskFlowers',
-} as const;
 
 export type HataSideNativeWidgetKind = keyof typeof HATA_SIDE_NATIVE_WIDGET_REGISTRY;
 export type HataSideLegacyWidgetKind = keyof typeof HATA_SIDE_LEGACY_WIDGET_REGISTRY;
@@ -299,26 +273,21 @@ export function isHataSideWidgetKind(value: unknown): value is HataSideWidgetKin
 }
 
 export function normalizeHataSideWidgetKind(value: unknown): HataSideWidgetKind {
-	if (!isHataSideWidgetKind(value)) return 'clock';
-	return value === 'flowers' ? HATA_SIDE_WIDGET_LEGACY_ALIASES.flowers : value;
+	return isHataSideWidgetKind(value) ? value : 'clock';
 }
 
 const HATA_SIDE_WIDGET_DEFAULT_LABEL_ALIASES: Partial<Record<HataSideWidgetKind, readonly string[]>> = {
-	// v2以前の flowers は sanitize 時に hataskFlowers へ移るが、当時の既定名は残る。
-	hataskFlowers: ['Hatask お花', '育てたお花'],
 };
 
 /**
  * ウィジェット名を表示時だけ共通localeへ解決する。
  *
  * `storedLabel` は既存プロファイルとの互換用であり、利用者が変更した名前はそのまま返す。
- * 翻訳対象外の地震・津波情報は、localeに関係なく保存済み表示を維持する。
  */
 export function getHataSideWidgetDisplayLabel(value: unknown, storedLabel?: string): string {
 	const kind = normalizeHataSideWidgetKind(value);
 	const canonicalLabel = HATA_SIDE_WIDGET_REGISTRY[kind].label;
 	const fallback = typeof storedLabel === 'string' && storedLabel.length > 0 ? storedLabel : canonicalLabel;
-	if (kind === 'earthquake') return fallback;
 
 	const defaultAliases = HATA_SIDE_WIDGET_DEFAULT_LABEL_ALIASES[kind] ?? [canonicalLabel];
 	if (typeof storedLabel === 'string' && storedLabel.length > 0 && !defaultAliases.includes(storedLabel)) return storedLabel;

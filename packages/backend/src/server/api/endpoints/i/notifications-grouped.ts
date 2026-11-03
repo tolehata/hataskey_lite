@@ -11,7 +11,6 @@ import {
 	obsoleteNotificationTypes,
 	groupedNotificationTypes,
 	FilterUnionByProperty,
-	hatadyNotificationSubtypes,
 	notificationFilterTypes,
 } from '@/types.js';
 import { Endpoint } from '@/server/api/endpoint-base.js';
@@ -54,11 +53,6 @@ export const paramDef = {
 		untilDate: { type: 'integer' },
 		markAsRead: { type: 'boolean', default: true },
 		excludeBots: { type: 'boolean', default: false },
-		brand: { type: 'string', enum: ['all', 'standard', 'hatady', 'hatask', 'hataFeed'], default: 'all' },
-		includeBrands: { type: 'array', items: { type: 'string', enum: ['standard', 'hatady', 'hatask', 'hataFeed'] } },
-		includeHataskApp: { type: 'boolean' },
-		includeHatadySubtypes: { type: 'array', items: { type: 'string', enum: hatadyNotificationSubtypes } },
-		excludeHatadySubtypes: { type: 'array', items: { type: 'string', enum: hatadyNotificationSubtypes } },
 		// 後方互換のため、廃止された通知タイプも受け付ける
 		includeTypes: { type: 'array', items: {
 			type: 'string', enum: [...notificationFilterTypes, ...obsoleteNotificationTypes],
@@ -247,11 +241,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				limit: ps.limit + EXTRA_LIMIT,
 				includeTypes,
 				excludeTypes,
-				brand: ps.brand,
-				includeBrands: ps.includeBrands,
-				includeHataskApp: ps.includeHataskApp,
-				includeHatadySubtypes: ps.includeHatadySubtypes,
-				excludeHatadySubtypes: ps.excludeHatadySubtypes,
 				excludeBots: ps.excludeBots,
 			});
 

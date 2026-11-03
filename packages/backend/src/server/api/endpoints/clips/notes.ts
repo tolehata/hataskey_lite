@@ -91,7 +91,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				.andWhere('clipNote.clipId = :clipId', { clipId: clip.id });
 
 			this.queryService.generateVisibilityQuery(query, me);
-			await this.queryService.generateChannelVisibilityQuery(query, me);
 			this.queryService.generateBlockedHostQueryForNote(query);
 			// this.queryService.generateSuspendedUserQueryForNote(query); // To avoid problems with removing notes, ignoring suspended user for now
 			if (me) {

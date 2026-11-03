@@ -80,7 +80,7 @@ function createRouter(settingsPage: Component = emptyPage, studioPage: Component
 		{ path: '/', component: emptyPage },
 		{ path: '/settings', component: settingsPage },
 		{ path: '/hata-side-studio', component: studioPage },
-		{ path: '/hatady', component: emptyPage },
+		{ path: '/other', component: emptyPage },
 	], '/settings', true, emptyPage);
 }
 
@@ -143,7 +143,7 @@ describe('settings leave guard with Nirax and cached page lifecycles', () => {
 		router.on('push', pushed);
 		await mountRouter(router);
 		for (let round = 0; round < 3; round++) {
-			for (const path of ['/', '/hatady']) {
+			for (const path of ['/', '/other']) {
 				router.pushByPath(path);
 				await settle();
 				expect(router.getCurrentFullPath()).toBe(path);
@@ -204,7 +204,7 @@ describe('settings leave guard with Nirax and cached page lifecycles', () => {
 			.mockReturnValueOnce(newConfirmation.promise);
 		const guard = createGuard(router, requestDiscard);
 		guard.install();
-		router.pushByPath('/hatady');
+		router.pushByPath('/other');
 		guard.dispose();
 		guard.install();
 		router.pushByPath('/');
@@ -252,7 +252,7 @@ describe('settings leave guard with Nirax and cached page lifecycles', () => {
 		const inactiveUnload = new Event('beforeunload', { cancelable: true });
 		window.dispatchEvent(inactiveUnload);
 		expect(inactiveUnload.defaultPrevented).toBe(false);
-		for (const path of ['/', '/hatady']) {
+		for (const path of ['/', '/other']) {
 			router.pushByPath(path);
 			await settle();
 			expect(router.getCurrentFullPath()).toBe(path);
@@ -279,7 +279,7 @@ describe('settings leave guard with Nirax and cached page lifecycles', () => {
 		listeners.push(() => window.removeEventListener('popstate', browserRouter));
 		const guard = createGuard(router, requestDiscard);
 		guard.install();
-		for (const path of ['/hatady', '/']) {
+		for (const path of ['/other', '/']) {
 			window.history.replaceState({}, '', path);
 			window.dispatchEvent(new PopStateEvent('popstate'));
 			expect(window.location.pathname).toBe('/settings');

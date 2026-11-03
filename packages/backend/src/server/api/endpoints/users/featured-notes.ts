@@ -87,7 +87,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 			this.queryService.generateBlockedHostQueryForNote(query);
 			this.queryService.generateSuspendedUserQueryForNote(query);
-			await this.queryService.generateChannelVisibilityQuery(query, me);
 			if (me == null) this.queryService.generateUgcVisibilityQueryForVisitor(query);
 
 			const notes = (await query.getMany()).filter(note => {

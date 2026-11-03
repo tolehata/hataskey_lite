@@ -19,7 +19,6 @@ import vary from 'vary';
 import htmlSafeJsonStringify from 'htmlescape';
 import type { Config } from '@/config.js';
 import { getNoteSummary } from '@/misc/get-note-summary.js';
-import { PrivateChannelNoteVisibilityError } from '@/misc/private-channel-note-visibility-error.js';
 import { DI } from '@/di-symbols.js';
 import * as Acct from '@/misc/acct.js';
 import { UserEntityService } from '@/core/entities/UserEntityService.js';
@@ -232,7 +231,7 @@ export class ClientServerService {
 		}
 
 		return {
-			instanceName: meta.name ?? 'CherryPick',
+			instanceName: meta.name ?? 'Hataskey Lite',
 			icon: resolveAppIconUrl(meta, 192, this.config.url),
 			appleTouchIcon: resolveAppIconUrl(meta, 512, this.config.url),
 			themeColor: meta.themeColor,
@@ -480,7 +479,7 @@ export class ClientServerService {
 
 		// OpenSearch XML
 		fastify.get('/opensearch.xml', async (request, reply) => {
-			const name = this.meta.name ?? 'CherryPick';
+			const name = this.meta.name ?? 'Hataskey Lite';
 			let content = '';
 			content += '<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/" xmlns:moz="http://www.mozilla.org/2006/browser/search/">';
 			content += `<ShortName>${name}</ShortName>`;
@@ -501,7 +500,7 @@ export class ClientServerService {
 			return await reply.view('base', {
 				img: this.meta.bannerUrl,
 				url: this.config.url,
-				title: this.meta.name ?? 'CherryPick',
+				title: this.meta.name ?? 'Hataskey Lite',
 				// 上流 2026.10.1: サーバーの紹介にHTMLを使ってもリンクプレビューの説明文にタグを出さない
 				desc: this.meta.description == null ? undefined : htmlToPlainText(this.meta.description),
 				...await this.generateCommonPugData(this.meta),
@@ -659,11 +658,7 @@ export class ClientServerService {
 					(this.meta.ugcVisibilityForVisitor === 'local' && note.userHost == null)
 				)
 			) {
-				const _note = await this.noteEntityService.pack(note).catch(error => {
-					if (error instanceof PrivateChannelNoteVisibilityError) return null;
-					throw error;
-				});
-				if (_note == null) return await renderBase(reply);
+				const _note = await this.noteEntityService.pack(note);
 				const profile = await this.userProfilesRepository.findOneByOrFail({ userId: note.userId });
 				reply.header('Cache-Control', 'public, max-age=15');
 				if (profile.preventAiLearning) {
@@ -883,7 +878,7 @@ export class ClientServerService {
 
 			reply.header('Cache-Control', 'public, max-age=3600');
 			return await reply.view('base-embed', {
-				title: this.meta.name ?? 'CherryPick',
+				title: this.meta.name ?? 'Hataskey Lite',
 				...await this.generateCommonPugData(this.meta),
 				embedCtx: htmlSafeJsonStringify({
 					user: _user,
@@ -905,15 +900,11 @@ export class ClientServerService {
 			if (['specified', 'followers'].includes(note.visibility)) return;
 			if (note.userHost != null) return;
 
-			const _note = await this.noteEntityService.pack(note, null, { detail: true }).catch(error => {
-				if (error instanceof PrivateChannelNoteVisibilityError) return null;
-				throw error;
-			});
-			if (_note == null) return;
+			const _note = await this.noteEntityService.pack(note, null, { detail: true });
 
 			reply.header('Cache-Control', 'public, max-age=3600');
 			return await reply.view('base-embed', {
-				title: this.meta.name ?? 'CherryPick',
+				title: this.meta.name ?? 'Hataskey Lite',
 				...await this.generateCommonPugData(this.meta),
 				embedCtx: htmlSafeJsonStringify({
 					note: _note,
@@ -934,7 +925,7 @@ export class ClientServerService {
 
 			reply.header('Cache-Control', 'public, max-age=3600');
 			return await reply.view('base-embed', {
-				title: this.meta.name ?? 'CherryPick',
+				title: this.meta.name ?? 'Hataskey Lite',
 				...await this.generateCommonPugData(this.meta),
 				embedCtx: htmlSafeJsonStringify({
 					clip: _clip,
@@ -947,7 +938,7 @@ export class ClientServerService {
 
 			reply.header('Cache-Control', 'public, max-age=3600');
 			return await reply.view('base-embed', {
-				title: this.meta.name ?? 'CherryPick',
+				title: this.meta.name ?? 'Hataskey Lite',
 				...await this.generateCommonPugData(this.meta),
 			});
 		});

@@ -3,26 +3,17 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { DEFAULT_FLOWER_RULES } from '@/core/hatask-flower-v2.js';
 import { Entity, Column, PrimaryColumn, ManyToOne } from 'typeorm';
 import { id } from './util/id.js';
 import { MiUser } from './User.js';
-import { defaultHataskSupportSettings } from '@/core/hatask-support.js';
-import type { HataskSupportSettings } from '@/core/hatask-support.js';
 
 @Entity('meta')
 export class MiMeta {
-	@Column('jsonb', { default: DEFAULT_FLOWER_RULES })
-	public hataskFlowerRules: typeof DEFAULT_FLOWER_RULES;
-
 	@PrimaryColumn({
 		type: 'varchar',
 		length: 32,
 	})
 	public id: string;
-
-	@Column('jsonb', { default: defaultHataskSupportSettings() })
-	public hataskSupport: HataskSupportSettings;
 
 	@Column({
 		...id(),
@@ -394,7 +385,7 @@ export class MiMeta {
 
 	@Column('varchar', {
 		length: 1024,
-		default: 'https://github.com/tolehata/hataskey',
+		default: 'https://github.com/tolehata/hataskey_lite',
 		nullable: true,
 	})
 	public repositoryUrl: string | null;

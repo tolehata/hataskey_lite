@@ -33,8 +33,6 @@ import { HttpRequestService } from '@/core/HttpRequestService.js';
 import type { Config } from '@/config.js';
 import { AvatarDecorationService } from '@/core/AvatarDecorationService.js';
 import { notificationRecieveConfig } from '@/models/json-schema/user.js';
-import { noteCharmSettingsSchema, validateNoteCharmUpdate } from '@/misc/note-charm.js';
-import { isLocalProfileBadgeOnlyUpdate } from '@/misc/local-profile-badge.js';
 import { ApiLoggerService } from '../../ApiLoggerService.js';
 import { ApiError } from '../../error.js';
 
@@ -123,18 +121,6 @@ export const meta = {
 			id: '25c90186-4ab0-49c8-9bba-a1fa6c202ba4',
 		},
 
-		invalidNoteCharmFile: {
-			message: 'The note charm must use your non-sensitive PNG, WebP or JPEG file up to 5 MiB.',
-			code: 'INVALID_NOTE_CHARM_FILE',
-			id: '934b07a3-0bb3-49cc-954e-7d7505ff394b',
-		},
-
-		noteCharmNotConsented: {
-			message: 'You must agree to the note charm terms before using this feature.',
-			code: 'NOTE_CHARM_NOT_CONSENTED',
-			id: '017f8d7c-d8f0-4bbb-ae6c-35a5a41547b2',
-		},
-
 		restrictedByRole: {
 			message: 'This feature is restricted by your role.',
 			code: 'RESTRICTED_BY_ROLE',
@@ -173,7 +159,6 @@ export const paramDef = {
 		location: { ...locationSchema, nullable: true },
 		birthday: { ...birthdaySchema, nullable: true },
 		lang: { type: 'string', enum: [null, ...Object.keys(langmap)] as string[], nullable: true },
-		noteCharm: noteCharmSettingsSchema,
 		avatarId: { type: 'string', format: 'misskey:id', nullable: true },
 		avatarDecorations: { type: 'array', maxItems: 16, items: {
 			type: 'object',
@@ -206,10 +191,6 @@ export const paramDef = {
 		isExplorable: { type: 'boolean' },
 		hideOnlineStatus: { type: 'boolean' },
 		publicReactions: { type: 'boolean' },
-		showUtageSuccessCount: { type: 'boolean' },
-		showUtageInterruptionCount: { type: 'boolean' },
-		showHataskFlowerCount: { type: 'boolean' },
-		hataskFlowerCount: { type: 'integer', minimum: 0, maximum: 1000000 },
 		carefulBot: { type: 'boolean' },
 		autoAcceptFollowed: { type: 'boolean' },
 		followApprovalLocalSeconds: { type: 'integer', nullable: true, minimum: 0, maximum: FOLLOW_APPROVAL_MAX_SECONDS },
@@ -255,12 +236,6 @@ export const paramDef = {
 				chatRoomInvitationReceived: notificationRecieveConfig,
 				achievementEarned: notificationRecieveConfig,
 				app: notificationRecieveConfig,
-				hataFeed: notificationRecieveConfig,
-				hatady: notificationRecieveConfig,
-				hataskFlowerReady: notificationRecieveConfig,
-				hataskFlowerBloomed: notificationRecieveConfig,
-				hataskZukanUpdated: notificationRecieveConfig,
-				hataskFestivalBloomed: notificationRecieveConfig,
 				test: notificationRecieveConfig,
 			},
 		},
@@ -383,10 +358,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			if (typeof ps.isExplorable === 'boolean') updates.isExplorable = ps.isExplorable;
 			if (typeof ps.hideOnlineStatus === 'boolean') updates.hideOnlineStatus = ps.hideOnlineStatus;
 			if (typeof ps.publicReactions === 'boolean') profileUpdates.publicReactions = ps.publicReactions;
-			if (typeof ps.showUtageSuccessCount === 'boolean') profileUpdates.showUtageSuccessCount = ps.showUtageSuccessCount;
-			if (typeof ps.showUtageInterruptionCount === 'boolean') profileUpdates.showUtageInterruptionCount = ps.showUtageInterruptionCount;
-			if (typeof ps.showHataskFlowerCount === 'boolean') profileUpdates.showHataskFlowerCount = ps.showHataskFlowerCount;
-			if (typeof ps.hataskFlowerCount === 'number') profileUpdates.hataskFlowerCount = ps.hataskFlowerCount;
 			if (typeof ps.isBot === 'boolean') updates.isBot = ps.isBot;
 			if (typeof ps.carefulBot === 'boolean') profileUpdates.carefulBot = ps.carefulBot;
 			if (typeof ps.autoAcceptFollowed === 'boolean') profileUpdates.autoAcceptFollowed = ps.autoAcceptFollowed;
@@ -407,18 +378,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			}
 			if (typeof ps.autoSensitive === 'boolean') profileUpdates.autoSensitive = ps.autoSensitive;
 			if (ps.emailNotificationTypes !== undefined) profileUpdates.emailNotificationTypes = ps.emailNotificationTypes;
-
-			if (ps.noteCharm !== undefined) {
-				if (ps.noteCharm !== null) {
-					if (profile.hataConsentNoteCharm !== true) throw new ApiError(meta.errors.noteCharmNotConsented);
-					policies ??= await this.roleService.getUserPolicies(user.id);
-					if (!policies.canUseNoteCharm) throw new ApiError(meta.errors.restrictedByRole);
-					const file = await this.driveFilesRepository.findOneBy({ id: ps.noteCharm.fileId });
-					const error = validateNoteCharmUpdate(ps.noteCharm, policies.canUseNoteCharm, user.id, file);
-					if (error) throw new ApiError(meta.errors[error]);
-				}
-				updates.noteCharm = ps.noteCharm;
-			}
 
 			if (ps.avatarId) {
 				policies ??= await this.roleService.getUserPolicies(user.id);
@@ -461,11 +420,15 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			if (ps.avatarDecorations) {
 				policies ??= await this.roleService.getUserPolicies(user.id);
 				const decorations = await this.avatarDecorationService.getAll(true);
-				const availability = await this.avatarDecorationService.getAvailability(user.id, decorations);
+				const myRoles = await this.roleService.getUserRoles(user.id);
+				const allRoles = await this.roleService.getRoles();
+				const decorationIds = decorations
+					.filter(d => d.roleIdsThatCanBeUsedThisDecoration.filter(roleId => allRoles.some(r => r.id === roleId)).length === 0 || myRoles.some(r => d.roleIdsThatCanBeUsedThisDecoration.includes(r.id)))
+					.map(d => d.id);
 
 				if (ps.avatarDecorations.length > policies.avatarDecorationLimit) throw new ApiError(meta.errors.restrictedByRole);
 
-				updates.avatarDecorations = ps.avatarDecorations.filter(d => availability.get(d.id) === null).map(d => ({
+				updates.avatarDecorations = ps.avatarDecorations.filter(d => decorationIds.includes(d.id)).map(d => ({
 					id: d.id,
 					angle: d.angle ?? 0,
 					flipH: d.flipH ?? false,
@@ -606,11 +569,8 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				await this.userFollowingService.acceptAllFollowRequests(user);
 			}
 
-			// フォロワーにUpdateを配信。旗鯖ローカルの実績バッジだけを
-			// 更新した場合は、ActivityPub Person に変化が無いので連合通信自体を行わない。
-			if (!isLocalProfileBadgeOnlyUpdate(Object.keys(ps))) {
-				this.accountUpdateService.publishToFollowers(user.id);
-			}
+			// フォロワーにUpdateを配信
+			this.accountUpdateService.publishToFollowers(user.id);
 
 			const urls = updatedProfile.fields.filter(x => x.value.startsWith('https://'));
 			for (const url of urls) {

@@ -38,16 +38,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<h3 :class="$style.cardTitle">{{ section.label }}</h3>
 			<SettingsSectionExplainer v-if="section.explain" :sectionId="section.sectionId" :motionEnabled="motionEnabled"/>
 			<div :class="$style.links">
-				<MkA v-if="section.sectionId === 'apps.section0'" :class="$style.link" to="/hatagoes?view=settings" data-settings-destination-id="hatagoes-settings">
-					<HataAppNavIcon app="hatagoes" :size="24" :monochrome="store.r.darkMode.value"/>
-					<span :class="$style.linkLabel" data-brand="HataGoes"><HataAppWordmark app="hatagoes" :onDark="store.r.darkMode.value"/></span>
-					<i class="ti ti-chevron-right" aria-hidden="true"></i>
-				</MkA>
 				<button v-for="destination in section.destinations" :key="destination.id" type="button" :class="$style.link" :data-settings-destination-id="destination.id" @click="emit('openDestination', destination.id, $event)">
-					<HataAppNavIcon v-if="destination.app != null" :app="destination.app" :size="24" :monochrome="store.r.darkMode.value"/>
-					<img v-else-if="destination.iconImage" :class="$style.linkImage" :src="destination.iconImage" alt="" aria-hidden="true">
+					<img v-if="destination.iconImage" :class="$style.linkImage" :src="destination.iconImage" alt="" aria-hidden="true">
 					<i v-else :class="destination.icon" aria-hidden="true"></i>
-					<span :class="$style.linkLabel" :data-brand="destination.brand"><HataAppWordmark v-if="destination.app != null && destination.label === destination.brand" :app="destination.app" :onDark="store.r.darkMode.value"/><template v-else>{{ destination.label }}</template></span>
+					<span :class="$style.linkLabel" :data-brand="destination.brand">{{ destination.label }}</span>
 					<i class="ti ti-chevron-right" aria-hidden="true"></i>
 				</button>
 			</div>
@@ -72,9 +66,6 @@ import SettingsSectionExplainer from './SettingsSectionExplainer.vue';
 import type { Component } from 'vue';
 import type { SettingsBentoCategoryId, SettingsBentoSectionId } from './settings-bento-catalog.js';
 import type { SettingsShellActionId } from './settings-shell-actions.js';
-import HataAppNavIcon from '@/components/HataAppNavIcon.vue';
-import HataAppWordmark from '@/components/HataAppWordmark.vue';
-import { hataAppForSettingsBrand } from '@/utility/hata-app-brand.js';
 import { store } from '@/store.js';
 import MkButton from '@/components/MkButton.vue';
 import MkA from '@/components/global/MkA.vue';
@@ -134,7 +125,7 @@ const hataCustomSections: Partial<Record<SettingsBentoCategoryId, SettingsBentoS
 const cherryPickSections: Partial<Record<SettingsBentoCategoryId, SettingsBentoSectionId>> = { advanced: 'advanced.section0', appearance: 'appearance.section3', timeline: 'timeline.section4', post: 'post.section0', notify: 'notify.section1' };
 const hataCustomSection = computed(() => hataCustomSections[props.categoryId]);
 const cherryPickSection = computed(() => cherryPickSections[props.categoryId]);
-const hasHataCustom = computed(() => ['data', 'appearance', 'timeline', 'post', 'notify'].includes(props.categoryId));
+const hasHataCustom = computed(() => ['data', 'appearance', 'timeline', 'post'].includes(props.categoryId));
 const hasCherryPick = computed(() => ['advanced', 'appearance', 'timeline', 'post', 'notify'].includes(props.categoryId));
 // These detail links share a topic with an inline form, but are separate capsule destinations.
 const linkSectionIcons: Partial<Record<SettingsBentoSectionId, string>> = {
@@ -150,7 +141,7 @@ const categoryDestinationSections = computed(() => bentoDestinationLinkSections.
 	destinations: section.destinationIds.map(id => {
 		const destination = destinationForId(id);
 		if (destination == null) throw new Error(`[settings-bento] unknown destination: ${id}`);
-		return { ...destination, app: hataAppForSettingsBrand(destination.brand) };
+		return destination;
 	}),
 })));
 const leadingDestinations = computed(() => categoryDestinationSections.value.flatMap(section => section.destinations).filter(destination => bentoLeadingDestinationIds.includes(destination.id)));

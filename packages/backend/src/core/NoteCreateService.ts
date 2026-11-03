@@ -17,7 +17,7 @@ import type { IMentionedRemoteUsers } from '@/models/Note.js';
 import { MiNote } from '@/models/Note.js';
 import { MiEvent } from '@/models/Event.js';
 import type { IEvent } from '@/models/Event.js';
-import type { BlockingsRepository, ChannelFollowingsRepository, ChannelMembersRepository, ChannelsRepository, DriveFilesRepository, FollowingsRepository, InstancesRepository, MiFollowing, MiMeta, MutingsRepository, NotesRepository, NoteThreadMutingsRepository, UserListMembershipsRepository, UserProfilesRepository, UsersRepository } from '@/models/_.js';
+import type { BlockingsRepository, ChannelFollowingsRepository, ChannelsRepository, DriveFilesRepository, FollowingsRepository, InstancesRepository, MiFollowing, MiMeta, MutingsRepository, NotesRepository, NoteThreadMutingsRepository, UserListMembershipsRepository, UserProfilesRepository, UsersRepository } from '@/models/_.js';
 import type { MiDriveFile } from '@/models/DriveFile.js';
 import type { MiApp } from '@/models/App.js';
 import { concat } from '@/misc/prelude/array.js';
@@ -42,9 +42,6 @@ import { UserWebhookService } from '@/core/UserWebhookService.js';
 import { HashtagService } from '@/core/HashtagService.js';
 import { AntennaService } from '@/core/AntennaService.js';
 import { QueueService } from '@/core/QueueService.js';
-import { UtageService } from '@/core/UtageService.js';
-import { LtlPunchService } from '@/core/LtlPunchService.js';
-import { LtlEmojiVoteService } from '@/core/LtlEmojiVoteService.js';
 import { TimelineCollapseService } from '@/core/TimelineCollapseService.js';
 import { NoteEntityService } from '@/core/entities/NoteEntityService.js';
 import { UserEntityService } from '@/core/entities/UserEntityService.js';
@@ -64,7 +61,6 @@ import { UserBlockingService } from '@/core/UserBlockingService.js';
 import { isReply } from '@/misc/is-reply.js';
 import { trackPromise } from '@/misc/promise-tracker.js';
 import { IdentifiableError } from '@/misc/identifiable-error.js';
-import { PrivateChannelNoteVisibilityError } from '@/misc/private-channel-note-visibility-error.js';
 import type { Packed } from '@/misc/json-schema.js';
 import { CollapsedQueue } from '@/misc/collapsed-queue.js';
 import { CacheService } from '@/core/CacheService.js';
@@ -239,9 +235,6 @@ export class NoteCreateService implements OnApplicationShutdown {
 		@Inject(DI.channelsRepository)
 		private channelsRepository: ChannelsRepository,
 
-		@Inject(DI.channelMembersRepository)
-		private channelMembersRepository: ChannelMembersRepository,
-
 		@Inject(DI.noteThreadMutingsRepository)
 		private noteThreadMutingsRepository: NoteThreadMutingsRepository,
 
@@ -262,9 +255,6 @@ export class NoteCreateService implements OnApplicationShutdown {
 		private idService: IdService,
 		private globalEventService: GlobalEventService,
 		private queueService: QueueService,
-		private utageService: UtageService,
-		private ltlEmojiVoteService: LtlEmojiVoteService,
-		private ltlPunchService: LtlPunchService,
 		private timelineCollapseService: TimelineCollapseService,
 		private fanoutTimelineService: FanoutTimelineService,
 		private notificationService: NotificationService,
@@ -351,8 +341,6 @@ export class NoteCreateService implements OnApplicationShutdown {
 
 			if (renote == null) {
 				throw new IdentifiableError('53983c56-e163-45a6-942f-4ddc485d4290', 'No such renote target');
-			} else if (!await this.noteEntityService.isChannelVisibleForMe(renote, user.id)) {
-				throw new IdentifiableError('53983c56-e163-45a6-942f-4ddc485d4290', 'No such renote target');
 			} else if (isRenote(renote) && !isQuote(renote)) {
 				throw new IdentifiableError('bde24c37-121f-4e7d-980d-cec52f599f02', 'Cannot renote pure renote');
 			}
@@ -385,9 +373,6 @@ export class NoteCreateService implements OnApplicationShutdown {
 				if (renoteChannel == null) {
 					// リノートしたいノートが書き込まれているチャンネルが無い
 					throw new IdentifiableError('b060f9a6-8909-4080-9e0b-94d9fa6f6a77', 'No such channel');
-				} else if (renoteChannel.isPrivate) {
-					// 旗鯖fork: プライベートチャンネルのノートは、チャンネル外へリノート/引用させない(内容流出防止)
-					throw new IdentifiableError('7e435f4a-780d-4cfc-a15a-42519bd6fb67', 'Channel does not allow renote to external');
 				} else if (!renoteChannel.allowRenoteToExternal) {
 					// リノート作成のリクエストだが、対象チャンネルがリノート禁止だった場合
 					throw new IdentifiableError('7e435f4a-780d-4cfc-a15a-42519bd6fb67', 'Channel does not allow renote to external');
@@ -451,10 +436,6 @@ export class NoteCreateService implements OnApplicationShutdown {
 				throw new IdentifiableError('bfa3905b-25f5-4894-b430-da331a490e4b', 'No such channel');
 			}
 
-			// 旗鯖fork: プライベートチャンネルには、メンバー/作成者/副管理者/モデレーター以外は投稿できない。
-			if (channel.isPrivate && !await this.canPostToPrivateChannel(channel, user.id)) {
-				throw new IdentifiableError('bfa3905b-25f5-4894-b430-da331a490e4b', 'No such channel');
-			}
 		}
 
 		return this.create(user, {
@@ -684,27 +665,12 @@ export class NoteCreateService implements OnApplicationShutdown {
 
 		const note = await this.insertNote(user, data, tags, emojis, mentionedUsers);
 
-		if (!silent) {
-			// 投稿応答・LTLへの投入より先に候補を確定する。開始失敗でも投稿は成立させる。
-			await this.ltlEmojiVoteService.onNoteCreated(note, user).catch(() => { /* optional LTL event */ });
-			await this.ltlPunchService.onNoteCreated(note, user).catch(() => { /* optional LTL event */ });
-		}
-
 		setImmediate('post created', { signal: this.#shutdownController.signal }).then(
 			() => this.postNoteCreated(note, user, data, silent, tags!, mentionedUsers!),
 			() => { /* aborted, ignore this */ },
 		);
 
 		return note;
-	}
-
-	// 旗鯖fork: プライベートチャンネルへ投稿可能か(作成者・副管理者・メンバー・モデレーター)。
-	@bindThis
-	private async canPostToPrivateChannel(channel: MiChannel, userId: MiUser['id']): Promise<boolean> {
-		if (channel.userId === userId) return true;
-		if (channel.moderatorUserIds.includes(userId)) return true;
-		if (await this.channelMembersRepository.exists({ where: { channelId: channel.id, userId } })) return true;
-		return this.roleService.isModerator({ id: userId });
 	}
 
 	@bindThis
@@ -771,16 +737,10 @@ export class NoteCreateService implements OnApplicationShutdown {
 
 		// 投稿を作成
 		try {
-			let utageChanges: Awaited<ReturnType<UtageService['onNoteSaved']>> = [];
-			const utageParents = [
-				...(data.reply ? [{ note: data.reply, kind: 'reply' as const }] : []),
-				...(data.renote ? [{ note: data.renote, kind: 'renote' as const }] : []),
-			];
-			if (insert.hasPoll || insert.hasEvent || this.utageService.isCandidate(insert) || utageParents.some(p => this.utageService.isCandidate(p.note))) {
+			if (insert.hasPoll || insert.hasEvent) {
 				// Start transaction
 				await this.db.transaction(async transactionalEntityManager => {
 					await transactionalEntityManager.insert(MiNote, insert);
-					utageChanges = await this.utageService.onNoteSaved(transactionalEntityManager, insert, user, utageParents);
 
 					if (insert.hasPoll) {
 						const poll = new MiPoll({
@@ -816,7 +776,6 @@ export class NoteCreateService implements OnApplicationShutdown {
 			} else {
 				await this.notesRepository.insert(insert);
 			}
-			await this.utageService.afterCommit(utageChanges);
 
 			return {
 				...insert,
@@ -1134,13 +1093,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 				continue;
 			}
 
-			let detailPackedNote: Packed<'Note'>;
-			try {
-				detailPackedNote = await this.noteEntityService.pack(note, u, { detail: true });
-			} catch (error) {
-				if (error instanceof PrivateChannelNoteVisibilityError) continue;
-				throw error;
-			}
+			const detailPackedNote = await this.noteEntityService.pack(note, u, { detail: true });
 
 			this.globalEventService.publishMainStream(u.id, 'mention', detailPackedNote);
 			this.webhookService.enqueueUserWebhook(u.id, 'mention', { note: detailPackedNote });

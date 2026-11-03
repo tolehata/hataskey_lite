@@ -53,9 +53,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 	) {
 		super(meta, paramDef, async (ps, me) => {
 			const query = this.queryService.makePaginationQuery(this.channelsRepository.createQueryBuilder('channel'), ps.sinceId, ps.untilId, ps.sinceDate, ps.untilDate)
-				.andWhere('channel.isArchived = FALSE')
-				// 空欄検索・参加状況を問わず、件数制限の前に非公開チャンネルを除外する。
-				.andWhere('channel.isPrivate = FALSE');
+				.andWhere('channel.isArchived = FALSE');
 
 			if (ps.query !== '') {
 				if (ps.type === 'nameAndDescription') {

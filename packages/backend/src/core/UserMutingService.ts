@@ -38,8 +38,6 @@ export class UserMutingService {
 		});
 
 		await this.cacheService.userMutingsCache.refresh(user.id);
-		this.globalEventService.publishHatadyTimelineRefresh(user.id);
-		await this.moduleRef.get<NotificationService>('NotificationService', { strict: false }).refreshHatadyNotificationsForViewer(user.id);
 	}
 
 	@bindThis
@@ -53,8 +51,6 @@ export class UserMutingService {
 		const muterIds = [...new Set(mutings.map(m => m.muterId))];
 		for (const muterId of muterIds) {
 			await this.cacheService.userMutingsCache.refresh(muterId);
-			this.globalEventService.publishHatadyTimelineRefresh(muterId);
-			await this.moduleRef.get<NotificationService>('NotificationService', { strict: false }).refreshHatadyNotificationsForViewer(muterId);
 		}
 	}
 }

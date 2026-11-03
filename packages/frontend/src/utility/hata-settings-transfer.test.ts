@@ -15,10 +15,6 @@ const settingsTransferLocale = vi.hoisted(() => ({
 			generalLabel: 'Hataskey全体', generalDescription: '投稿フォーム、演出、フォント、プロフィールの表示設定',
 			hatasabaUiLabel: 'Hataskey UI 2', hatasabaUiDescription: 'ナビ、デッキ、見た目と端末ごとの操作設定',
 			hataSideStudioLabel: 'HataSideStudio', hataSideStudioDescription: 'プロファイル、拡大・縮小の配置、色、グループとウィジェット設定',
-			hataskLabel: 'Hatask', hataskDescription: 'テーマやホーム表示などの設定（ToDo・記録は含みません）',
-			hatadyLabel: 'Hatady', hatadyDescription: 'テーマ（学習記録・本棚は含みません）',
-			hatafeedLabel: 'HataFeed', hatafeedDescription: 'HataFeedの表示設定（イシュー・申請内容は含みません）',
-			mascotLabel: 'マスコット', mascotDescription: '通知、表示位置、表情切替の設定（キャラクター素材は含みません）',
 		},
 		unknownVersion: '不明な版',
 		validation: {
@@ -98,14 +94,10 @@ describe('旗鯖独自設定の入出力', () => {
 		api.mockRejectedValue(new Error('未設定'));
 	});
 
-	test('カテゴリ表示は共通localeを使い、地震津波は日本語固定を維持する', () => {
+	test('カテゴリ表示は共通localeを使う', () => {
 		expect(HATA_SETTINGS_CATEGORIES.find(category => category.id === 'general')).toMatchObject({
 			label: 'Hataskey全体',
 			description: '投稿フォーム、演出、フォント、プロフィールの表示設定',
-		});
-		expect(HATA_SETTINGS_CATEGORIES.find(category => category.id === 'earthquake')).toMatchObject({
-			label: '地震・津波情報',
-			description: '地域、更新間隔、通知条件',
 		});
 	});
 
@@ -116,14 +108,12 @@ describe('旗鯖独自設定の入出力', () => {
 			format: HATA_SETTINGS_TRANSFER_FORMAT,
 			formatVersion: HATA_SETTINGS_TRANSFER_VERSION,
 			categories: {
-				hatady: { device: { hatadyTheme: 'espresso' } },
 				hanaawase: { registry: { settings: { se: false, motion: 'reduced' } } },
 			},
 		}));
 		expect(parsed.unknownCategories).toEqual(['hanaawase']);
 		const result = await applyHataSettingsTransfer(parsed.file, HATA_SETTINGS_CATEGORIES.map(category => category.id));
-		expect(result.applied).toBe(1);
-		expect(local.get('hatadyTheme')).toBe('espresso');
+		expect(result.applied).toBe(0);
 		expect(local.get('miux:hanaawase:progress')).toBe(existingProgress);
 		expect(api).not.toHaveBeenCalled();
 	});
@@ -132,7 +122,8 @@ describe('旗鯖独自設定の入出力', () => {
 		const file = await createHataSettingsTransfer(HATA_SETTINGS_CATEGORIES.map(category => category.id));
 		expect(file.categories).not.toHaveProperty('hanaawase');
 		expect(api.mock.calls.some(([, data]) => data?.scope?.includes('hanaawase'))).toBe(false);
-		expect(api.mock.calls.some(([endpoint]) => endpoint === 'i/registry/get')).toBe(true);
+		// Lite has no registry-backed category any more (the mascot was the only one), so the export reads no registry at all.
+		expect(api.mock.calls.some(([endpoint]) => endpoint === 'i/registry/get')).toBe(false);
 	});
 
 	test('未知カテゴリを残した新しい版のファイルも解析し、警告対象にする', () => {
@@ -171,7 +162,7 @@ describe('旗鯖独自設定の入出力', () => {
 			categories: {
 				hatasabaUi: {
 					device: { hatasabaTabSwipeEnabled: 'false', hatasabaLastListId: 123 },
-					preferences: { 'simpleUi.showTrendingTab': false, 'simpleUi.showHatadyTab': false },
+					preferences: { 'simpleUi.showTrendingTab': false },
 				},
 			},
 		})).file;
@@ -179,8 +170,7 @@ describe('旗鯖独自設定の入出力', () => {
 		expect(local.get('hatasabaTabSwipeEnabled')).toBe('false');
 		expect(local.has('hatasabaLastListId')).toBe(false);
 		expect(commits).toContainEqual(['simpleUi.showTrendingTab', false]);
-		expect(commits).toContainEqual(['simpleUi.showHatadyTab', false]);
-		expect(result.applied).toBe(3);
+		expect(result.applied).toBe(2);
 		expect(result.skipped).toEqual(expect.arrayContaining([expect.objectContaining({ key: 'hatasabaLastListId' })]));
 	});
 
@@ -252,63 +242,6 @@ describe('旗鯖独自設定の入出力', () => {
 		]));
 	});
 
-	test('通知詳細フィルタを旧カラム・旧プロファイル・新デッキで書き出し→復元→再書き出しする', async () => {
-		const column = {
-			id: 'column-1', type: 'notifications', width: 340, excludeTypes: ['reaction'], notificationFilterKnownTypes: ['reaction', 'mention'], excludeBots: true,
-			notificationFilterDetails: { includeBrands: null, includeHataskApp: false, excludeHatadySubtypes: ['future-subtype'], knownHatadySubtypes: ['future-subtype'] },
-		};
-		const profileColumn = {
-			...column, id: 'column-2', notificationFilterDetails: {
-				includeBrands: ['hatady', 'future-brand'], includeHataskApp: true,
-				excludeHatadySubtypes: ['note', 'future-subtype'], knownHatadySubtypes: ['note', 'future-subtype'],
-			},
-		};
-		const tab = {
-			id: 'tab-1', type: 'notifications', tabColor: '#336699', excludeTypes: ['mention'], notificationFilterKnownTypes: ['mention'], excludeBots: false,
-			notificationFilterDetails: { includeBrands: [], includeHataskApp: false, excludeHatadySubtypes: ['future-subtype'], knownHatadySubtypes: ['future-subtype'] },
-		};
-		const values = {
-			'simpleUi.deckColumns': [column],
-			'simpleUi.deckProfiles': [{ id: 'profile-old', name: '旧デッキ', layout: 'row', columns: [profileColumn] }],
-			'simpleUi.deckProfilesV2': [{ id: 'profile-new', name: '新デッキ', layout: 'row', slots: [{ id: 'slot-1', width: 380, frames: [{ id: 'frame-1', tabs: [tab] }] }] }],
-		};
-		for (const [key, value] of Object.entries(values)) preferenceValues.set(key, value);
-		const exported = await createHataSettingsTransfer(['hatasabaUi']);
-		const imported = parseHataSettingsTransfer(JSON.stringify(exported)).file;
-		const result = await applyHataSettingsTransfer(imported, ['hatasabaUi']);
-		const exportedAgain = await createHataSettingsTransfer(['hatasabaUi']);
-		for (const [key, value] of Object.entries(values)) {
-			expect(commits).toContainEqual([key, value]);
-			expect(exportedAgain.categories.hatasabaUi?.preferences?.[key]).toEqual(exported.categories.hatasabaUi?.preferences?.[key]);
-		}
-		expect(result.skipped.filter(item => Object.hasOwn(values, item.key))).toEqual([]);
-	});
-
-	test('通知詳細フィルタの不正な値だけをスキップし、未知の文字列は保持する', async () => {
-		const file = parseHataSettingsTransfer(JSON.stringify({
-			format: HATA_SETTINGS_TRANSFER_FORMAT, formatVersion: HATA_SETTINGS_TRANSFER_VERSION,
-			categories: { hatasabaUi: { preferences: { 'simpleUi.deckColumns': [{
-				id: 'column-1', type: 'notifications', width: 340,
-				notificationFilterDetails: {
-					includeBrands: ['hatady', 42, 'future-brand'], includeHataskApp: 'false',
-					excludeHatadySubtypes: ['future-subtype', false], knownHatadySubtypes: ['future-subtype'],
-				},
-			}] } } },
-		})).file;
-		const result = await applyHataSettingsTransfer(file, ['hatasabaUi']);
-		expect(commits).toContainEqual(['simpleUi.deckColumns', [{
-			id: 'column-1', type: 'notifications', width: 340,
-			notificationFilterDetails: {
-				includeBrands: ['hatady', 'future-brand'], excludeHatadySubtypes: ['future-subtype'], knownHatadySubtypes: ['future-subtype'],
-			},
-		}]]);
-		expect(result.skipped).toEqual(expect.arrayContaining([
-			expect.objectContaining({ key: 'simpleUi.deckColumns[0].notificationFilterDetails.includeBrands[1]' }),
-			expect.objectContaining({ key: 'simpleUi.deckColumns[0].notificationFilterDetails.includeHataskApp' }),
-			expect.objectContaining({ key: 'simpleUi.deckColumns[0].notificationFilterDetails.excludeHatadySubtypes[1]' }),
-		]));
-	});
-
 	test('配列の全要素が壊れている設定は現在値を空配列で上書きしない', async () => {
 		const file = parseHataSettingsTransfer(JSON.stringify({
 			format: HATA_SETTINGS_TRANSFER_FORMAT,
@@ -345,67 +278,4 @@ describe('旗鯖独自設定の入出力', () => {
 		expect(result.applied).toBe(1);
 	});
 
-	test('新形式は両UIの構成を書き出して復元し、旧形式は既存UI Sを保持する', async () => {
-		const legacy = JSON.stringify({ version: 9, activeProfileId: 'old', profiles: [{ id: 'old', name: '旧UI' }] });
-		const uiS = JSON.stringify({ version: 9, activeProfileId: 'new', profiles: [{ id: 'new', name: 'UI S' }] });
-		local.set('hataSideStudio', legacy);
-		const beforeFirstUiS = await createHataSettingsTransfer(['hataSideStudio']);
-		expect(beforeFirstUiS.categories.hataSideStudio?.device?.hataSideStudioUiS).toBe(legacy);
-		local.set('hataSideStudioUiS', uiS);
-		const exported = await createHataSettingsTransfer(['hataSideStudio']);
-		expect(exported.categories.hataSideStudio?.device).toMatchObject({ hataSideStudio: legacy, hataSideStudioUiS: uiS });
-		local.set('hataSideStudioUiS', uiS);
-		const oldFile = parseHataSettingsTransfer(JSON.stringify({
-			format: HATA_SETTINGS_TRANSFER_FORMAT, formatVersion: 1,
-			categories: { hatasabaUi: { device: { hataSideStudio: legacy } } },
-		})).file;
-		await applyHataSettingsTransfer(oldFile, ['hataSideStudio']);
-		expect(local.get('hataSideStudioUiS')).toBe(uiS);
-		await applyHataSettingsTransfer(exported, ['hataSideStudio']);
-		expect(JSON.parse(local.get('hataSideStudioUiS')!).profiles[0].name).toBe('UI S');
-	});
-
-	test('廃止した起動時表示と未知項目は捨て、既存項目を残して既知項目だけを上書きする', async () => {
-		api.mockImplementation((endpoint: string, data: { value?: unknown }) => {
-			if (endpoint === 'i/registry/get') return Promise.resolve({ showClock: true, theme: 'kisetsu', openOnStart: true });
-			if (endpoint === 'i/registry/set') return Promise.resolve(data.value);
-			return Promise.reject(new Error('unexpected'));
-		});
-		const exported = await createHataSettingsTransfer(['hatask']);
-		expect(exported.categories.hatask?.registry?.settings).toEqual({ showClock: true, theme: 'kisetsu' });
-		const file = parseHataSettingsTransfer(JSON.stringify({
-			format: HATA_SETTINGS_TRANSFER_FORMAT,
-			formatVersion: 2,
-			serverVersion: '2027.1.0-hata.13.0',
-			exportedAt: '2027-01-01T00:00:00.000Z',
-			categories: { hatask: { registry: { settings: { showClock: false, openOnStart: true, futureSetting: 'unknown' } } } },
-		})).file;
-		const result = await applyHataSettingsTransfer(file, ['hatask']);
-		const setCall = api.mock.calls.find(call => call[0] === 'i/registry/set');
-		expect(setCall?.[1].value).toEqual({ showClock: false, theme: 'kisetsu', openOnStart: true });
-		expect(result.applied).toBe(1);
-		expect(result.skipped).toContainEqual(expect.objectContaining({ key: 'settings.futureSetting' }));
-		expect(result.skipped).toContainEqual(expect.objectContaining({ key: 'settings.openOnStart' }));
-	});
-
-	test('Hatadyはテーマだけを書き出し、読み込み時も旧言語設定を消さない', async () => {
-		api.mockImplementation((endpoint: string, data: { value?: unknown }) => {
-			if (endpoint === 'i/registry/get') return Promise.resolve({ theme: 'paper', lang: 'en', futureDisplay: true });
-			if (endpoint === 'i/registry/set') return Promise.resolve(data.value);
-			return Promise.reject(new Error('unexpected'));
-		});
-
-		const exported = await createHataSettingsTransfer(['hatady']);
-		expect(exported.categories.hatady?.registry?.display).toEqual({ theme: 'paper' });
-		expect(exported.categories.hatady?.device).toBeUndefined();
-
-		const imported = parseHataSettingsTransfer(JSON.stringify({
-			...exported,
-			categories: { hatady: { registry: { display: { theme: 'espresso' } } } },
-		})).file;
-		const result = await applyHataSettingsTransfer(imported, ['hatady']);
-		const setCall = api.mock.calls.find(call => call[0] === 'i/registry/set');
-		expect(setCall?.[1].value).toEqual({ theme: 'espresso', lang: 'en', futureDisplay: true });
-		expect(result.applied).toBe(1);
-	});
 });

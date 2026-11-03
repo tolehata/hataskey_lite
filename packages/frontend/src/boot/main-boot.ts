@@ -31,19 +31,14 @@ import { userName } from '@/filters/user.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import * as os from '@/os.js';
 import { cleanupStaleUiElements } from '@/utility/ui-cleanup.js';
-import { initHataFontWatcher } from '@/scripts/hata-font-manager.js';
 import { fetchMutedUsers, refreshMutedUsers } from '@/utility/muted-users.js';
 import { hideMutedReactionsLocal } from '@/utility/hatasaba-device-prefs.js';
 import { enqueueHataDialog } from '@/utility/hata-dialog-queue.js';
 import { HATA_WHATS_NEW } from '@/utility/hata-whats-new.js';
-import { startHataskFlowerGrowthTracker } from '@/utility/hatask-flower-growth.js';
 import { acceptNotificationUnreadState } from '@/utility/notification-unread-state.js';
 
 export async function mainBoot() {
 	cleanupStaleUiElements();
-
-	// 旗鯖フォント初期化
-	initHataFontWatcher();
 
 	// 旗鯖fork: 柔らかい転換アニメーションは強制ON。preference値が反転トグル仕様で、
 	// false = アニメーションON、true = アニメーションOFFという意味。
@@ -89,9 +84,6 @@ export async function mainBoot() {
 			case 'visitor':
 				rootComponent = await import('@/ui/visitor.vue').then(x => x.default);
 				break;
-			case 'hataskey3':
-				rootComponent = await import('@/ui/hataskey3.vue').then(x => x.default);
-				break;
 			case 'simple':
 				rootComponent = await import('@/ui/simple.vue').then(x => x.default);
 				break;
@@ -108,18 +100,6 @@ export async function mainBoot() {
 
 		return createApp(rootComponent);
 	});
-
-	// Hataskのお花はページやUIの表示有無に依存せず、保存時刻から実経過で育てる。
-	// 背景・終了中の分も、復帰または次回起動時にまとめて反映する。
-	if ($i) startHataskFlowerGrowthTracker();
-
-	// 廃止した接続先の認証情報を common() 内で消してから、許可された外部通知ストリームだけを起動する。
-	const { startExternalNotificationStream } = await import('@/utility/external-notification-stream.js');
-	startExternalNotificationStream();
-	if ($i) {
-		const { initializeConcrnt } = await import('@/utility/concrnt/runtime.js');
-		void initializeConcrnt();
-	}
 
 	reactionPicker.init();
 	emojiPicker.init();
@@ -380,10 +360,10 @@ export async function mainBoot() {
 		}
 
 		const modifiedVersionMustProminentlyOfferInAgplV3Section13Read = miLocalStorage.getItem('modifiedVersionMustProminentlyOfferInAgplV3Section13Read');
-		// 旗鯖fork: 無改変とみなす公式リポジトリURLは tolehata/hataskey。
+		// 旗鯖fork: 無改変とみなす公式リポジトリURLは tolehata/hataskey_lite。
 		// これと一致する場合は「無改変版」とみなしAGPL第13条のソース開示ポップアップを出さない。
 		// (about-misskey.vue の判定と値を揃えること)
-		if (modifiedVersionMustProminentlyOfferInAgplV3Section13Read !== 'true' && instance.repositoryUrl !== 'https://github.com/tolehata/hataskey') {
+		if (modifiedVersionMustProminentlyOfferInAgplV3Section13Read !== 'true' && instance.repositoryUrl !== 'https://github.com/tolehata/hataskey_lite') {
 			const { dispose } = popup(defineAsyncComponent(() => import('@/components/MkSourceCodeAvailablePopup.vue')), {}, {
 				closed: () => dispose(),
 			});
@@ -504,7 +484,7 @@ export async function mainBoot() {
 	let safemodeRequestCount = 0;
 	let safemodeRequestTimer: number | null = null;
 	const keymap = {
-		[ui === 'hataskey3' ? 'p' : 'p|n']: () => {
+		'p|n': () => {
 			if ($i == null) return;
 			post();
 		},

@@ -10,7 +10,7 @@ const fixture = vi.hoisted(() => {
 	const commits: Array<[string, unknown]> = [];
 	const copy = {
 		resetDefaults: '初期値に戻す', resetAllConfirm: 'reset', resetTopNavConfirm: 'top', resetBottomNavConfirm: 'bottom',
-		navHome: 'ホーム', navLocal: 'ローカル', navSocial: 'ソーシャル', navGlobal: 'グローバル', navSearch: '検索', navNotifications: '通知', navCustomFeatures: '独自', navHatady: 'Hatady', navHataFeed: 'HataFeed', navWidgets: 'ウィジェット',
+		navHome: 'ホーム', navLocal: 'ローカル', navSocial: 'ソーシャル', navGlobal: 'グローバル', navSearch: '検索', navNotifications: '通知', navCustomFeatures: '独自', navWidgets: 'ウィジェット',
 		savedReloading: '保存しました', saveFailedTitle: '失敗', tryAgain: '再試行', discardChangesTitle: '破棄', discardChangesText: '破棄しますか',
 	};
 	return {
@@ -21,7 +21,7 @@ const fixture = vi.hoisted(() => {
 		prefer: {
 			r: {
 				'simpleUi.normalNoBannerBg': { value: false }, 'simpleUi.profileNoBannerBg': { value: false }, 'simpleUi.glassUiCardOpacity': { value: 55 },
-				'simpleUi.disableBubbleInHatasabaDeck': { value: false }, 'simpleUi.showTrendingTab': { value: true }, 'simpleUi.showHatadyTab': { value: true }, 'simpleUi.topNavMode': { value: false }, 'simpleUi.deckMode': { value: false },
+				'simpleUi.disableBubbleInHatasabaDeck': { value: false }, 'simpleUi.showTrendingTab': { value: true }, 'simpleUi.topNavMode': { value: false }, 'simpleUi.deckMode': { value: false },
 			},
 			s: {
 				'simpleUi.topNav': [{ id: 'home', visible: true }, { id: 'search', visible: true }],
@@ -36,7 +36,7 @@ const fixture = vi.hoisted(() => {
 vi.mock('@/preferences.js', () => ({ prefer: fixture.prefer }));
 vi.mock('@/preferences/def.js', () => ({ PREF_DEF: {
 	'simpleUi.normalNoBannerBg': { default: false }, 'simpleUi.profileNoBannerBg': { default: false }, 'simpleUi.glassUiCardOpacity': { default: 55 },
-	'simpleUi.disableBubbleInHatasabaDeck': { default: false }, 'simpleUi.showTrendingTab': { default: true }, 'simpleUi.showHatadyTab': { default: true }, 'simpleUi.topNavMode': { default: false },
+	'simpleUi.disableBubbleInHatasabaDeck': { default: false }, 'simpleUi.showTrendingTab': { default: true }, 'simpleUi.topNavMode': { default: false },
 } }));
 vi.mock('@/preferences/manager.js', () => ({ getInitialPrefValue: (key: string) => fixture.prefer.s[key as keyof typeof fixture.prefer.s] ?? [] }));
 vi.mock('@/utility/hatasaba-device-prefs.js', () => ({
@@ -78,40 +78,26 @@ afterEach(() => {
 });
 
 describe('useHatasabaUi2Draft', () => {
-	test.each([false, true])('normalizes all three legacy bottom navigation candidates before saving visible=%s', visible => {
+	test('drops the retired app items from the bottom navigation before saving', () => {
 		vi.useFakeTimers();
 		const original = fixture.prefer.s['simpleUi.bottomNav'];
 		fixture.prefer.s['simpleUi.bottomNav'] = [
-			{ id: 'hatask', visible: false }, { id: 'hatady', visible: false }, { id: 'hatafeed', visible: !visible }, { id: 'search', visible: true },
+			{ id: 'hatask', visible: false }, { id: 'hatady', visible: true }, { id: 'hatafeed', visible: true }, { id: 'hatagoes', visible: true }, { id: 'search', visible: true },
 		];
 		try {
 			const { editor, unmount } = mountEditor();
-			expect(editor.draft.editedBottomNav.map(item => item.id)).toEqual(['hatagoes', 'search']);
-			expect(editor.navDisplayLabel(editor.draft.editedBottomNav[0]!)).toBe('HataGoes');
-			expect(editor.draft.editedBottomNav[0]!.visible).toBe(!visible);
-			editor.draft.editedBottomNav[0]!.visible = visible;
+			expect(editor.draft.editedBottomNav.map(item => item.id)).toEqual(['search']);
+			editor.draft.editedBottomNav[0]!.visible = false;
 			expect(editor.save()).toBe(true);
 			const saved = fixture.commits.find(([key]) => key === 'simpleUi.bottomNav')?.[1] as { id: string; visible: boolean }[];
-			expect(saved.map(item => item.id)).toEqual(['hatagoes', 'search']);
-			expect(saved[0]?.visible).toBe(visible);
+			expect(saved.map(item => item.id)).toEqual(['search']);
+			expect(saved[0]?.visible).toBe(false);
 			unmount();
 		} finally {
 			fixture.prefer.s['simpleUi.bottomNav'] = original;
 			vi.clearAllTimers();
 			vi.useRealTimers();
 		}
-	});
-
-	test('saves the Hatady tab visibility with the other basic settings', () => {
-		vi.useFakeTimers();
-		const { editor, unmount } = mountEditor();
-		editor.draft.editedShowHatadyTab = false;
-		expect(editor.changeCount).toBe(1);
-		expect(editor.save()).toBe(true);
-		expect(fixture.commits).toContainEqual(['simpleUi.showHatadyTab', false]);
-		unmount();
-		vi.clearAllTimers();
-		vi.useRealTimers();
 	});
 	test('editing and reset remain draft/preview-only until save', async () => {
 		const { editor, unmount } = mountEditor();

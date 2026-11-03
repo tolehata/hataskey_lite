@@ -62,14 +62,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				validLink = ps.link;
 			}
 
-			// Old native Hatask tabs can retain their browser timers after an upgrade.
-			// Mood reminders now belong to the server job, including its record/mute
-			// checks and deduplication. Other apps and calendar notifications are unchanged.
-			if (token == null && validLink != null) {
-				const link = new URL(validLink, 'https://local.invalid');
-				if (link.pathname === '/hatask' && link.searchParams.get('notice') === 'mood') return;
-			}
-
 			this.notificationService.createNotification(user.id, 'app', {
 				appAccessTokenId: token ? token.id : null,
 				customBody: ps.body,

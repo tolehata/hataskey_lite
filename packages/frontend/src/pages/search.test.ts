@@ -5,7 +5,6 @@ import { createApp, defineComponent, h, KeepAlive, nextTick, provide, ref, Suspe
 import Search from './search.vue';
 import type { App, PropType, Ref } from 'vue';
 import type { PageHeaderItem } from '@/types/page-header.js';
-import Hk3SidePageContent from '@/components/hataskey3/Hk3SidePageContent.vue';
 import MkPageHeader from '@/components/global/MkPageHeader.vue';
 import CPPageHeader from '@/components/global/CPPageHeader.vue';
 import { DI } from '@/di.js';
@@ -48,7 +47,7 @@ vi.mock('@/instance.js', async () => {
 	return { instance: reactive({ federation: 'none', noteSearchableScope: 'local' }) };
 });
 vi.mock('@/i.js', () => ({ $i: null }));
-vi.mock('@/page.js', () => ({ definePage: vi.fn(), isExactHataAppTitle: () => false }));
+vi.mock('@/page.js', () => ({ definePage: vi.fn() }));
 vi.mock('@/os.js', () => ({ popupMenu: vi.fn(), confirm: vi.fn(async () => ({ canceled: true })), selectUser: vi.fn(), promiseDialog: vi.fn() }));
 vi.mock('@/utility/misskey-api.js', () => ({ misskeyApi: vi.fn(async () => ({ id: 'author', username: 'author', host: null })) }));
 vi.mock('@/utility/check-permissions.js', () => permissions);
@@ -109,7 +108,7 @@ function element<T extends Element = HTMLElement>(selector: string): T {
 	return found;
 }
 
-async function mount(mode: 'standard' | 'compact' = 'standard', props: Record<string, unknown> = {}, inWindow = false, containedControls?: Ref<boolean>) {
+async function mount(mode: 'standard' | 'compact' = 'standard', props: Record<string, unknown> = {}, inWindow = false) {
 	const PageWithHeader = defineComponent({
 		props: { actions: { type: Array as PropType<PageHeaderItem[]>, required: true } },
 		setup(header, { slots }) {
@@ -122,9 +121,7 @@ async function mount(mode: 'standard' | 'compact' = 'standard', props: Record<st
 		query: '旗鯖', ...props, ref: searchRef,
 		...(props.embedded ? { active: embeddedActive.value, maxHeight: embeddedMaxHeight.value, onHeight: (height: number) => heights.push(height), onClose: close } : {}),
 	}) : h(OtherPage) }) });
-	app = createApp({ render: () => containedControls
-		? h(Hk3SidePageContent, { omitHeaderTitle: false, containedControls: containedControls.value }, { default: page })
-		: page() });
+	app = createApp({ render: () => page() });
 	app.provide('inWindow', inWindow);
 	app.component('PageWithHeader', PageWithHeader);
 	app.component('MkAvatar', { render: () => null });
@@ -186,53 +183,6 @@ afterEach(async () => {
 });
 
 describe('mobile search toolbar', () => {
-	test('desktop side page keeps a narrow search inline after results appear', async () => {
-		width = 1200;
-		const contained = ref(true);
-		await mount('standard', {}, false, contained);
-		await resizePage(480);
-		const page = element('[data-page]');
-		const panel = element('[role=search]');
-		await submit();
-		expect(page.contains(panel)).toBe(true);
-		expect(panel.parentElement).not.toBe(window.document.body);
-		expect(panel.dataset.mobile).toBe('false');
-		expect(panel.style.display).toBe('');
-		expect(host.querySelector('button[aria-controls]')).toBeNull();
-		expect(page.contains(element('[data-results]'))).toBe(true);
-		expect(requests).toHaveLength(1);
-	});
-
-	test('side page context changes and split/full widths preserve one query, result, and control', async () => {
-		width = 1200;
-		const contained = ref(true);
-		await mount('standard', {}, false, contained);
-		await resizePage(480);
-		await submit();
-		const input = element<HTMLInputElement>('input[type=search]');
-		const panel = element('[role=search]');
-		const result = element('[data-results]');
-		for (const paneWidth of [1200, 480]) {
-			await resizePage(paneWidth);
-			expect(host.contains(panel)).toBe(true);
-			expect(panel.style.display).toBe('');
-		}
-		contained.value = false; await flush();
-		expect(panel.parentElement).toBe(window.document.body);
-		expect(panel.dataset.mobile).toBe('true');
-		expect(panel.style.display).toBe('none');
-		contained.value = true; await flush();
-		expect(host.contains(panel)).toBe(true);
-		expect(panel.style.display).toBe('');
-		expect(element<HTMLInputElement>('input[type=search]')).toBe(input);
-		expect(input.value).toBe('旗鯖');
-		expect(element('[data-results]')).toBe(result);
-		expect(host.querySelectorAll('[role=search]')).toHaveLength(1);
-		expect(window.document.body.querySelectorAll(':scope > [role=search]')).toHaveLength(0);
-		expect(requests).toHaveLength(1);
-		expect(paginators).toHaveLength(1);
-	});
-
 	test.each(['standard', 'compact'] as const)('%s header opens the same query and leaves the results intact', async mode => {
 		await mount(mode);
 		const input = element<HTMLInputElement>('input[type=search]');

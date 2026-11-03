@@ -8,7 +8,6 @@ export {
 
 export const permissions = consts.permissions;
 export const notificationTypes = consts.notificationTypes;
-export const hatadyNotificationSubtypes = consts.hatadyNotificationSubtypes;
 export const noteVisibilities = consts.noteVisibilities;
 export const mutedNoteReasons = consts.mutedNoteReasons;
 export const followingVisibilities = consts.followingVisibilities;
@@ -31,17 +30,15 @@ export { api, entities, acct, note, nyaize };
 //#region standalone types
 import type { Endpoints } from './api.types.js';
 import type { StreamEvents, IStream, IChannelConnection } from './streaming.js';
-import type { Channels, LtlPunchState } from './streaming.types.js';
+import type { Channels } from './streaming.types.js';
 import type { Acct } from './acct.js';
 
 export type {
 	Endpoints,
 	Channels,
-	LtlPunchState,
 	Acct,
 	StreamEvents,
 	IStream,
 	IChannelConnection,
 };
-export type * from './hata-media.js';
 //#endregion

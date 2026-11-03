@@ -32,17 +32,6 @@ export const notificationTypes = [
 	'followRequestAccepted',
 	'groupInvited',
 	'app',
-	'hataFeed',
-	'hatady',
-	'hataskFlowerReady',
-	'hataskFlowerBloomed',
-	'hataskZukanUpdated',
-	'hataskFestivalBloomed',
-	'hataskDecorationUnlocked',
-	'earthquake',
-	// 旗鯖fork: プライベートチャンネルのメンバー構成変更通知 (追加/削除)
-	'addedToPrivateChannel',
-	'removedFromPrivateChannel',
 	'roleAssigned',
 	'chatRoomInvitationReceived',
 	'achievementEarned',
@@ -51,8 +40,6 @@ export const notificationTypes = [
 	'login',
 	'createToken',
 ] as const;
-
-export const hatadyNotificationSubtypes = ['follow', 'comment', 'reaction', 'milestone', 'goalDone', 'mediaComment', 'mediaReply', 'mediaReaction'] as const;
 
 export const noteVisibilities = ['public', 'home', 'followers', 'specified'] as const;
 
@@ -154,10 +141,6 @@ export const permissions = [
 ] as const;
 
 export const moderationLogTypes = [
-	'deleteHatadyRecord',
-	'deleteHataskRecord',
-	'warnHatadyUser',
-	'warnHataskUser',
 	'voteRegistrationApplication',
 	'approveRegistrationApplication',
 	'rejectRegistrationApplication',
@@ -232,20 +215,7 @@ export const rolePolicies = [
 	'canSearchNotes',
 	'canSearchUsers',
 	'canHideAds',
-	'mascotMaxExpressions',
-	'mascotMaxPhrases',
-	'mascotMaxCharacters',
 	'hataSideStudioProfileLimit',
-	'canUseNoteCharm',
-	'canUseMascot',
-	'canAccessHataFeed',
-	'canUseHatadySync',
-	'hatadyBookLimit',
-	'hatadyBookmarkLimit',
-	'hatadyGameTitleLimit',
-	'canMakePrivateChannel',
-	'canRequestRemoteEmoji',
-	'emojiRequestLimit',
 	'driveCapacityMb',
 	'maxFileSizeMb',
 	'alwaysMarkNsfw',
@@ -286,7 +256,6 @@ export const queueTypes = [
 	'objectStorage',
 	'userWebhookDeliver',
 	'systemWebhookDeliver',
-	'utageResolve',
 ] as const;
 
 // See: packages/backend/src/core/ReversiService.ts@L410
@@ -319,18 +288,7 @@ type ReceivedAbuseReport = {
 	forwarded: boolean;
 };
 
-export type RecordModerationLogInfo = {
-	operationId: string; product: string; targetType: string; targetId: string; title: string;
-	targetUserId: string; targetUsername: string; targetName: string;
-	moderatorId: string; moderatorUsername: string; moderatorName: string;
-	performedAt: string; reason: string; impact: { label: string; count: number }[]; warningId: string | null;
-};
-
 export type ModerationLogPayloads = {
-	deleteHatadyRecord: RecordModerationLogInfo;
-	deleteHataskRecord: RecordModerationLogInfo;
-	warnHatadyUser: RecordModerationLogInfo;
-	warnHataskUser: RecordModerationLogInfo;
 	voteRegistrationApplication: { applicationId: string; choice: 'agree' | 'oppose' };
 	approveRegistrationApplication: { applicationId: string };
 	rejectRegistrationApplication: { applicationId: string };

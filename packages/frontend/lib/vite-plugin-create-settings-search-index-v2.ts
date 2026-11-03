@@ -93,23 +93,13 @@ export type SettingsInteractiveStaticGroupDescriptorV2 = {
 /** The categories actually rendered by settings/hata-custom.vue. */
 export type HataCustomCategoryV2 =
 	| 'general'
-	| 'font'
 	| 'glassUi'
-	| 'visual'
-	| 'hatask'
-	| 'hatady'
-	| 'mascot'
-	| 'earthquake'
-	| 'accessibility';
+	| 'visual';
 
 export type SettingsPopupIdV2 =
 	| 'hatasaba-ui2'
-	| 'earthquake'
 	| 'ui-setup'
-	| 'settings-transfer'
-	| 'hatask'
-	| 'hatady'
-	| 'mascot';
+	| 'settings-transfer';
 
 export type SettingsPersistenceV2 = 'device' | 'profile' | 'account';
 export type SettingsSaveModeV2 = 'immediate' | 'buffered' | 'reload';
@@ -366,7 +356,6 @@ function isDirectDestructiveAction(node: ElementNode): boolean {
  * turns a banner-dismissal into a user setting. */
 const EXPLICIT_NON_SETTING_ACTIONS_V2: Readonly<Record<string, ReadonlySet<string>>> = {
 	'src/pages/settings/index.vue': new Set(['skipAutoBackup']),
-	'src/pages/settings/external-account.vue': new Set(['section']),
 };
 
 function isExplicitNonSettingActionV2(sourceFile: string, click: string): boolean {
@@ -422,13 +411,6 @@ function staticGroupKeyForNode(sourceFile: string, node: ElementNode): string {
 function staticGroupContext(sourceFile: string, ancestors: readonly ElementNode[]): { key: string; label: string } {
 	for (let index = ancestors.length - 1; index >= 0; index--) {
 		const ancestor = ancestors[index]!;
-		// These finite radio options own one audited fieldset descriptor. Its
-		// conditional focus is separately redirected to the permanent root;
-		// retain the fieldset identity here so its raw rows cannot disappear.
-		if (sourceFile === 'src/components/MkNoteCharmSettings.vue' && ancestor.tag === 'fieldset'
-			&& normalizedExpression(expressionOf(findAttribute(ancestor.props, 'class'))) === '$style.patternField') {
-			return { key: staticGroupKeyForNode(sourceFile, ancestor), label: 'チャームの模様' };
-		}
 		if (!['SearchMarker', 'MkFolder', 'FormSection', 'FormSlot', 'section', 'fieldset'].includes(ancestor.tag)) continue;
 		// The candidate's own directives are not enough: an otherwise plain
 		// FormSection below an outer `v-if` is just as absent as the branch that
@@ -511,7 +493,7 @@ function persistentHandlerNames(source: string): ReadonlySet<string> {
 		const body = bodies.get(name);
 		if (body == null) return false;
 		visiting.add(name);
-		const direct = /(?:prefer\.(?:commit|model)|miLocalStorage\.(?:setItem|removeItem)|\bstore\.set\(|registry(?:Set|\.set)|save(?:HatadyDisplay|DisplaySettings|Settings)|write[A-Z]|updatePreferences|setDisplaySettings)/u.test(body)
+		const direct = /(?:prefer\.(?:commit|model)|miLocalStorage\.(?:setItem|removeItem)|\bstore\.set\(|registry(?:Set|\.set)|save(?:DisplaySettings|Settings)|write[A-Z]|updatePreferences|setDisplaySettings)/u.test(body)
 			// Do not treat every ref write as a preference. The named models below
 			// are persisted setting drafts; view/tab/preview refs are deliberately
 			// excluded so a handler prefix alone can never make an action searchable.
@@ -837,8 +819,10 @@ function explicitStorageDispositionsV2(): ReadonlyMap<string, ExplicitStorageKey
 		'Deck V2のプロフィール・表示・RSS実行時状態', ['src/ui/_common_/hatasaba-deck.vue']);
 	add('preference', keys('simpleUi.deckTutorialDone'), 'runtime',
 		'Deckチュートリアルのdismiss状態', ['src/ui/_common_/HatasabaDeckTutorial.vue']);
-	add('preference', keys('hataskeyUi3ShortcutGuideShown'), 'runtime',
-		'Hataskey UI S のショートカット案内をアカウントごとに一度だけ出すための表示済み印', ['src/components/hataskey3/Hk3Composer.vue']);
+	add('preference', keys('hataskeyUi3ShortcutGuideShown hataskeyUi3TimelineBackground hataskeyUi3SideMenuBackground hataskeyUi3RightPaneBackground hataskeyUi3GlassDensity hataskeyUi3BottomNav hataskeyUi3ComposerShortcut1 hataskeyUi3ComposerShortcut2 hataskeyUi3ComposerEmojiPosition hataskeyUi3ComposerPosition hataskeyUi3RssEnabled hataskeyUi3RssFeeds hataskeyUi3RssAutoSwitch hataskeyUi3RssReadSeconds hataskeyUi3RssReadMode'), 'deprecated',
+		'hataskey Lite で Hataskey UI S とともに撤去。保存済みプロファイルを読むために残す互換定義', ['src/preferences/def.ts']);
+	add('preference', keys('showDrawingButtonInPostForm simpleUi.showHatadyTab hatafeed.leaves'), 'deprecated',
+		'hataskey Lite でお絵かき・Hatady・HataFeed とともに撤去。保存済みプロファイルを読むために残す互換定義', ['src/preferences/def.ts']);
 	add('preference', keys('simpleUi.sidebar simpleUi.sidebarCollapsed'), 'runtime',
 		'Simple UIのsidebar構成・開閉状態', ['src/ui/simple.vue']);
 	add('preference', keys('widgets'), 'runtime',
@@ -851,14 +835,12 @@ function explicitStorageDispositionsV2(): ReadonlyMap<string, ExplicitStorageKey
 		'通知画面のフィルターメニューが更新するBOT除外状態', ['src/pages/notifications.vue']);
 	add('preference', keys('showEventButtonInPostForm'), 'runtime',
 		'投稿面が参照する表示状態', ['src/components/MkPostForm.vue']);
-	add('preference', keys('simpleUi.utageBadgeTipShown'), 'runtime',
-		'ユーザーページの宴バッジtip dismiss状態', ['src/pages/user/home.vue']);
 	add('preference', keys('nicknameMap'), 'runtime',
 		'ユーザー名編集dialogが更新する表示上のニックネーム対応表', ['src/utility/edit-nickname.ts']);
-	add('preference', keys('external.avatarUrl external.host external.token external.userId external.username'), 'internal',
-		'MiAuth連携identityまたはcredentialの導出状態で、検索・表示対象にしてはいけない', ['src/pages/settings/external-account.vue']);
-	add('preference', keys('hataConsent.customFont hataConsent.customFontDate hataConsent.externalTl hataConsent.externalTlDate hataFont.customFontConsent'), 'internal',
-		'利用規約・同意dialogの結果または記録日時で、単独設定controlではない', ['src/pages/settings/hata-custom.vue', 'src/pages/settings/external-account.vue']);
+	add('preference', keys('external.avatarUrl external.host external.token external.userId external.username external.enabled external.enableOHTL external.enableOLTL external.disableNotificationToast'), 'deprecated',
+		'hataskey Lite で外部アカウント連携とともに撤去。保存済みプロファイルを読むために残す互換定義（credentialは検索・表示対象にしない）', ['src/preferences/def.ts']);
+	add('preference', keys('hataConsent.customFont hataConsent.customFontDate hataConsent.externalTl hataConsent.externalTlDate hataFont.id hataFont.customUrl hataFont.customName hataFont.customFontConsent'), 'deprecated',
+		'撤去済みのフォント選択・同意管理の値で、保存済みプロファイルを読むために残す互換定義', ['src/preferences/def.ts']);
 	add('preference', keys('reportError'), 'deprecated',
 		'設定UIから廃止済みで、保存済みプロファイルを読むために残す互換定義', ['src/preferences/def.ts']);
 	add('preference', keys('showLikeButtonInNoteFooter'), 'migration',
@@ -875,12 +857,8 @@ function explicitStorageDispositionsV2(): ReadonlyMap<string, ExplicitStorageKey
 		'hata-13.0でユーザーパネルとともに廃止。保存済みプロファイルを読むために残す互換定義', ['src/preferences/def.ts']);
 	add('preference', keys('smoothTransitionAnimations'), 'internal',
 		'常時ONのdisabled表示用product policyで、利用者が変更できない', ['src/pages/settings/preferences.vue']);
-	add('preference', keys('weatherEffect.firstTipShown.heavyRain weatherEffect.firstTipShown.rain weatherEffect.firstTipShown.shootingStar weatherEffect.firstTipShown.snow weatherEffect.firstTipShown.sunny weatherEffect.firstTipShown.windy'), 'deprecated',
-		'季節演出の旧初回tipフラグ。現行runtimeの参照先ではない', ['src/preferences/def.ts']);
-	add('preference', keys('weatherEffect.intensity weatherEffect.respectReducedMotion'), 'deprecated',
-		'旧weather設定で、現行描画・設定controlに接続しない', ['src/preferences/def.ts', 'src/utility/hata-settings-transfer.ts']);
-	add('preference', keys('weatherEffect.scope'), 'runtime',
-		'天気演出の集計範囲を変えるruntime値。hata-customには可視controlがない', ['src/components/MkStreamingNotesTimeline.vue', 'src/pages/settings/hata-custom.vue']);
+	add('preference', keys('weatherEffect.enabled weatherEffect.scope weatherEffect.duration weatherEffect.intensity weatherEffect.respectReducedMotion weatherEffect.firstTipShown.heavyRain weatherEffect.firstTipShown.rain weatherEffect.firstTipShown.shootingStar weatherEffect.firstTipShown.snow weatherEffect.firstTipShown.sunny weatherEffect.firstTipShown.windy ltlEmojiVoteEnabled simpleUi.utageBadgeTipShown showLoginBonusPopup'), 'deprecated',
+		'hataskey Lite で天気エフェクト・LTL絵文字投票・宴・ログイン日数ポップアップとともに撤去。保存済みプロファイルを読むために残す互換定義', ['src/preferences/def.ts']);
 
 	// Pizzax mirrors are an explicit reviewed list. A same-named preference is
 	// never sufficient evidence on its own.
@@ -918,26 +896,19 @@ function explicitStorageDispositionsV2(): ReadonlyMap<string, ExplicitStorageKey
 		'旧既定音の移行をプロファイル・設定キー・scopeごとに記録する完了印', ['src/utility/hataskey-sound-migration.ts']);
 	add('local', ['hata_portal_cleanup_migrated:' + dynamicKey], 'migration',
 		'廃止ポータルの保存メニュー移行をアカウント・プロファイルごとに記録する完了印', ['src/utility/retired-portal-migration.ts']);
-	add('local', ['hata_external_notifications_sidebar_migrated:' + dynamicKey], 'migration',
-		'外部通知を保存サイドバー項目へ移行したことをアカウント・プロファイルごとに記録する完了印', ['src/utility/external-notifications-sidebar-migration.ts']);
-	add('local', ['fontSize', 'hatadyLang', 'miux:' + dynamicKey, 'themes:' + dynamicKey, 'lastEmojisFetchedAt', 'emojis'], 'deprecated',
+	add('local', ['fontSize', 'miux:' + dynamicKey, 'themes:' + dynamicKey, 'lastEmojisFetchedAt', 'emojis'], 'deprecated',
 		'旧端末UI保存値。現行の正本または互換経路へ置換済み', ['src/local-storage.ts', 'src/pages/settings/preferences.vue']);
-	add('local', keys('hataPostDelayEnabled hataPostDelaySeconds hataSideStudio hataSideStudioUiS'), 'runtime',
+	add('local', keys('hataPostDelayEnabled hataPostDelaySeconds hataSideStudio'), 'runtime',
 		'独立feature内の実行時設定で、settings catalog target外', ['src/local-storage.ts']);
-	add('local', [...keys('hataskeyUi3Tab hataskeyUi3Live hataskeyUi3DeckMode hataskeyUi3PaneTab hataskeyUi3MobileOrder'), 'hataskeyUi3MobileGuideShown:' + dynamicKey], 'runtime',
-		'Hataskey UI S の画面内操作(タブ・LIVE・デッキ表示・右ペイン・モバイルTLの並びと初回案内)が更新する端末ローカルの表示状態', ['src/components/hataskey3/Hk3Timeline.vue', 'src/components/hataskey3/Hk3App.vue', 'src/components/hataskey3/Hk3RightPane.vue']);
+	add('local', ['hataskeyUi3MobileOrder', 'hataskeyUi3MobileGuideShown:' + dynamicKey], 'deprecated',
+		'hataskey Lite で Hataskey UI S とともに撤去した端末ローカルの表示状態。型定義だけ残している', ['src/local-storage.ts']);
 	add('local', ['hataRightWidgetsCollapsed'], 'runtime',
 		'右ウィジェットバーの開閉操作が更新する端末ローカルの表示状態', ['src/utility/hatasaba-device-prefs.ts']);
 	add('local', ['hataNotificationView'], 'runtime',
-		'通知画面のブランド・種別・BOT除外フィルターを保持する端末ローカル表示状態', ['src/utility/hatasaba-device-prefs.ts', 'src/pages/notifications.vue']);
-	add('local', ['hataskAkatsukiUsage:' + dynamicKey], 'cache',
-		'暁ホームの優先表示に使う端末・アカウント別のツール利用履歴で、設定項目ではない', ['src/utility/hatask-akatsuki-usage.ts']);
-	add('local', ["hatagoes:${'state' | 'create' | 'scroll'}:" + dynamicKey], 'cache',
-		'HataGoesの画面復元・最近の作成・スクロール位置を保持する端末・アカウント別キャッシュ', ['src/utility/hatasaba-device-prefs.ts']);
+		'通知画面の種別・BOT除外フィルターを保持する端末ローカル表示状態', ['src/utility/hatasaba-device-prefs.ts', 'src/pages/notifications.vue']);
 	add('local', [
 		'account', 'aiscriptSecure:' + dynamicKey, 'debug', 'hataNotificationFilterPolicyNoticeShown:' + dynamicKey,
-		'hataSideStudioTutorialDone', 'hataWhatsNewShownVersion', 'hata_muted_reactions_notice_shown', 'hatafeedIntroShown',
-		'hatalyzeNoticeAcceptedV1:' + dynamicKey, 'hatalyzeNoticeSyncedV1:' + dynamicKey,
+		'hataSideStudioTutorialDone', 'hataWhatsNewShownVersion', 'hata_muted_reactions_notice_shown',
 		'hidePreferencesRestoreSuggestion', 'isSafeMode', 'latestDonationInfoShownAt',
 		'modifiedVersionMustProminentlyOfferInAgplV3Section13Read', 'neverShowDonationInfo', 'neverShowLocalOnlyInfo',
 		'neverShowNoteEditInfo', 'showPushNotificationDialog', 'ui_setup_completed', 'ui_temp', 'hataGlassUi',
@@ -946,12 +917,11 @@ function explicitStorageDispositionsV2(): ReadonlyMap<string, ExplicitStorageKey
 	add('local', [
 		'aiscript:' + dynamicKey, 'bootloaderLocales', 'channelLastReadedAt:' + dynamicKey, 'chatMessageDrafts',
 		'colorScheme', 'drafts', 'hashtags',
-		'hataFormDrafts:' + dynamicKey, 'hatalyzeCooldownV1:' + dynamicKey,
 		'hatasabaLastAntennaId', 'hatasabaLastListId', 'hatasabaUiLastTab', 'idbfallback::' + dynamicKey,
-		'instance', 'instanceCachedAt', 'lastUsed', 'latestPreferencesUpdate', 'loginBonusLastShown', 'preferences',
+		'instance', 'instanceCachedAt', 'lastUsed', 'latestPreferencesUpdate', 'preferences',
 		'scratchpad', 'theme', 'themeCachedVersion', 'themeId', 'ui:folder:' + dynamicKey,
 	], 'cache',
-		'editor/history/cacheなどの実行時データ', ['src/local-storage.ts', 'src/utility/hata-form-draft.ts']);
+		'editor/history/cacheなどの実行時データ', ['src/local-storage.ts']);
 	return dispositions;
 }
 
@@ -969,9 +939,6 @@ const REDESIGNED_PREFERENCE_AUDIT_SOURCE_FILES_V2 = [
 	'src/pages/settings-redesign/settings-preferences-models.ts',
 	'src/pages/settings-redesign/settings-preferences-search-index.ts',
 	'src/pages/settings-redesign/SettingsPreferencesSurface.vue',
-	'src/pages/settings-redesign/HataskeyUiSRssSettings.vue',
-	'src/pages/settings-redesign/HataskeyUiSBottomNavSettings.vue',
-	'src/utility/hatasaba-device-prefs.ts',
 ] as const;
 
 /** These controls are owned by the redesigned surface, so they have no legacy
@@ -984,24 +951,9 @@ function redesignedPreferenceAuditDescriptorsV2(
 	const destinations: Record<string, string> = {
 		emojiAdditionNotice: 'notifications-preferences',
 		hourlyTimeNotice: 'notifications-preferences',
-		hataskeyUi3ComposerShortcut1: 'hataskey-ui-s',
-		hataskeyUi3ComposerShortcut2: 'hataskey-ui-s',
-		hataskeyUi3ComposerEmojiPosition: 'hataskey-ui-s',
-		hataskeyUi3ComposerPosition: 'hataskey-ui-s',
-		hataskeyUi3TimelineBackground: 'hataskey-ui-s',
-		hataskeyUi3SideMenuBackground: 'hataskey-ui-s',
-		hataskeyUi3RightPaneBackground: 'hataskey-ui-s',
-		hataskeyUi3GlassDensity: 'hataskey-ui-s',
-		hataskeyUi3BottomNav: 'hataskey-ui-s',
-		hataskeyUi3RssEnabled: 'hataskey-ui-s',
-		hataskeyUi3RssFeeds: 'hataskey-ui-s',
-		hataskeyUi3RssAutoSwitch: 'hataskey-ui-s',
-		hataskeyUi3RssReadSeconds: 'hataskey-ui-s',
-		hataskeyUi3RssReadMode: 'hataskey-ui-s',
 	};
 	const keys = Object.keys(destinations).filter(key => registered.has(key));
-	const hasUiSDisplaySize = localStorageKeysForAuditV2(input.localStorageDefinition).includes('hataskeyUiSDisplaySize');
-	if (keys.length === 0 && !hasUiSDisplaySize) return [];
+	if (keys.length === 0) return [];
 	const evidenceFiles = new Set<string>(REDESIGNED_PREFERENCE_AUDIT_SOURCE_FILES_V2);
 	const sources = new Map([...input.settingsSources, ...input.runtimeSources]
 		.filter(source => evidenceFiles.has(source.file))
@@ -1010,21 +962,6 @@ function redesignedPreferenceAuditDescriptorsV2(
 	const models = sources.get(REDESIGNED_PREFERENCE_AUDIT_SOURCE_FILES_V2[1]) ?? '';
 	const search = sources.get(REDESIGNED_PREFERENCE_AUDIT_SOURCE_FILES_V2[2]) ?? '';
 	const surface = sources.get(REDESIGNED_PREFERENCE_AUDIT_SOURCE_FILES_V2[3]) ?? '';
-	const rssSurface = sources.get(REDESIGNED_PREFERENCE_AUDIT_SOURCE_FILES_V2[4]) ?? '';
-	const bottomNavSurface = sources.get(REDESIGNED_PREFERENCE_AUDIT_SOURCE_FILES_V2[5]) ?? '';
-	const devicePrefs = sources.get(REDESIGNED_PREFERENCE_AUDIT_SOURCE_FILES_V2[6]) ?? '';
-	const uiSDisplaySizeDescriptor = (() => {
-		if (!hasUiSDisplaySize) return [];
-		const connected = /:data-settings-search-id="uiSDisplaySizeSearchId"/u.test(surface)
-			&& /:modelValue="hataskeyUiSDisplaySize"/u.test(surface)
-			&& /@update:modelValue="setHataskeyUiSDisplaySize\(\$event\)"/u.test(surface)
-			&& /miLocalStorage\.getItem\('hataskeyUiSDisplaySize'\)/u.test(devicePrefs)
-			&& /miLocalStorage\.setItem\('hataskeyUiSDisplaySize', size\)/u.test(devicePrefs)
-			&& /storageRefs:\s*\[\{ kind: 'local', key: 'hataskeyUiSDisplaySize' \}\]/u.test(search)
-			&& /stableId:\s*uiSDisplaySizeSearchId/u.test(search);
-		if (!connected) throw new Error('settings key audit: UI S display size has invalid device control evidence');
-		return [{ stableId: 'settings.control.device.hataskey-ui-s-display-size', searchable: true, preferenceKeys: [], storageRefs: [{ kind: 'local' as const, key: 'hataskeyUiSDisplaySize' }] }];
-	})();
 	const inventory = /export\s+const\s+preferenceContainerKeys\s*=\s*\[([\s\S]*?)\]\s*as\s+const/u.exec(catalog)?.[1] ?? '';
 	const mountedControl = (/v-for="control in visibleMountedControls"/u.test(surface)
 		|| /v-for="control in controlGroup\.controls"/u.test(surface)
@@ -1039,30 +976,14 @@ function redesignedPreferenceAuditDescriptorsV2(
 		&& /preferenceControls\.map\(control\s*=>/u.test(search)
 		&& /const\s+stableId\s*=\s*generatedPreferenceSearchId\(entry\.key\)/u.test(search)
 		&& /preferenceKeys:\s*\[entry\.key\]/u.test(search);
-	return [...uiSDisplaySizeDescriptor, ...keys.map(key => {
-		if (key === 'hataskeyUi3BottomNav') {
-			const mounted = /<HataskeyUiSBottomNavSettings\s+v-if="destination\.id === 'hataskey-ui-s'(?: \|\| categoryId === 'appearance')?"/u.test(surface);
-			const connected = /<MkPreferenceContainer\s+k="hataskeyUi3BottomNav"/u.test(bottomNavSurface)
-				&& /prefer\.commit\('hataskeyUi3BottomNav',/u.test(bottomNavSurface)
-				&& /resolveUiSBottomNav\(prefer\.r\.hataskeyUi3BottomNav\.value,/u.test(bottomNavSurface)
-				&& /v-model="items"/u.test(bottomNavSurface)
-				&& /computed\(\{ get: currentItems, set: commit \}\)/u.test(bottomNavSurface);
-			const indexed = /const uiSBottomNavSearchId = generatedPreferenceSearchId\('simpleUi\.bottomNav'\)/u.test(search)
-				&& /preferenceKeys:\s*\['hataskeyUi3BottomNav'\]/u.test(search);
-			if (!mounted || !connected || !indexed) throw new Error(`settings key audit: redesigned preference control has invalid evidence: ${key}`);
-			return { stableId: 'settings.control.preference.simpleui-bottomnav', searchable: true, preferenceKeys: [key], storageRefs: [{ kind: 'pref' as const, key }] };
-		}
+	return keys.map(key => {
 		const keyPattern = storageKeyMatcherSourceV2(key);
 		const quotedKey = `['"]${keyPattern}['"]`;
 		const hasInventory = new RegExp(quotedKey, 'u').test(inventory);
 		const hasDestination = new RegExp(`\\b${keyPattern}\\s*:\\s*\\{\\s*destinationId:\\s*['"]${destinations[key]}['"]`, 'u').test(catalog);
 		const hasLabel = new RegExp(`\\b${keyPattern}\\s*:\\s*i18n\\.ts\\.`, 'u').test(catalog);
 		const hasModel = new RegExp(`\\b${keyPattern}\\s*:\\s*unknownRef\\(prefer\\.model\\(${quotedKey}\\)\\)`, 'u').test(models);
-		const specializedRssRender = key.startsWith('hataskeyUi3Rss')
-			&& /<HataskeyUiSRssSettings\s+v-if="destination\.id === 'hataskey-ui-s'(?: \|\| categoryId === 'appearance')?"/u.test(surface)
-			&& new RegExp(`searchId\\(${quotedKey}\\)`, 'u').test(rssSurface)
-			&& new RegExp(`(?:prefer\\.commit\\(${quotedKey}|prefer\\.r\\.${keyPattern}\\.value)`, 'u').test(rssSurface);
-		if (!hasInventory || !hasDestination || !hasLabel || !hasModel || !(specializedRssRender || mountedControl && !key.startsWith('hataskeyUi3Rss')) || !runtimeCatalog) {
+		if (!hasInventory || !hasDestination || !hasLabel || !hasModel || !mountedControl || !runtimeCatalog) {
 			throw new Error(`settings key audit: redesigned preference control has invalid evidence: ${key}`);
 		}
 		return {
@@ -1071,7 +992,7 @@ function redesignedPreferenceAuditDescriptorsV2(
 			preferenceKeys: [key],
 			storageRefs: [{ kind: 'pref', key }],
 		};
-	})];
+	});
 }
 
 /** Files whose content is evidence for a reviewed storage-key classification.
@@ -1269,10 +1190,6 @@ type SettingsTransitiveControlDispositionDefinitionV2 = Pick<SettingsTransitiveC
 };
 
 const TRANSITIVE_SETTINGS_COMPONENT_DISPOSITIONS_V2: Readonly<Record<string, SettingsTransitiveControlDispositionDefinitionV2>> = {
-	'src/components/MkNoteCharmPreview.vue': {
-		disposition: 'nonsetting',
-		reason: 'MkNoteCharmPreviewはinert内でmockの実MkNoteにサンプルを渡す読取専用preview。設定値・保存先を所有せず、投稿やメディア操作のimport閉包は設定面ではない',
-	},
 	'src/components/MkCode.vue': {
 		disposition: 'nonsetting',
 		reason: 'MkCodeのcopy/showは表示中コードのコピー・展開だけで、prefer.s.dataSaver.codeは読取のみ。設定値を更新しない',
@@ -1363,34 +1280,6 @@ const TRANSITIVE_SETTINGS_COMPONENT_DISPOSITIONS_V2: Readonly<Record<string, Set
 		disposition: 'nonsetting',
 		reason: 'MkTokenGenerateWindowは連携トークンを生成する一時workflowであり、永続設定値の独立targetではない。検索から生成・同意を開始しない',
 	},
-	'src/components/HataFeedExportWindow.vue': {
-		disposition: 'nonsetting',
-		reason: 'HataFeedExportWindowは書き出し範囲・形式を一回のexport実行のために選ぶworkflowで、設定値・到達先を永続化しない',
-	},
-	'src/components/HataFeedProjectSettings.vue': {
-		disposition: 'nonsetting',
-		reason: 'HataFeedProjectSettingsは実行時に選んだ共有プロジェクトの作成・編集・停止・削除と書き出しを行うデータ管理workflow。表示設定値を所有せず、検索からプロジェクトの選択や更新を開始しない',
-	},
-	'src/components/HatadyExportDialog.vue': {
-		disposition: 'nonsetting',
-		reason: 'HatadyExportDialogは書き出し対象・期間を一回のexport実行のために選ぶworkflowで、設定値・到達先を永続化しない',
-	},
-	'src/components/HatadyTutorial.vue': {
-		disposition: 'nonsetting',
-		reason: 'HatadyTutorialは初回案内を進める一時workflowであり、検索から開始・完了状態を変更しない',
-	},
-	'src/components/HataFeedTutorial.vue': {
-		disposition: 'nonsetting',
-		reason: 'HataFeedTutorialは使い方と更新内容を読む一時workflow。設定からの再表示は確認状況や実データを変更しない',
-	},
-	'src/components/HyTutorial.vue': {
-		disposition: 'parent-contained',
-		reason: 'HyTutorialはHatadyとHataFeedの案内にページ送りと終了操作を提供する共通表示。設定値や独立した保存先を持たない',
-	},
-	'src/components/MkExternalReactionPicker.vue': {
-		disposition: 'parent-contained',
-		reason: 'MkExternalReactionPickerは外部アカウント画面の選択済みお気に入り絵文字へ値を返すpickerで、保存キー・条件・静的到達先は親の外部アカウント設定が所有する',
-	},
 	'src/components/MkHatasabaUi2EditWindow.vue': {
 		disposition: 'parent-contained',
 		reason: 'MkHatasabaUi2EditWindowは常設HatasabaUi2SettingsBodyと同じUI2下書きの旧popup面で、検索のcanonical到達先・保存根拠は常設surfaceが所有する',
@@ -1402,14 +1291,6 @@ const TRANSITIVE_SETTINGS_COMPONENT_DISPOSITIONS_V2: Readonly<Record<string, Set
 	'src/components/MkUrlPreviewPopup.vue': {
 		disposition: 'nonsetting',
 		reason: 'MkUrlPreviewPopupはURLプレビューを一時表示するだけで、設定値を変更しない',
-	},
-	'src/components/HatadySubjectManager.vue': {
-		disposition: 'parent-contained',
-		reason: 'HatadySubjectManagerはHatady表示設定から選択済み分野を管理する一時popupであり、検索は親のHatady管理セクションへ安全に到達する',
-	},
-	'src/components/MkMascotImportSelectDialog.vue': {
-		disposition: 'nonsetting',
-		reason: 'MkMascotImportSelectDialogは読み込み時に上限超過した表情・文言から残す項目を一度だけ選ぶ一時workflowで、設定値・保存先・安全な独立到達先を所有しない',
 	},
 	'src/pages/settings/avatar-decoration.decoration.vue': {
 		disposition: 'nonsetting',
@@ -1637,7 +1518,6 @@ const UI2_DRAFT_PREFERENCE_KEYS: Readonly<Record<string, readonly string[]>> = {
 	'editor.draft.editedOpacity': ['simpleUi.glassUiCardOpacity'],
 	'editor.draft.editedDisableBubbleInHatasabaDeck': ['simpleUi.disableBubbleInHatasabaDeck'],
 	'editor.draft.editedShowTrendingTab': ['simpleUi.showTrendingTab'],
-	'editor.draft.editedShowHatadyTab': ['simpleUi.showHatadyTab'],
 	'editor.draft.editedTopNavMode': ['simpleUi.topNavMode'],
 	'editor.draft.editedTopNav': ['simpleUi.topNav'],
 	'editor.draft.editedBottomNav': ['simpleUi.bottomNav'],
@@ -2126,28 +2006,6 @@ function canonicalizeTemplate(template: string, aliases: ReadonlyMap<string, str
 	});
 }
 
-/** A source-owned conditional label has two audited, translated variants.
- * Retain both without evaluating the selected theme or trusting arbitrary
- * computed strings as settings-search copy. */
-function sourceControlLabelTemplateV2(sourceFile: string, node: ElementNode, template: string): string {
-	if (sourceFile === 'src/pages/HataskSettings.vue'
-		&& normalizedExpression(eventHandlerExpression(node, 'click')) === "toggle('autoTheme')"
-		&& template === '${autoAppearanceLabel}') {
-		return '${i18n.ts._hata._hatask._settings.autoAppearanceTheme} / ${i18n.ts._hata._hatask._settings.autoAppearance}';
-	}
-	if (sourceFile === 'src/components/MkNoteCharmSettings.vue') {
-		if (normalizedExpression(eventHandlerExpression(node, 'click')) === 'chooseImage'
-			&& template === '${draft.fileId ? i18n.ts._noteCharm.replaceImage : i18n.ts._noteCharm.chooseImage}') {
-			return '${i18n.ts._noteCharm.chooseImage} / ${i18n.ts._noteCharm.replaceImage}';
-		}
-		if (directiveExpression(node, 'model') === 'draft.size'
-			&& template === '${i18n.ts._noteCharm.width}${draft.size} px') {
-			return '${i18n.ts._noteCharm.width}';
-		}
-	}
-	return template;
-}
-
 function safeI18nKeys(template: string): string[] | null {
 	const expressions = [...template.matchAll(/\$\{([^}]+)\}/gu)].map(([, expression]) => expression.trim());
 	if (!expressions.every(expression => I18N_PROPERTY_EXPRESSION.test(expression))) return null;
@@ -2298,7 +2156,7 @@ function markerIdFor(node: ElementNode, sourceFile: string): string {
 function hataCustomConditionActivation(sourceFile: string, conditions: readonly string[]): SettingsControlActivationV2 | undefined {
 	if (sourceFile !== 'src/pages/settings/hata-custom.vue') return undefined;
 	for (const condition of [...conditions].reverse()) {
-		const category = /activeCat\s*===\s*['"](general|font|glassUi|visual|hatask|hatady|mascot|earthquake|accessibility)['"]/u.exec(condition)?.[1] as HataCustomCategoryV2 | undefined;
+		const category = /activeCat\s*===\s*['"](general|glassUi|visual)['"]/u.exec(condition)?.[1] as HataCustomCategoryV2 | undefined;
 		if (category != null) return { kind: 'hata-custom-category', category };
 	}
 	return undefined;
@@ -2319,10 +2177,6 @@ function ownerForSettingsControlV2(
 	if (route === '/settings/hata-custom'
 		|| sourceFile.includes('HatasabaUi2')
 		|| sourceFile.includes('HataSettings')
-		|| sourceFile.endsWith('/HataskSettings.vue')
-		|| sourceFile.endsWith('/HatadyDisplaySettings.vue')
-		|| sourceFile.endsWith('/MkMascotSettings.vue')
-		|| sourceFile.endsWith('/MkEarthquakeSettings.vue')
 		|| sourceFile.endsWith('/MkUISetup.vue')) return 'hatasaba';
 	return 'core';
 }
@@ -2354,7 +2208,6 @@ const ACCOUNT_SETTINGS_ROUTES_V2 = new Set([
 	'/settings/privacy',
 	'/settings/email',
 	'/settings/security',
-	'/settings/external-account',
 ]);
 
 // These popup editors hold a temporary value locally only until the parent
@@ -2416,11 +2269,6 @@ function localStorageRefsForSourceV2(
 	if (sourceFile === 'src/components/HatasabaUi2SettingsBody.vue') {
 		return (UI2_DRAFT_DEVICE_KEYS[modelExpression ?? ''] ?? []).map(key => ({ kind: 'local' as const, key }));
 	}
-	if (sourceFile === 'src/components/MkEarthquakeSettings.vue') {
-		if (modelExpression === 'prefModel') return [{ kind: 'local', key: 'hataEarthquakePref' }];
-		if (modelExpression === 'pollModel') return [{ kind: 'local', key: 'hataEarthquakePollSec' }];
-	}
-	if (sourceFile === 'src/components/HatadyDisplaySettings.vue') return [{ kind: 'local', key: 'hatadyTheme' }];
 	return [];
 }
 
@@ -2436,14 +2284,6 @@ type ExplicitControlStorageBindingV2 = {
  * of receiving a made-up persistence scope.
  */
 const NON_PERSISTENT_FORM_CONTROL_EXCLUSIONS_V2: Readonly<Record<string, Readonly<Record<string, string>>>> = {
-	'src/components/concrnt/ConcrntSettings.vue': {
-		domainDraft: 'Concrnt連携ウィザードの接続先候補。検索からドメイン確認や認証を開始しない',
-		secretDraft: 'Concrnt認証専用の一時サブキー入力。秘密情報は検索項目・検索語へ含めない',
-		saveDraft: 'Concrnt連携の確定前だけ保持する保存方法の下書き。連携後の保存方法設定を検索対象にする',
-	},
-	'src/pages/settings/external-account.vue': {
-		selectedHost: 'MiAuth認証を始める前の接続先候補。検索から認証フローを開始しない',
-	},
 	'src/pages/settings/2fa.qrdialog.vue': {
 		token: '二段階認証登録の一時確認コードであり、保存済み設定値ではない。検索から認証フローを開始しない',
 	},
@@ -2459,41 +2299,6 @@ const NON_PERSISTENT_FORM_CONTROL_EXCLUSIONS_V2: Readonly<Record<string, Readonl
  * or the exact local/profile key used by that control.
  */
 const EXPLICIT_CONTROL_STORAGE_BINDINGS_V2: Readonly<Record<string, Readonly<Record<string, ExplicitControlStorageBindingV2>>>> = {
-	'src/components/MkNoteCharmSettings.vue': {
-		'model:draft.enabled': noteCharmAccountStorageBindingV2(),
-		'model:draft.size': noteCharmAccountStorageBindingV2(),
-		'model:draft.color': noteCharmAccountStorageBindingV2(),
-		'click:chooseImage': noteCharmAccountStorageBindingV2(),
-		'click:removeImage': noteCharmAccountStorageBindingV2(),
-		'click:save': noteCharmAccountStorageBindingV2(),
-		'model:noteCharmDisplay.show': { refs: [{ kind: 'local', key: 'noteCharmDisplay' }], evidence: 'setNoteCharmDisplay({ show }) は端末の noteCharmDisplay を即時更新する' },
-		'model:noteCharmDisplay.showOthers': { refs: [{ kind: 'local', key: 'noteCharmDisplay' }], evidence: 'setNoteCharmDisplay({ showOthers }) は端末の noteCharmDisplay を即時更新する' },
-		'model:noteCharmDisplay.motion': { refs: [{ kind: 'local', key: 'noteCharmDisplay' }], evidence: 'setNoteCharmDisplay({ motion }) は端末の noteCharmDisplay を即時更新する' },
-		'model:noteCharmDisplay.wind': { refs: [{ kind: 'local', key: 'noteCharmDisplay' }], evidence: 'setNoteCharmDisplay({ wind }) は端末の noteCharmDisplay を即時更新する' },
-	},
-	'src/components/concrnt/ConcrntSettings.vue': {
-		"change:updateBoolean('enabled',$event)": concrntSettingsStorageBindingV2('enabled'),
-		"change:updateBoolean('notifications',$event)": concrntSettingsStorageBindingV2('notifications'),
-		"change:updateBoolean('popups',$event)": concrntSettingsStorageBindingV2('popups'),
-		"change:updateSave('device',$event)": concrntSettingsStorageBindingV2('save'),
-		"change:updateSave('session',$event)": concrntSettingsStorageBindingV2('save'),
-		'change:updateProfile': concrntSettingsStorageBindingV2('profile'),
-	},
-	'src/pages/settings/external-account.vue': {
-		'change:onEnabledChange': { refs: [{ kind: 'pref', key: 'external.enabled' }], evidence: 'onEnabledChange() → onToggleEnabled() → externalEnabled は prefer.model(external.enabled) を更新する' },
-		"change:onTimelineChange('external.enableOHTL',$event)": { refs: [{ kind: 'pref', key: 'external.enableOHTL' }], evidence: 'onTimelineChange() は引数の external.enableOHTL を prefer.commit で更新する' },
-		"change:onTimelineChange('external.enableOLTL',$event)": { refs: [{ kind: 'pref', key: 'external.enableOLTL' }], evidence: 'onTimelineChange() は引数の external.enableOLTL を prefer.commit で更新する' },
-		'change:onNotificationChange': { refs: [{ kind: 'pref', key: 'external.disableNotificationToast' }], evidence: 'onNotificationChange() は external.disableNotificationToast を prefer.commit で更新する' },
-	},
-	'src/components/HataFeedDisplaySettings.vue': {
-		'click:choose(theme.value)': { refs: [{ kind: 'local', key: 'hatafeedTheme' }], evidence: 'choose() は setHataFeedTheme を通じて端末の hatafeedTheme を即時更新する' },
-	},
-	'src/components/HatadyDisplaySettings.vue': {
-		// The carousel keeps the same buffered theme value as the former inline
-		// editTheme assignment. Index its option row once; arrows remain alternate
-		// carousel affordances represented by the static display-settings group.
-		'click:choose(opt.value)': { refs: [{ kind: 'registry', scope: ['client', 'hatady'], key: 'display' }], evidence: 'choose() は editTheme を編集し、save() が saveHatadyDisplay で client/hatady:display へ明示保存する' },
-	},
 	'src/pages/settings/index.vue': {
 		'click:enableAutoBackup': {
 			refs: [{ kind: 'pizzax', store: 'base', key: 'enablePreferencesAutoCloudBackup', scope: 'device' }],
@@ -2527,9 +2332,6 @@ const EXPLICIT_CONTROL_STORAGE_BINDINGS_V2: Readonly<Record<string, Readonly<Rec
 		'model:foldableLayout': { refs: [{ kind: 'local', key: 'hataFoldableLayout' }], evidence: 'setFoldableLayoutMode() はこの端末の hataFoldableLayout を更新する' },
 		'model:classicNoteSpacingDisplay': { refs: [{ kind: 'pref', key: 'simpleUi.classicNoteSpacing' }], evidence: 'classicNoteSpacingDisplay の setter は simpleUi.classicNoteSpacing を更新する' },
 		'click:addBotAllowlistUser': { refs: [{ kind: 'pref', key: 'simpleUi.botAllowlist' }], evidence: 'addBotAllowlistUser() は simpleUi.botAllowlist を更新する' },
-		'click:onFontChange(preset.id)': { refs: [{ kind: 'pref', key: 'hataFont.id' }], evidence: 'onFontChange() は hataFont.id を更新する' },
-		"click:onFontChange('system')": { refs: [{ kind: 'pref', key: 'hataFont.id' }], evidence: 'onFontChange() は hataFont.id を更新する' },
-		'click:resetToDefault': { refs: [{ kind: 'pref', key: 'hataFont.id' }, { kind: 'pref', key: 'hataFont.customUrl' }, { kind: 'pref', key: 'hataFont.customName' }], evidence: 'resetToDefault() はカスタムフォントの profile 値を初期化する' },
 	},
 	'src/pages/settings/migration.vue': {
 		'model:moveToAccount': { refs: [{ kind: 'api', endpoint: 'i/update', fields: ['movedTo'] }], evidence: 'move() は移行先を現在アカウントの i/update 経路へ保存する' },
@@ -2625,20 +2427,6 @@ function explicitControlStorageBindingV2(
 		?? (change == null ? undefined : sourceBindings[`change:${change}`]);
 }
 
-function noteCharmAccountStorageBindingV2(): ExplicitControlStorageBindingV2 {
-	return {
-		refs: [{ kind: 'api', endpoint: 'i/update', fields: ['noteCharm'] }],
-		evidence: 'draftの画像・有効状態・幅・模様・色はsave()がpayload()をi/update.noteCharmへ明示保存する',
-	};
-}
-
-function concrntSettingsStorageBindingV2(field: 'enabled' | 'save' | 'profile' | 'notifications' | 'popups'): ExplicitControlStorageBindingV2 {
-	return {
-		refs: [{ kind: 'indexeddb', database: 'HataskeyConcrnt', store: 'private', key: '${encodeURIComponent(owner)}:connection', fields: [`settings.${field}`] }],
-		evidence: `updateConcrntSettings() → ConcrntStorage.saveConnection() が HataskeyConcrnt/private の owner 別 connection レコード内 settings.${field} を更新する。クラウド同期・設定バックアップには含めない`,
-	};
-}
-
 function nonPersistentFormControlExclusionV2(sourceFile: string, modelExpression: string | undefined): string | undefined {
 	return modelExpression == null ? undefined : NON_PERSISTENT_FORM_CONTROL_EXCLUSIONS_V2[sourceFile]?.[modelExpression];
 }
@@ -2665,9 +2453,6 @@ function uniqueStorageRefsV2(refs: readonly SettingsStorageRefV2[]): SettingsSto
 }
 
 function registryRefsForSourceV2(sourceFile: string): SettingsStorageRefV2[] {
-	if (sourceFile === 'src/pages/HataskSettings.vue') return [{ kind: 'registry', scope: ['client', 'hatask'], key: 'settings' }];
-	if (sourceFile === 'src/components/HatadyDisplaySettings.vue') return [{ kind: 'registry', scope: ['client', 'hatady'], key: 'display' }];
-	if (sourceFile === 'src/pages/MkMascotSettings.vue') return [{ kind: 'registry', scope: ['client', 'hataMascot'], key: 'displaySettings' }];
 	return [];
 }
 
@@ -2677,9 +2462,7 @@ function apiRefsForControlV2(sourceFile: string, route: string | undefined, sour
 	const text = `${click}\n${handler == null ? '' : handlerBodies(sourceCode).get(handler) ?? ''}`;
 	const endpoint = /(?:misskeyApi|(?:os\.)?apiWithDialog)\(\s*['"]([^'"]+)['"]/u.exec(text)?.[1];
 	if (endpoint != null) return [{ kind: 'api', endpoint }];
-	if (sourceFile === 'src/components/MkEarthquakeSettings.vue' && /notif/i.test(`${node.loc.source} ${text}`)) return [{ kind: 'api', endpoint: 'hata/earthquake/notification-settings-update' }];
-	if (sourceFile === 'src/pages/MkMascotSettings.vue') return [{ kind: 'api', endpoint: 'hata/mascot/update' }];
-	if (route != null && ['/settings/profile', '/settings/privacy', '/settings/email', '/settings/security', '/settings/external-account'].includes(route) && /(?:misskeyApi|(?:os\.)?apiWithDialog)\(/u.test(sourceCode)) return [{ kind: 'api', endpoint: 'i/update' }];
+	if (route != null && ['/settings/profile', '/settings/privacy', '/settings/email', '/settings/security'].includes(route) && /(?:misskeyApi|(?:os\.)?apiWithDialog)\(/u.test(sourceCode)) return [{ kind: 'api', endpoint: 'i/update' }];
 	return [];
 }
 
@@ -2715,17 +2498,14 @@ function deriveSettingsMetadataV2(
 	const hasProfile = storageRefs.some(ref => ref.kind === 'pref');
 	const hasDevice = storageRefs.some(ref => ref.kind === 'local' || ref.kind === 'indexeddb' || (ref.kind === 'pizzax' && ref.scope !== 'account'));
 	const hasAccount = storageRefs.some(ref => ref.kind === 'registry' || ref.kind === 'api' || (ref.kind === 'pizzax' && ref.scope === 'account'));
-	// Hatady deliberately keeps a device cache for an account-registry source of
-	// truth. That is not a mixed user choice, but it must be named explicitly.
-	const accountWithDeviceCache = sourceFile === 'src/components/HatadyDisplaySettings.vue' && hasAccount && hasDevice;
-	if ((hasProfile && hasDevice) || (hasProfile && hasAccount) || (hasAccount && hasDevice && !accountWithDeviceCache)) {
+	if ((hasProfile && hasDevice) || (hasProfile && hasAccount) || (hasAccount && hasDevice)) {
 		throw new Error(`settings V2 mixed persistence requires an explicit semantic split: ${sourceFile}:${node.loc.start.line}`);
 	}
 	let persistence: SettingsPersistenceV2;
 	let persistenceEvidence: string;
 	if (hasAccount) {
 		persistence = 'account';
-		persistenceEvidence = `アカウントAPI/Registry: ${storageRefs.filter(ref => ref.kind === 'api' || ref.kind === 'registry').map(ref => ref.kind === 'api' ? ref.endpoint : `${ref.scope.join('/')}:${ref.key}`).join(', ')}${accountWithDeviceCache ? '（miLocalStorageは初期表示用キャッシュ）' : ''}`;
+		persistenceEvidence = `アカウントAPI/Registry: ${storageRefs.filter(ref => ref.kind === 'api' || ref.kind === 'registry').map(ref => ref.kind === 'api' ? ref.endpoint : `${ref.scope.join('/')}:${ref.key}`).join(', ')}`;
 	} else if (hasDevice) {
 		persistence = 'device';
 		persistenceEvidence = `端末保存値: ${storageRefs.filter(ref => ref.kind === 'local' || ref.kind === 'indexeddb' || ref.kind === 'pizzax').map(ref => storageRefIdentityV2(ref)).join(', ')}`;
@@ -2741,10 +2521,8 @@ function deriveSettingsMetadataV2(
 		throw new Error(`settings V2 missing persistence evidence: ${sourceFile}:${node.loc.start.line} (${normalizedExpression(eventHandlerExpression(node, 'click')) ?? modelExpression ?? node.tag})`);
 	}
 	const handlerText = [eventHandlerExpression(node, 'click'), eventHandlerExpression(node, 'update:modelValue'), eventHandlerExpression(node, 'input')].filter(Boolean).join(' ');
-	const buffered = (sourceFile === 'src/components/MkNoteCharmSettings.vue' && hasAccount)
-		|| sourceFile === 'src/components/HatasabaUi2SettingsBody.vue'
-		|| /\b(?:save|saveDisplaySettings|saveSettings|applyHataSettingsTransfer)\b/u.test(handlerText)
-		|| (sourceFile === 'src/pages/MkMascotSettings.vue');
+	const buffered = sourceFile === 'src/components/HatasabaUi2SettingsBody.vue'
+		|| /\b(?:save|saveDisplaySettings|saveSettings|applyHataSettingsTransfer)\b/u.test(handlerText);
 	const reload = sourceFile === 'src/components/HatasabaUi2SettingsBody.vue'
 		|| sourceFile === 'src/pages/settings/custom-css.vue'
 		|| sourceFile === 'src/components/MkUISetup.vue';
@@ -2909,7 +2687,7 @@ export function collectSettingsControlDescriptorsV2(
 				// label that can actually be displayed by the redesigned search UI.
 				const fallbackLabelTemplate = nonEmptyFallbackCandidates.find(value => safeI18nKeys(value) != null) ?? nonEmptyFallbackCandidates[0];
 				const inheritedLabel = !ownLabelTemplate && fallbackLabelTemplate != null;
-				const labelTemplate = sourceControlLabelTemplateV2(sourceFile, node, canonicalizeTemplate(ownLabelTemplate || fallbackLabelTemplate || '', aliases));
+				const labelTemplate = canonicalizeTemplate(ownLabelTemplate || fallbackLabelTemplate || '', aliases);
 				const captionTemplate = canonicalizeTemplate(namedSlotTemplate(node, 'caption'), aliases);
 				const label = literalPart(labelTemplate);
 				const labelI18nKeys = safeI18nKeys(labelTemplate);
@@ -3049,36 +2827,6 @@ type StaticReachabilityGroupSpecV2 = {
 
 const STATIC_REACHABILITY_GROUP_SPECS_V2: readonly StaticReachabilityGroupSpecV2[] = [
 	{
-		stableId: 'settings.group.note-charm-settings',
-		sourceFile: 'src/components/MkNoteCharmSettings.vue',
-		labelExpression: 'i18n.ts._noteCharm.title',
-		labelI18nKeys: ['i18n.ts._noteCharm.title'],
-		aliases: ['ノートチャーム'],
-		sourceSemanticGroupId: 'settings.semantic.feature.note-charm',
-		unmet: [{ kind: 'policy', id: 'note-charm-role-and-ui', behavior: 'explain' }],
-		materialize: false,
-		matches: (node, isRoot) => isRoot && node.tag === 'section',
-	},
-	{
-		stableId: 'settings.group.note-charm-pattern',
-		sourceFile: 'src/components/MkNoteCharmSettings.vue',
-		labelExpression: 'i18n.ts._noteCharm.pattern',
-		labelI18nKeys: ['i18n.ts._noteCharm.pattern'],
-		aliases: ['チャームの模様', '切り抜き', '透明', 'ドット', 'ストライプ', 'チェック'],
-		sourceSemanticGroupId: 'settings.semantic.feature.note-charm',
-		matches: node => node.tag === 'fieldset' && normalizedExpression(expressionOf(findAttribute(node.props, 'class'))) === '$style.patternField',
-	},
-	{
-		stableId: 'settings.group.concrnt-connection-settings',
-		sourceFile: 'src/components/concrnt/ConcrntSettings.vue',
-		labelExpression: 'コンカレント連携(BETA)',
-		labelI18nKeys: [],
-		aliases: ['Concrnt', 'コンカレント', 'CTL', 'コンカレントの通知', 'プロフィール', '端末に保存'],
-		sourceSemanticGroupId: 'settings.semantic.feature.concrnt-linking',
-		unmet: [{ kind: 'runtime-data', id: 'concrnt-account-and-section', behavior: 'explain' }],
-		matches: (node, isRoot) => isRoot && node.tag === 'div',
-	},
-	{
 		stableId: 'settings.group.preference-profile-backups',
 		sourceFile: 'src/pages/settings/profiles.vue',
 		labelExpression: 'i18n.ts._preferencesProfile.manageProfiles',
@@ -3087,16 +2835,6 @@ const STATIC_REACHABILITY_GROUP_SPECS_V2: readonly StaticReachabilityGroupSpecV2
 		sourceSemanticGroupId: 'settings.semantic.feature.preference-profiles',
 		unmet: [{ kind: 'runtime-data', id: 'preference-profile-selection', behavior: 'explain' }],
 		matches: (node, _isRoot, labels) => node.tag === 'SearchMarker' && labels.includes('i18n.ts._preferencesProfile.manageProfiles'),
-	},
-	{
-		stableId: 'settings.group.external-favorite-emoji-settings',
-		sourceFile: 'src/pages/settings/external-account.vue',
-		labelExpression: 'i18n.ts._hata._externalAccount.favoriteEmojiSection',
-		labelI18nKeys: ['i18n.ts._hata._externalAccount.favoriteEmojiSection'],
-		aliases: ['外部アカウント', 'お気に入り絵文字', '外部リアクション', 'emoji picker'],
-		sourceSemanticGroupId: 'settings.semantic.feature.external-account-linking',
-		unmet: [{ kind: 'preference', id: 'external-account-link', behavior: 'explain' }, { kind: 'runtime-data', id: 'external-favorite-emoji-selection', behavior: 'explain' }],
-		matches: (node, _isRoot, labels) => node.tag === 'SearchMarker' && labels.includes('i18n.ts._hata._externalAccount.title'),
 	},
 	{
 		stableId: 'settings.group.security-key-runtime-settings',
@@ -3109,20 +2847,6 @@ const STATIC_REACHABILITY_GROUP_SPECS_V2: readonly StaticReachabilityGroupSpecV2
 		matches: (node, _isRoot, labels) => node.tag === 'MkFolder' && labels.includes('i18n.ts.securityKeyAndPasskey'),
 	},
 	{
-		stableId: 'settings.group.earthquake-notification-settings',
-		sourceFile: 'src/components/MkEarthquakeSettings.vue',
-		labelExpression: '地震・津波の通知',
-		labelI18nKeys: [],
-		aliases: ['地震通知', '津波通知', '震度通知', 'お住いの都道府県で揺れたら通知'],
-		sourceSemanticGroupId: 'settings.semantic.feature.earthquake-tsunami-alerts',
-		unmet: [{ kind: 'preference', id: 'earthquake-notification-enabled', behavior: 'explain' }],
-		materialize: false,
-		// This static card is deliberately narrower than the whole dialog: its
-		// conditional children are server notification settings, while the dialog
-		// also contains unrelated device-only polling and prefecture choices.
-		matches: node => node.tag === 'div' && normalizedExpression(expressionOf(findAttribute(node.props, 'class'))) === '$style.section',
-	},
-	{
 		stableId: 'settings.group.preferences-backup-suggestion',
 		sourceFile: 'src/pages/settings/index.vue',
 		labelExpression: '設定プロファイルの自動バックアップ',
@@ -3132,27 +2856,6 @@ const STATIC_REACHABILITY_GROUP_SPECS_V2: readonly StaticReachabilityGroupSpecV2
 		unmet: [{ kind: 'preference', id: 'preferences-auto-backup-suggestion', behavior: 'explain' }],
 		materialize: false,
 		matches: node => node.tag === 'div' && staticAttributeValue(node, 'class') === 'body',
-	},
-	{
-		stableId: 'settings.group.hatask-runtime-settings',
-		sourceFile: 'src/pages/HataskSettings.vue',
-		labelExpression: 'Hatask の設定',
-		labelI18nKeys: [],
-		aliases: ['Hatask', 'タスク設定', 'デザインテーマ', 'Hatakyu'],
-		sourceSemanticGroupId: 'settings.semantic.feature.hatask-settings',
-		unmet: [{ kind: 'runtime-data', id: 'hatask-view-or-theme-selection', behavior: 'explain' }],
-		materialize: false,
-		matches: node => node.tag === 'div' && normalizedExpression(expressionOf(findAttribute(node.props, 'class'))) === '$style.root',
-	},
-	{
-		stableId: 'settings.group.mascot-runtime-settings',
-		sourceFile: 'src/pages/MkMascotSettings.vue',
-		labelExpression: 'マスコットの設定',
-		labelI18nKeys: [],
-		aliases: ['マスコット', '通知文言', '誕生日', '表情', 'キャラクター'],
-		sourceSemanticGroupId: 'settings.semantic.feature.mascot-display-settings',
-		unmet: [{ kind: 'consent', id: 'mascot-terms', behavior: 'explain' }, { kind: 'runtime-data', id: 'mascot-character-selection', behavior: 'explain' }],
-		matches: node => node.tag === 'div' && normalizedExpression(expressionOf(findAttribute(node.props, 'class'))) === '$style.root',
 	},
 	{
 		stableId: 'settings.group.avatar-decoration-adjustment',
@@ -3245,18 +2948,6 @@ const STATIC_REACHABILITY_GROUP_SPECS_V2: readonly StaticReachabilityGroupSpecV2
 		sourceSemanticGroupId: 'settings.semantic.feature.webhook-editor',
 		unmet: [{ kind: 'runtime-data', id: 'webhook-selection', behavior: 'explain' }],
 		matches: (node, _isRoot, labels) => node.tag === 'FormSection' && labels.includes('i18n.ts._settings.webhook'),
-	},
-	{
-		stableId: 'settings.group.hatady-display-settings',
-		sourceFile: 'src/components/HatadyDisplaySettings.vue',
-		labelExpression: 'Hatady表示設定',
-		aliases: ['Hatady', 'テーマ', '表示設定'],
-		sourceSemanticGroupId: 'settings.semantic.feature.hatady-display-settings',
-		// Native content survives both popup and embedded HyDialog rendering.
-		// A component-root attribute could otherwise land on MkModal's teleport
-		// wrapper instead of a focusable element in the settings surface.
-		matches: node => isSettingsWindowRoot(node, 'MkWindow')
-			|| (node.tag === 'div' && staticAttributeValue(node, 'data-settings-search-group-id') === 'settings.group.hatady-display-settings'),
 	},
 ];
 
@@ -3446,7 +3137,6 @@ const CONTROL_PRIMARY_ALIASES_BY_PREFERENCE_KEY_V2: Readonly<Record<string, stri
 	'nicknameEnabled': ['ニックネーム', 'ニャ', 'nicknameEnabled'],
 	'chat.sendOnEnter': ['Enterで送信'],
 	'hataBranding.useHatakyu': ['ハタキュ', 'アイコン', 'ブランディング'],
-	'weatherEffect.enabled': ['天気', '雨', '雪', '若葉', '演出'],
 	'deck.columnAlign': ['カラム', 'deck.columnAlign'],
 	'deck.wallpaper': ['壁紙'],
 	'deck.menuPosition': ['メニュー位置'],
@@ -3515,13 +3205,11 @@ function hataCustomLegacyCategoryShortcutV2(
 // separate group descriptor.  Keeping the mapping finite makes any new
 // source prove its own relation evidence instead of inheriting a broad route.
 const EXPLICIT_SOURCE_SEMANTIC_GROUPS: Readonly<Record<string, string>> = {
-	'src/components/MkNoteCharmSettings.vue': 'settings.semantic.feature.note-charm',
 	// A compact dialog/popup has a visible feature heading, but no static
 	// FormSection host spanning its controls. These are hand-audited feature
 	// scopes, never a generic route/category fallback.
 	'src/pages/settings/avatar-decoration.dialog.vue': 'settings.semantic.feature.avatar-decoration-adjustment',
 	'src/pages/settings/2fa.vue': 'settings.semantic.feature.security-key-settings',
-	'src/components/MkEarthquakeSettings.vue': 'settings.semantic.feature.earthquake-tsunami-alerts',
 	'src/pages/settings/email.vue': 'settings.semantic.feature.email-account',
 	'src/pages/settings/mute-block.vue': 'settings.semantic.feature.mute-block',
 	'src/pages/settings/mute-block.instance-mute.vue': 'settings.semantic.feature.mute-block',
@@ -3535,23 +3223,13 @@ const EXPLICIT_SOURCE_SEMANTIC_GROUPS: Readonly<Record<string, string>> = {
 	'src/components/MkPushNotificationAllowButton.vue': 'settings.semantic.feature.notification-delivery',
 	'src/pages/settings/sounds.vue': 'settings.semantic.feature.sound-settings',
 	'src/pages/settings/sounds.sound.vue': 'settings.semantic.feature.sound-settings',
-	// These screens are self-contained feature editors.  Their templates predate
-	// FormSection/SearchMarker, so a source-local feature scope is the only
-	// static, user-visible relation evidence.  This is intentionally a finite
-	// list of named features -- it must not become a route/category catch-all.
-	'src/components/HatadyDisplaySettings.vue': 'settings.semantic.feature.hatady-display-settings',
-	'src/components/HataFeedDisplaySettings.vue': 'settings.semantic.feature.hatafeed-display-settings',
-	'src/components/concrnt/ConcrntSettings.vue': 'settings.semantic.feature.concrnt-linking',
 	// The permanent surface is a named, user-visible feature area. Its root
 	// category landing and the three child groups are genuine peers, unlike a
 	// route-wide fallback, so it supplies relation evidence for the canonical
 	// "Hataskey UI" destination.
 	'src/components/HatasabaUi2ImmediateSettings.vue': 'settings.semantic.feature.hatasaba-ui2-immediate-surface',
 	'src/components/MkUISetup.vue': 'settings.semantic.feature.ui-selection',
-	'src/pages/HataskSettings.vue': 'settings.semantic.feature.hatask-settings',
-	'src/pages/MkMascotSettings.vue': 'settings.semantic.feature.mascot-display-settings',
 	'src/pages/settings/emoji-palette.vue': 'settings.semantic.feature.emoji-palette',
-	'src/pages/settings/external-account.vue': 'settings.semantic.feature.external-account-linking',
 	'src/pages/settings/hidden-reactions-manage.vue': 'settings.semantic.feature.hidden-reactions',
 	'src/pages/settings/migration.vue': 'settings.semantic.feature.account-migration',
 	// Switching/adding an account and exporting its account data are the two
@@ -3602,7 +3280,7 @@ function explicitFeatureSemanticGroupV2(
 		if (/\bedited(?:GlassUiBubble|NormalNoBannerBg|ProfileNoBannerBg)\b/u.test(modelExpression ?? '')) {
 			return 'settings.semantic.feature.hatasaba-ui2-glass-appearance';
 		}
-		if (/\bedited(?:ShowTrendingTab|ShowHatadyTab|TopNavMode|DeckIgnoreWidth|TabSwipeEnabled|DisableBubbleInHatasabaDeck)\b/u.test(modelExpression ?? '')) {
+		if (/\bedited(?:ShowTrendingTab|TopNavMode|DeckIgnoreWidth|TabSwipeEnabled|DisableBubbleInHatasabaDeck)\b/u.test(modelExpression ?? '')) {
 			return 'settings.semantic.feature.hatasaba-ui2-navigation-deck';
 		}
 	}
@@ -3614,12 +3292,9 @@ function explicitFeatureSemanticGroupV2(
 		// not merely to an arbitrary item in the same category.
 		if (/\bhideMutedReactions\b/u.test(identity)) return 'settings.semantic.feature.hidden-reactions';
 		if (/\btimelineAnimationDirection\b/u.test(identity)) return 'settings.semantic.feature.timeline-motion';
-		if (/\bshowLoginBonusPopup\b/u.test(identity)) return 'settings.semantic.feature.welcome-notices';
 		if (/_font\.(?:resetDefault|uiFontSelection)/u.test(identity)) return 'settings.semantic.feature.font-customization';
 		if (/\b(?:foldableLayout|hataBranding\.useHatakyu)\b/u.test(identity)) return 'settings.semantic.feature.hatasaba-ui2';
 		if (/\bsimpleUi\.showTimelineDateOnMobile\b/u.test(identity)) return 'settings.semantic.feature.timeline-display';
-		if (/\b(?:hatafeed\.leaves|weatherEffect\.)\b/u.test(identity)) return 'settings.semantic.feature.seasonal-display-effects';
-		if (/hatady|ハタディ/iu.test(identity)) return 'settings.semantic.feature.hatady-display-settings';
 		if (/\bsimpleUi\.(?:widgetBorder|glassEffect|deckNoBannerBg|showPageHeader)\b/u.test(identity)) return 'settings.semantic.feature.hatasaba-ui-surface';
 	}
 	if (sourceFile === 'src/pages/settings/preferences.vue') {
@@ -3650,10 +3325,8 @@ function explicitFeatureSemanticGroupForHostV2(sourceFile: string, host: Pick<St
 	if (sourceGroup != null) return sourceGroup;
 	if (sourceFile === 'src/pages/settings/hata-custom.vue') {
 		const labelKeys = new Set(host.labelI18nKeys ?? []);
-		if (/hatady/iu.test(`${host.key} ${host.labelTemplate}`)) return 'settings.semantic.feature.hatady-display-settings';
 		if (host.key.includes('|SearchMarker|') && labelKeys.has('i18n.ts._hata._customSettings.title')) return 'settings.semantic.feature.hata-custom-general';
 		if (labelKeys.has('i18n.ts._hata._customSettings._general.hideBotPosts')) return 'settings.semantic.feature.hata-custom-general';
-		if (labelKeys.has('i18n.ts._hata._customSettings._font.uiFontSelection')) return 'settings.semantic.feature.font-customization';
 		if (labelKeys.has('i18n.ts._hata._customSettings._ui.hatasabaUi2Settings')) return 'settings.semantic.feature.hatasaba-ui2';
 		if (labelKeys.has('i18n.ts._hata._customSettings._visual.noteSpacing')) return 'settings.semantic.feature.timeline-display';
 	}
@@ -3732,16 +3405,6 @@ function staticGroupMetadataOverrideV2(
  * default and make the device-only filter lie.
  */
 const STATIC_GROUP_METADATA_OVERRIDES_V2: Readonly<Record<string, StaticGroupMetadataOverrideV2>> = {
-	'settings.group.hatafeed-theme': staticGroupMetadataOverrideV2(
-		'device', 'immediate', 'all', 'hatasaba', 'all',
-		'HataFeedのテーマは setHataFeedTheme が miLocalStorage の hatafeedTheme へ即時保存する',
-		[{ kind: 'local', key: 'hatafeedTheme' }],
-	),
-	'settings.group.hatady-display-settings': staticGroupMetadataOverrideV2(
-		'account', 'buffered', 'all', 'hatasaba', 'all',
-		'Hatadyのテーマを明示保存する設定グループ。client/hatady:display が正本で、hatadyTheme は初期表示用の端末キャッシュ',
-		[{ kind: 'registry', scope: ['client', 'hatady'], key: 'display' }, { kind: 'local', key: 'hatadyTheme' }],
-	),
 	// This is a category landing rather than a value itself. Its children are
 	// intentionally mixed device/profile controls, so it cannot inherit one
 	// child's storage. The explicit evidence keeps the UI filter honest: only
@@ -3767,11 +3430,6 @@ const STATIC_GROUP_METADATA_OVERRIDES_V2: Readonly<Record<string, StaticGroupMet
 		'profile', 'reload', 'all', 'hatasaba', 'simple',
 		'UI2 draft の下部ナビ並び替えは simpleUi.bottomNav を既存save/reload経路で保存する',
 		[{ kind: 'pref', key: 'simpleUi.bottomNav' }],
-	),
-	'settings.group.src-pages-settings-external-account-vue-10ophv2': staticGroupMetadataOverrideV2(
-		'profile', 'immediate', 'all', 'core', 'all',
-		'外部TLのお気に入り絵文字は external.* preference の既存即時保存group',
-		[{ kind: 'pref', key: 'external.favoriteEmojis' }],
 	),
 	'settings.group.src-pages-settings-hata-custom-vue-28qg9w': staticGroupMetadataOverrideV2(
 		'profile', 'immediate', 'all', 'hatasaba', 'all',
@@ -3811,25 +3469,11 @@ const STATIC_GROUP_METADATA_OVERRIDES_V2: Readonly<Record<string, StaticGroupMet
 };
 
 /**
- * These two groups are not inferred from a broad route. Their rows are
+ * These groups are not inferred from a broad route. Their rows are
  * dynamic or v-for based, so the storage write is recorded beside the exact
  * static, user-visible host that contains it.
  */
 function sourceScopedStaticGroupMetadataV2(host: StaticGroupHostV2): StaticGroupMetadataOverrideV2 | undefined {
-	if (host.reachabilitySpec?.stableId === 'settings.group.note-charm-pattern') {
-		return staticGroupMetadataOverrideV2(
-			'account', 'buffered', 'all', 'hatasaba', 'all',
-			'模様のradio選択肢はdraft.patternを編集し、save()がi/update.noteCharmへ明示保存する',
-			[{ kind: 'api', endpoint: 'i/update', fields: ['noteCharm'] }],
-		);
-	}
-	if (host.reachabilitySpec?.stableId === 'settings.group.concrnt-connection-settings') {
-		return staticGroupMetadataOverrideV2(
-			'device', 'immediate', 'all', 'hatasaba', 'all',
-			'Concrntの連携設定は独立した端末IndexedDBに保持する。検索は常設設定画面へ移動し、認証・連携・カプセル選択を自動実行しない',
-			[{ kind: 'indexeddb', database: 'HataskeyConcrnt', store: 'private', key: '${encodeURIComponent(owner)}:connection', fields: ['settings'] }],
-		);
-	}
 	if (host.reachabilitySpec?.stableId === 'settings.group.preference-profile-backups') {
 		return staticGroupMetadataOverrideV2(
 			'account', 'immediate', 'all', 'core', 'all',
@@ -3842,13 +3486,6 @@ function sourceScopedStaticGroupMetadataV2(host: StaticGroupHostV2): StaticGroup
 			'profile', 'immediate', 'all', 'core', 'all',
 			'外部アカウントのお気に入り絵文字の実行時一覧は external.favoriteEmojis preference へ即時保存する',
 			[{ kind: 'pref', key: 'external.favoriteEmojis' }],
-		);
-	}
-	if (host.reachabilitySpec?.stableId === 'settings.group.mascot-runtime-settings') {
-		return staticGroupMetadataOverrideV2(
-			'profile', 'immediate', 'all', 'hatasaba', 'all',
-			'マスコットの実行時キャラクター・表情・文言は hataMascot.displaySettings registry へ保存する',
-			[{ kind: 'registry', scope: ['client', 'hataMascot'], key: 'displaySettings' }],
 		);
 	}
 	if (host.reachabilitySpec?.stableId === 'settings.group.security-key-runtime-settings') {
@@ -4083,9 +3720,7 @@ function conditionNeedsStaticParentFocusV2(
 	control: Pick<SettingsControlSearchDescriptorV2, 'stableId' | 'conditions' | 'activation' | 'searchable' | 'isGroup'>,
 ): boolean {
 	if (!control.searchable) return false;
-	// This reviewed runtime-radio group has the same canEdit prerequisite as
-	// individual controls and must participate in the static-focus audit.
-	if (control.isGroup === true && control.stableId !== 'settings.group.note-charm-pattern') return false;
+	if (control.isGroup === true) return false;
 	// Activation opens only its exact category/popup surface. It must not mask
 	// a second v-if inside it (consent, selected character, policy, runtime row,
 	// and so on), but the category selector itself is a verified prerequisite
@@ -4102,7 +3737,7 @@ function conditionIsMountedByActivationV2(
 	// user-selectable prerequisite whose absence should change focus.
 	if (normalized === '$i' || normalized === 'true') return true;
 	if (activation?.kind !== 'hata-custom-category') return false;
-	const category = /^(?:\()?activeCat===['"](general|font|glassUi|visual|hatask|hatady|mascot|earthquake|accessibility)['"](?:\))?$/u.exec(normalized)?.[1];
+	const category = /^(?:\()?activeCat===['"](general|glassUi|visual)['"](?:\))?$/u.exec(normalized)?.[1];
 	return category === activation.category;
 }
 
@@ -4163,17 +3798,8 @@ function unmetForConditionalControlV2(
 	conditions: readonly string[],
 ): SettingsActivationUnmetV2[] {
 	const condition = conditions.join(' ');
-	if (sourceFile === 'src/components/MkNoteCharmSettings.vue' && /\bcanEdit\b/u.test(condition)) {
-		return [{ kind: 'policy', id: 'note-charm-role-and-ui', behavior: 'explain' }];
-	}
-	if (sourceFile === 'src/components/concrnt/ConcrntSettings.vue') {
-		return [{ kind: 'runtime-data', id: 'concrnt-account-and-section', behavior: 'explain' }];
-	}
 	if (sourceFile === 'src/pages/settings/2fa.vue') {
 		return [{ kind: 'preference', id: 'two-factor-authentication', behavior: 'explain' }];
-	}
-	if (sourceFile === 'src/pages/settings/external-account.vue') {
-		return [{ kind: 'preference', id: 'external-account-link', behavior: 'explain' }];
 	}
 	if (sourceFile === 'src/pages/settings/preferences.vue' && /searchEngine/u.test(condition)) {
 		return [{ kind: 'preference', id: 'search-engine-other', behavior: 'explain' }];
@@ -4371,18 +3997,6 @@ export function collectSettingsSearchDescriptorsV2(
 			}
 		}
 	}
-	for (const group of groups.filter(candidate => candidate.stableId === 'settings.group.note-charm-pattern')) {
-		if (!conditionNeedsStaticParentFocusV2(group)) continue;
-		const focusHost = staticFocusHostForConditionalControlV2(group, undefined, [...hostsByKey.values()]);
-		if (focusHost == null) throw new Error('settings V2 note charm pattern has no static parent focus');
-		const unmet = unmetForConditionalControlV2(sourceFile, group.conditions);
-		group.focusId = focusHost.stableId;
-		group.focusHostSourceFile = focusHost.sourceFile;
-		group.focusHostSourceLine = focusHost.node.loc.start.line;
-		group.focusHostConditions = [...focusHost.conditions];
-		group.unmet = unmet;
-		group.activation = withConditionalParentFocusV2(group.activation, focusHost.stableId, unmet);
-	}
 	return [...controls, ...groups];
 }
 
@@ -4569,12 +4183,8 @@ function injectHataCustomActivationTargetsV2(
 
 	const popupHandlers: Record<Extract<SettingsControlActivationV2, { kind: 'popup' }>['popup'], string> = {
 		'hatasaba-ui2': 'openHatasabaUi2EditWindow',
-		earthquake: 'openEarthquakeSettings',
 		'ui-setup': 'openUiSetup',
 		'settings-transfer': 'openSettingsTransfer',
-		hatask: 'openHataskSettings',
-		hatady: 'openHatadySettings',
-		mascot: 'openMascotSettings',
 	};
 	const popups = [...new Set(activations.flatMap(activation => activation.kind === 'popup' ? [activation.popup] : []))];
 	for (const popup of popups) {
@@ -4942,11 +4552,6 @@ export function injectSettingsSearchIdsV2(
 			continue;
 		}
 		appendRequiredAttribute(magic, host.node, 'data-settings-search-group-id', descriptor.focusId, sourceFile);
-		// Profile results have no popup activation, so navigation resolves their
-		// fallback controlId through the ordinary control selector as well.
-		if (sourceFile === 'src/components/MkNoteCharmSettings.vue' && host.stableId === 'settings.group.note-charm-settings') {
-			appendRequiredAttribute(magic, host.node, 'data-settings-search-id', descriptor.focusId, sourceFile);
-		}
 		focusHostIds.set(host.node, descriptor.focusId);
 	}
 	if (requiresRelatedImport) injectSettingsRelatedImportV2(magic, parsed, code);

@@ -5,14 +5,13 @@
 
 import { Inject, Injectable } from '@nestjs/common';
 import { DI } from '@/di-symbols.js';
-import type { ChannelFavoritesRepository, ChannelFollowingsRepository, ChannelMembersRepository, ChannelsRepository, DriveFilesRepository, NotesRepository } from '@/models/_.js';
+import type { ChannelFavoritesRepository, ChannelFollowingsRepository, ChannelsRepository, DriveFilesRepository, NotesRepository } from '@/models/_.js';
 import type { Packed } from '@/misc/json-schema.js';
 import type { } from '@/models/Blocking.js';
 import type { MiUser } from '@/models/User.js';
 import type { MiChannel } from '@/models/Channel.js';
 import type { MiChannelFollowing } from '@/models/ChannelFollowing.js';
 import type { MiChannelFavorite } from '@/models/ChannelFavorite.js';
-import type { MiChannelMember } from '@/models/ChannelMember.js';
 import { bindThis } from '@/decorators.js';
 import { IdService } from '@/core/IdService.js';
 import { ChannelService } from '@/core/ChannelService.js';
@@ -32,10 +31,6 @@ export class ChannelEntityService {
 
 		@Inject(DI.channelFavoritesRepository)
 		private channelFavoritesRepository: ChannelFavoritesRepository,
-
-		// 旗鯖fork: packMany でのプライベートチャンネルのメンバー判定バッチに使用。
-		@Inject(DI.channelMembersRepository)
-		private channelMembersRepository: ChannelMembersRepository,
 
 		@Inject(DI.notesRepository)
 		private notesRepository: NotesRepository,
@@ -62,7 +57,6 @@ export class ChannelEntityService {
 			bannerMap?: Map<string, string | null>; // bannerId -> bannerUrl
 			followingSet?: Set<MiChannel['id']>;
 			favoritedSet?: Set<MiChannel['id']>;
-			memberSet?: Set<MiChannel['id']>;
 			iAmModerator?: boolean;
 		},
 	): Promise<Packed<'Channel'>> {
@@ -95,12 +89,7 @@ export class ChannelEntityService {
 				}))
 			: false;
 
-		// 旗鯖fork: プライベートチャンネルのメンバー判定・管理権限。
-		const isMember = (meId && channel.isPrivate)
-			? (_hint_?.memberSet
-				? _hint_.memberSet.has(channel.id)
-				: await this.channelService.isMember(channel.id, meId))
-			: false;
+		// 旗鯖fork: 管理権限。
 		// canManage は roleService.isModerator が必要。hint があれば集約結果から再計算する。
 		const canManage = meId
 			? (_hint_?.iAmModerator !== undefined
@@ -132,16 +121,13 @@ export class ChannelEntityService {
 			notesCount: channel.notesCount,
 			isSensitive: channel.isSensitive,
 			allowRenoteToExternal: channel.allowRenoteToExternal,
-			// 旗鯖fork: プライベートチャンネル情報
-			isPrivate: channel.isPrivate,
-			hasPassword: channel.password != null && channel.password.length > 0,
+			// 旗鯖fork: 副管理者
 			moderatorUserIds: channel.moderatorUserIds,
 
 			...(me ? {
 				isFollowing,
 				isFavorited,
 				hasUnreadNote: false, // 後方互換性のため
-				isMember,
 				canManage,
 			} : {}),
 
@@ -196,11 +182,10 @@ export class ChannelEntityService {
 
 		let followingSet: Set<MiChannel['id']> | undefined;
 		let favoritedSet: Set<MiChannel['id']> | undefined;
-		let memberSet: Set<MiChannel['id']> | undefined;
 		let iAmModerator: boolean | undefined;
 		if (meId) {
 			const channelIds = channels.map(c => c.id);
-			const [followings, favorites, members, isMod] = await Promise.all([
+			const [followings, favorites, isMod] = await Promise.all([
 				this.channelFollowingsRepository.findBy({
 					followerId: meId,
 					followeeId: In(channelIds),
@@ -209,20 +194,11 @@ export class ChannelEntityService {
 					userId: meId,
 					channelId: In(channelIds),
 				}),
-				(async () => {
-					const privateIds = channels.filter(c => c.isPrivate).map(c => c.id);
-					if (privateIds.length === 0) return [] as { channelId: string }[];
-					return await this.channelMembersRepository.findBy({
-						userId: meId,
-						channelId: In(privateIds),
-					});
-				})(),
 				// canManage 用の isModerator(1 回だけ呼ぶ)。
 				this.roleService.isModerator({ id: meId }),
 			]);
 			followingSet = new Set(followings.map((f: MiChannelFollowing) => f.followeeId));
 			favoritedSet = new Set(favorites.map((f: MiChannelFavorite) => f.channelId));
-			memberSet = new Set(members.map((m: { channelId: string }) => m.channelId));
 			iAmModerator = isMod;
 		}
 
@@ -230,7 +206,6 @@ export class ChannelEntityService {
 			bannerMap,
 			followingSet,
 			favoritedSet,
-			memberSet,
 			iAmModerator,
 		})));
 	}

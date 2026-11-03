@@ -27,8 +27,7 @@ async function setup(enabled = false, viewer = 'owner1') {
 	let beforeFilter: ((note: Packed<'Note'>) => Promise<void>) | undefined;
 	const entity = {
 		pack: async () => { await beforePack?.(); return packed; },
-		shouldHideNote: async () => false,
-		isChannelVisibleForMe: async (note: Packed<'Note'>) => { await beforeFilter?.(note); return true; },
+		shouldHideNote: async (note: Packed<'Note'>) => { await beforeFilter?.(note); return false; },
 	} as unknown as NoteEntityService;
 	const service = new AntennaChannelService({ exists: async ({ where }: { where: { id: string; userId: string } }) => !!await lookup(where), findOneBy: lookup } as never, entity);
 	const hiding = new NoteStreamingHidingService({ ugcVisibilityForVisitor: 'all' } as never, entity);

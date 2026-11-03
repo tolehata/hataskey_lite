@@ -79,7 +79,7 @@ afterEach(() => {
 });
 
 describe('settings preference horizontal swipe persistence', () => {
-	it.each(['simple', 'hataskey3', null])('%sでは端末の横スワイプ設定と読み書きを共有する', async ui => {
+	it.each(['simple', null])('%sでは端末の横スワイプ設定と読み書きを共有する', async ui => {
 		mocks.ui = ui;
 		const models = await mountModels();
 		const device = await import('@/utility/hatasaba-device-prefs.js');

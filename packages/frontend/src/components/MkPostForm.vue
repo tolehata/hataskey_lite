@@ -21,7 +21,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<button v-if="!fixed" :class="$style.cancel" class="_button" @click="cancel"><i class="ti ti-x"></i></button>
 			 <button v-click-anime v-tooltip="i18n.ts.account" :class="[$style.account, { [$style.fixed]: fixed }]" class="_button" @click="openAccountMenu">
 	                 <img :class="[$style.avatar, { [$style.square]: prefer.s.squareAvatars }]" :src="currentAccountAvatar"/>
-	                 <span v-if="useExternalAccount" :class="$style.externalBadge"><i class="ti ti-external-link" style="font-size: 0.7em;"></i></span>
 			</button>
 		</div>
 		<div :class="$style.headerRight">
@@ -58,21 +57,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</div>
 	</header>
 	<MkNoteSimple v-if="replyTargetNote" :class="$style.targetNote" :note="replyTargetNote" :enableNoteClick="false"/>
-	<div v-else-if="externalReplyTarget" :class="[$style.targetNote, $style.externalReplyTarget]">
-		<img v-if="externalReplyTarget.user.avatarUrl" :class="$style.externalTargetAvatar" :src="externalReplyTarget.user.avatarUrl" :alt="externalReplyTarget.user.username"/>
-		<span v-else :class="[$style.externalTargetAvatar, $style.externalTargetAvatarFallback]" aria-hidden="true"><i class="ti ti-user"></i></span>
-		<div :class="$style.externalTargetBody">
-			<div :class="$style.externalTargetNote">
-				<span :class="$style.externalBadgeInline"><i class="ti ti-external-link"></i></span>
-				<I18n :src="i18n.ts._hata._postFormCustom.externalReplyTo" tag="span">
-					<template #account>
-						<b>@{{ externalReplyTarget.user.username }}@{{ externalReplyTarget.user.host || externalHost }}</b>
-					</template>
-				</I18n>
-			</div>
-			<div v-if="externalReplyTarget.text" :class="$style.externalTargetText">{{ externalReplyTarget.text }}</div>
-		</div>
-	</div>
 	<MkNoteSimple v-if="renoteTargetNote" :class="$style.targetNote" :note="renoteTargetNote" :enableNoteClick="false"/>
 	<div v-if="quoteId" :class="$style.withQuote"><i class="ti ti-quote"></i> {{ i18n.ts.quoteAttached }}<button class="_button" @click="quoteId = null; renoteTargetNote = null;"><i class="ti ti-x"></i></button></div>
 	<MkEventEditor v-if="event" v-model="event" @destroyed="event = null"/>
@@ -145,7 +129,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<button v-if="prefer.s.showHashtagButtonInPostForm" v-tooltip="i18n.ts.hashtags" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: withHashtags }]" @click="playHataIconMotion($event, 'hash-tilt'); withHashtags = !withHashtags"><i class="ti ti-hash"></i></button>
 			<button v-tooltip="i18n.ts.mention" class="_button" :class="$style.footerButton" @click="playHataIconMotion($event, 'mention-orbit'); insertMention()"><i class="ti ti-at"></i></button>
                         <button v-if="prefer.s.showEventButtonInPostForm" v-tooltip="i18n.ts.event" class="_button" :class="$style.footerButton" @click="playHataIconMotion($event, 'calendar-page'); toggleEvent()"><i class="ti ti-calendar"></i></button>
-			<button v-if="prefer.s.showDrawingButtonInPostForm" v-tooltip="i18n.ts._hata._drawingTool.drawing" class="_button" :class="$style.footerButton" :aria-label="i18n.ts._hata._drawingTool.drawing" @click="playHataIconMotion($event, 'pencil-write'); openDrawingTool()"><i class="ti ti-brush" aria-hidden="true"></i></button>
 			<button v-if="showAddMfmFunction" v-tooltip="i18n.ts.addMfmFunction" class="_button" :class="$style.footerButton" :aria-label="i18n.ts.addMfmFunction" @click="playHataIconMotion($event, 'simple-lift'); insertMfmFunction($event)"><i class="ti ti-typography" aria-hidden="true"></i></button>
 			<button v-if="postFormActions.length > 0" v-tooltip="i18n.ts.plugins" class="_button" :class="$style.footerButton" @click="playHataIconMotion($event, 'plug-connect'); showActions($event)"><i class="ti ti-plug"></i></button>
 			<!-- 旗鯖fork: 絵文字挿入ボタンを footerRight から footerLeft の末尾に移動。
@@ -161,7 +144,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { getExternalAccount, isExternalAccountLinked, callExternalApi, uploadDriveFilesToExternal } from '@/utility/external-api.js';
 import { inject, watch, nextTick, onMounted, defineAsyncComponent, provide, shallowRef, ref, computed, useTemplateRef, onUnmounted } from 'vue';
 import * as mfm from 'mfc-js';
 import * as Misskey from 'cherrypick-js';
@@ -184,8 +166,6 @@ import XPostFormAttaches from '@/components/MkPostFormAttaches.vue';
 import XTextCounter from '@/components/MkPostForm.TextCounter.vue';
 import MkPollEditor from '@/components/MkPollEditor.vue';
 import * as os from '@/os.js';
-import MkDrawingTool from '@/components/MkDrawingTool.vue';
-const MkExternalReactionPicker = defineAsyncComponent(() => import('@/components/MkExternalReactionPicker.vue'));
 import MkEventEditor from '@/components/MkEventEditor.vue';
 import MkScheduledNoteDelete from '@/components/MkScheduledNoteDelete.vue';
 import MkNoteSimple from '@/components/MkNoteSimple.vue';
@@ -640,21 +620,6 @@ function chooseFileFromDrive(ev: MouseEvent) {
 	});
 }
 
-function openDrawingTool() {
-	if (props.mock) return;
-	const { dispose } = os.popup(MkDrawingTool, { canAttach: true }, {
-		done: (file: Misskey.entities.DriveFile) => {
-			if (files.value.some(item => item.id === file.id)) return;
-			if (files.value.length >= 16) {
-				void os.alert({ type: 'warning', text: i18n.ts._hata._drawingTool.attachmentLimit });
-				return;
-			}
-			files.value = [...files.value, file];
-		},
-		closed: () => dispose(),
-	});
-}
-
 function detachFile(id) {
 	files.value = files.value.filter(x => x.id !== id);
 }
@@ -881,9 +846,6 @@ function clear() {
 	saveToDraft.value = false;
 	disableRightClick.value = false;
 	deliveryTargets.value = null;
-	externalReplyTarget.value = null;
-	externalRenoteTarget.value = null;
-	useExternalAccount.value = false;
 	// 旗鯖fork: 本家 2026.6.0 から取り込み: 下書きリセット時に未アップロードのファイルも解除されるように
 	uploader.reset();
 }
@@ -1299,8 +1261,8 @@ async function post(ev?: MouseEvent) {
 	}
 
 	// 旗鯖fork(ベータ): 警告・添付アップロード・プラグイン処理を終えた後、notes/create の直前でだけ待つ。
-	// 編集・予約・下書き・外部アカウント投稿は対象外。待機中はサーバーや連合へ予約状態を送らない。
-	if (postSendDelayEnabled.value && !props.updateMode && !useExternalAccount.value) {
+	// 編集・予約・下書きは対象外。待機中はサーバーや連合へ予約状態を送らない。
+	if (postSendDelayEnabled.value && !props.updateMode) {
 		submitMotionState.value = 'countdown';
 		const shouldSend = await postDelay.begin(postSendDelaySeconds.value);
 		if (!shouldSend) {
@@ -1311,87 +1273,6 @@ async function post(ev?: MouseEvent) {
 
 	posting.value = true;
 	submitMotionState.value = 'sending';
-
-	// 外部アカウントでの投稿
-	if (useExternalAccount.value) {
-		if (!externalAccount.value) {
-			submitMotionState.value = 'failure';
-			await waitForSubmitMotion(980);
-			await os.alert({
-				type: 'error',
-				text: i18n.ts._hata._postFormCustom.externalAccountNotLinked,
-			});
-			posting.value = false;
-			submitMotionState.value = 'idle';
-			return;
-		}
-
-		try {
-			// ファイルがある場合は外部サーバーにアップロード
-			let externalFileIds: string[] | undefined;
-			if (files.value.length > 0) {
-				try {
-					externalFileIds = await uploadDriveFilesToExternal(files.value);
-				} catch (uploadErr) {
-					console.error('External file upload error:', uploadErr);
-					const { canceled } = await os.confirm({
-						type: 'warning',
-						text: i18n.ts._hata._postFormCustom.externalFileUploadFailed,
-					});
-					if (canceled) {
-						posting.value = false;
-						submitMotionState.value = 'idle';
-						return;
-					}
-				}
-			}
-
-			const externalPostData = {
-				text: postData.text,
-				cw: postData.cw,
-				visibility: postData.visibility,
-				localOnly: postData.localOnly,
-				replyId: externalReplyTarget.value?.id,
-				renoteId: externalRenoteTarget.value?.id,
-				fileIds: externalFileIds,
-			};
-
-			await callExternalApi('notes/create', externalPostData);
-
-			posted.value = true;
-			submitMotionState.value = 'success';
-			await waitForSubmitMotion(720);
-			if (!props.freezeAfterPosted) {
-				clear();
-				posted.value = false;
-				submitMotionState.value = 'idle';
-			}
-
-			nextTick(() => {
-				deleteDraft();
-				emit('posted');
-
-				if (externalReplyTarget.value) os.toast(i18n.ts._hata._postFormCustom.externalReplyPosted, 'reply');
-				else if (externalRenoteTarget.value) os.toast(i18n.ts._hata._postFormCustom.externalQuotePosted, 'quote');
-				else os.toast(i18n.ts._hata._postFormCustom.externalPostPosted, 'posted');
-
-				posting.value = false;
-				useExternalAccount.value = false;
-			});
-		} catch (err) {
-			console.error('External post error:', err);
-			submitMotionState.value = 'failure';
-			await waitForSubmitMotion(980);
-			await os.alert({
-				type: 'error',
-				text: i18n.ts._hata._postFormCustom.externalPostFailed,
-			});
-			posting.value = false;
-			submitMotionState.value = 'idle';
-		}
-
-		return;
-	}
 
 	if (props.updateMode && postData.noteId == null) {
 		posting.value = false;
@@ -1519,29 +1400,6 @@ async function insertEmoji(ev: MouseEvent) {
 	const target = ev.currentTarget ?? ev.target;
 	if (target == null) return;
 
-	// 外部アカウント使用時は外部サーバーの絵文字ピッカーを使用
-	if (useExternalAccount.value) {
-		let pos = textareaEl.value?.selectionStart ?? 0;
-		let posEnd = textareaEl.value?.selectionEnd ?? text.value.length;
-		const { dispose } = os.popup(MkExternalReactionPicker, {
-			anchorElement: target as HTMLElement,
-		}, {
-			done: (emoji: string) => {
-				const textBefore = text.value.substring(0, pos);
-				const textAfter = text.value.substring(posEnd);
-				text.value = textBefore + emoji + textAfter;
-				pos += emoji.length;
-				posEnd += emoji.length;
-			},
-			closed: () => {
-				dispose();
-				textAreaReadOnly.value = false;
-				nextTick(() => focus());
-			},
-		});
-		return;
-	}
-
 	// emojiPickerはダイアログが閉じずにtextareaとやりとりするので、
 	// focustrapをかけているとinsertTextAtCursorが効かない
 	// そのため、投稿フォームのテキストに直接注入する
@@ -1603,20 +1461,9 @@ async function openMfmCheatSheet() {
 }
 
 const postAccount = ref<Misskey.entities.UserDetailed | null>(null);
-const useExternalAccount = ref(props.initialUseExternalAccount ?? false);
-const externalReplyTarget = shallowRef(props.externalReply ?? null);
-const externalRenoteTarget = shallowRef(props.externalRenote ?? null);
-
-// 外部サーバー情報
-const externalAccount = computed(() => getExternalAccount());
-const externalHost = computed(() => externalAccount.value?.host ?? '');
-const isExternalLinked = computed(() => isExternalAccountLinked());
 
 // 現在のアカウントのアバター
 const currentAccountAvatar = computed(() => {
-	if (useExternalAccount.value && externalAccount.value) {
-		return externalAccount.value.avatarUrl ?? `https://${externalAccount.value.host}/identicon/${externalAccount.value.userId}`;
-	}
 	return (postAccount.value ?? $i).avatarUrl;
 });
 
@@ -1708,20 +1555,6 @@ async function openAccountMenu(ev: MouseEvent) {
 		},
 	});
 
-       const externalItems: MenuItem[] = [];
-                if (isExternalLinked.value && externalAccount.value) {
-	        externalItems.push({ type: 'divider' });
-	        externalItems.push({
-		  type: 'button',
-		  text: `🔗 @${externalAccount.value.username}@${externalAccount.value.host}`,
-		  icon: useExternalAccount.value ? 'ti ti-check' : undefined,
-		  action: () => {
-	            useExternalAccount.value = true;
-		    postAccount.value = null;
-		  },
-	   });
-        }
-
 	os.popupMenu([{
 		type: 'button',
 		text: i18n.ts._drafts.listDrafts,
@@ -1736,7 +1569,7 @@ async function openAccountMenu(ev: MouseEvent) {
 		action: () => {
 			showDraftsDialog(true);
 		},
-	}, { type: 'divider' }, ...items, ...externalItems], (ev.currentTarget ?? ev.target ?? undefined) as HTMLElement | undefined, { motionPreset: 'postform' });
+	}, { type: 'divider' }, ...items], (ev.currentTarget ?? ev.target ?? undefined) as HTMLElement | undefined, { motionPreset: 'postform' });
 }
 
 function showPerUploadItemMenu(item: UploaderItem, ev: MouseEvent) {
@@ -2450,57 +2283,6 @@ html[data-color-scheme=light] .preview {
 	.headerRight {
 		gap: 0;
 	}
-}
-
-// 外部アカウント関連のスタイル
-.externalBadge {
-	position: absolute;
-	bottom: -2px;
-	right: -2px;
-	font-size: 12px;
-	line-height: 1;
-}
-
-.externalBadgeInline {
-	margin-right: 4px;
-}
-
-.externalReplyTarget {
-	display: flex;
-	align-items: flex-start;
-	gap: 10px;
-}
-
-.externalTargetAvatar {
-	width: 38px;
-	height: 38px;
-	flex: 0 0 auto;
-	border-radius: 50%;
-	object-fit: cover;
-}
-
-.externalTargetAvatarFallback {
-	display: grid;
-	place-items: center;
-	background: var(--MI_THEME-buttonBg);
-	color: var(--MI_THEME-fg);
-}
-
-.externalTargetBody {
-	min-width: 0;
-	flex: 1;
-}
-
-.externalTargetNote {
-	font-size: 0.9em;
-}
-
-.externalTargetText {
-	margin-top: 4px;
-	opacity: 0.7;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 </style>

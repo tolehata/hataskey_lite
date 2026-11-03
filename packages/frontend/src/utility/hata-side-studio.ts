@@ -4,13 +4,12 @@
  *
  * HataSideStudio の端末ローカル設定。
  * サイドメニューは端末の幅・入力方法に強く依存するため prefer へは保存せず、
- * UIごとの miLocalStorage キーで完結させる。サーバー・連合へは送信しない。
+ * miLocalStorage の1キーだけで完結させる。サーバー・連合へは送信しない。
  */
 
 import { ref } from 'vue';
 import { i18n } from '@/i18n.js';
 import { miLocalStorage } from '@/local-storage.js';
-import { normalizeHatagoesSidebar, RETIRED_HATA_SIDEBAR_IDS } from '@/utility/hatagoes-sidebar.js';
 import {
 	HATA_SIDE_WIDGET_REGISTRY,
 	HATA_SIDE_WIDGET_SIZES,
@@ -36,16 +35,14 @@ export type {
 
 export { getHataSideWidgetDisplayLabel };
 
-export const HATA_SIDE_STUDIO_FORMAT_VERSION = 9;
+export const HATA_SIDE_STUDIO_FORMAT_VERSION = 8;
 export const HATA_SIDE_STUDIO_DEFAULT_PROFILE_LIMIT = 3;
 export const HATA_SIDE_STUDIO_STORAGE_KEY = 'hataSideStudio';
-export const HATA_SIDE_STUDIO_UI_S_STORAGE_KEY = 'hataSideStudioUiS';
 export const HATA_SIDE_STUDIO_CHANGE_EVENT = 'hata-side-studio:change';
 export const HATA_SIDE_STUDIO_BROADCAST_CHANNEL = 'hata-side-studio';
 
 export const HATA_SIDE_STUDIO_FIXED_IDS = new Set(['more', 'settings', 'realtime', 'admin']);
-export const HATA_SIDE_STUDIO_DEAD_IDS = new Set(['whatsNew', 'portal']);
-export const HATA_SIDE_STUDIO_REQUIRED_MENU_IDS = new Set(['externalNotifications']);
+export const HATA_SIDE_STUDIO_DEAD_IDS = new Set(['whatsNew', 'portal', 'hatask', 'hatafeed', 'hatady', 'hatagoes', 'earthquake', 'externalNotifications', 'mascot']);
 export const HATA_SIDE_STUDIO_MENU_ID_ALIASES: Readonly<Record<string, string>> = {
 	// 「もっと！」では ui、従来のHataskey UIサイドバーでは uiSetup という
 	// 異なるIDだが、どちらも同じUI切り替えを開く。別ボタンとして重複させない。
@@ -134,11 +131,6 @@ export type HataSideGroup = {
 
 export type HataSideNode = HataSideButton | HataSideWidget | HataSideGroup;
 
-export function hataSideStudioNodeContainsRequiredMenu(node: HataSideNode): boolean {
-	if (node.type === 'button') return HATA_SIDE_STUDIO_REQUIRED_MENU_IDS.has(node.menuId);
-	return node.type === 'group' && node.children.some(child => child.type === 'button' && HATA_SIDE_STUDIO_REQUIRED_MENU_IDS.has(child.menuId));
-}
-
 export type HataSideStudioProfile = {
 	id: string;
 	name: string;
@@ -198,16 +190,10 @@ const HATA_SIDE_STUDIO_MENU_STORAGE_LABELS: Readonly<Record<string, string>> = {
 	timeline: 'タイムライン',
 	search: '検索',
 	notifications: '通知',
-	externalNotifications: '外部通知',
 	chat: 'メッセージ',
 	announcements: 'お知らせ',
 	drive: 'ドライブ',
 	favorites: 'お気に入り',
-	hatask: 'Hatask',
-	hatafeed: 'HataFeed',
-	hatady: 'Hatady',
-	hatagoes: 'HataGoes',
-	earthquake: '地震・津波情報',
 	uiSetup: 'UI切り替え',
 	explore: 'みつける',
 	followRequests: 'フォロー申請',
@@ -220,13 +206,10 @@ const fallbackSidebar: SidebarSourceItem[] = [
 	{ id: 'timeline', icon: 'ti ti-home', label: HATA_SIDE_STUDIO_MENU_STORAGE_LABELS.timeline, group: 'basic' },
 	{ id: 'search', icon: 'ti ti-search', label: HATA_SIDE_STUDIO_MENU_STORAGE_LABELS.search, group: 'basic' },
 	{ id: 'notifications', icon: 'ti ti-bell', label: HATA_SIDE_STUDIO_MENU_STORAGE_LABELS.notifications, group: 'basic' },
-	{ id: 'externalNotifications', icon: 'ti ti-bell', label: HATA_SIDE_STUDIO_MENU_STORAGE_LABELS.externalNotifications, group: 'basic' },
 	{ id: 'chat', icon: 'ti ti-messages', label: HATA_SIDE_STUDIO_MENU_STORAGE_LABELS.chat, group: 'basic' },
 	{ id: 'announcements', icon: 'ti ti-speakerphone', label: HATA_SIDE_STUDIO_MENU_STORAGE_LABELS.announcements, group: 'basic' },
 	{ id: 'drive', icon: 'ti ti-cloud', label: HATA_SIDE_STUDIO_MENU_STORAGE_LABELS.drive, group: 'basic' },
 	{ id: 'favorites', icon: 'ti ti-star', label: HATA_SIDE_STUDIO_MENU_STORAGE_LABELS.favorites, group: 'basic' },
-	{ id: 'hatagoes', icon: 'ti ti-sparkles', label: HATA_SIDE_STUDIO_MENU_STORAGE_LABELS.hatagoes, group: 'hata' },
-	{ id: 'earthquake', icon: 'ti ti-activity', label: HATA_SIDE_STUDIO_MENU_STORAGE_LABELS.earthquake, group: 'hata' },
 	{ id: 'uiSetup', icon: 'ti ti-wand', label: HATA_SIDE_STUDIO_MENU_STORAGE_LABELS.uiSetup, group: 'discover' },
 	{ id: 'explore', icon: 'ti ti-hash', label: HATA_SIDE_STUDIO_MENU_STORAGE_LABELS.explore, group: 'discover' },
 	{ id: 'followRequests', icon: 'ti ti-user-plus', label: HATA_SIDE_STUDIO_MENU_STORAGE_LABELS.followRequests, group: 'discover' },
@@ -265,14 +248,9 @@ export function getHataSideStudioMenuDisplayLabel(menuId: string, storedLabel?: 
 	const normalizedId = normalizeHataSideStudioMenuId(menuId);
 	const canonicalLabel = HATA_SIDE_STUDIO_MENU_STORAGE_LABELS[normalizedId];
 	const fallback = typeof storedLabel === 'string' && storedLabel.length > 0 ? storedLabel : canonicalLabel ?? normalizedId;
-	if (normalizedId === 'earthquake' || canonicalLabel == null) return fallback;
+	if (canonicalLabel == null) return fallback;
 	if (typeof storedLabel === 'string' && storedLabel.length > 0 && storedLabel !== canonicalLabel) return storedLabel;
 	return utilityCopy().menuLabels[normalizedId] ?? fallback;
-}
-
-/** キャッシュクリアのラベルを狭いセルでも1行に収めるための文字幅係数。 */
-export function getHataSideStudioCacheLabelSize(label: string): string {
-	return `${Math.min(10.5, 94 / Math.max(1, Array.from(label).length)).toFixed(3)}cqi`;
 }
 
 /** 既定のグループ名だけを表示時に翻訳する。利用者が編集した名前はそのまま返す。 */
@@ -337,13 +315,12 @@ export function createDefaultPostButtonAppearance(): HataSidePostButtonAppearanc
 }
 
 export function createButton(source: SidebarSourceItem, appearance?: Partial<HataSideAppearance & Pick<HataSideButton, 'borderVisible'>>): HataSideButton {
-	const sourceId = normalizeHataSideStudioMenuId(source.id);
-	const menuId = RETIRED_HATA_SIDEBAR_IDS.has(sourceId) ? 'hatagoes' : sourceId;
+	const menuId = normalizeHataSideStudioMenuId(source.id);
 	return {
 		type: 'button',
 		id: uid('button'),
 		menuId,
-		icon: menuId === 'hatagoes' && sourceId !== menuId ? 'ti ti-sparkles' : source.icon,
+		icon: source.icon,
 		// 既知IDはlocale表示名ではなく互換用の固定名を保存する。
 		label: HATA_SIDE_STUDIO_MENU_STORAGE_LABELS[menuId] ?? source.label,
 		...createDefaultAppearance(),
@@ -398,7 +375,7 @@ export function createGroup(name: string = HATA_SIDE_STUDIO_DEFAULT_STORAGE_NAME
 		id: uid('group'),
 		name,
 		showName: true,
-		columns: 2,
+		columns: 1,
 		masonry: false,
 		background: 'transparent',
 		border: 'var(--MI_THEME-divider)',
@@ -438,7 +415,7 @@ function sanitizeSourceList(source: readonly unknown[], forcedGroup?: string): S
 		seen.add(item.id);
 		result.push(item);
 	}
-	return normalizeHatagoesSidebar(result);
+	return result;
 }
 
 export function createHataSideStudioSourceCatalog(
@@ -458,17 +435,7 @@ export function createHataSideStudioSourceCatalog(
 }
 
 function visibleSource(source: readonly SidebarSourceItem[]): SidebarSourceItem[] {
-	const visible = sanitizeSourceList(source).filter(item => item.visible !== false || HATA_SIDE_STUDIO_REQUIRED_MENU_IDS.has(item.id));
-	if (visible.some(item => item.id === 'externalNotifications')) return visible;
-	const externalNotifications: SidebarSourceItem = {
-		id: 'externalNotifications',
-		icon: 'ti ti-bell',
-		label: HATA_SIDE_STUDIO_MENU_STORAGE_LABELS.externalNotifications,
-		group: 'basic',
-	};
-	const notificationsIndex = visible.findIndex(item => item.id === 'notifications');
-	visible.splice(notificationsIndex >= 0 ? notificationsIndex + 1 : 0, 0, externalNotifications);
-	return visible;
+	return sanitizeSourceList(source).filter(item => item.visible !== false);
 }
 
 export function createDefaultProfile(source: readonly SidebarSourceItem[] = fallbackSidebar, name: string = HATA_SIDE_STUDIO_DEFAULT_STORAGE_NAMES.defaultProfile): HataSideStudioProfile {
@@ -648,121 +615,6 @@ function sanitizeGroup(value: unknown, refreshLayoutDefaults = false): HataSideG
 	};
 }
 
-function isExternalNotificationsButton(value: HataSideButton | HataSideNode): value is HataSideButton {
-	return value.type === 'button' && value.menuId === 'externalNotifications';
-}
-
-/**
- * v8以前は画面側が外部通知を固定注入していたため、全プロファイルの保存配列へ一度だけ補う。
- * 既存の外部通知は位置も装飾も変えず、重複した場合は最初の1件だけを残す。
- */
-function ensureExternalNotificationsExpanded(nodes: HataSideNode[]): HataSideNode[] {
-	let found = false;
-	const deduplicated: HataSideNode[] = [];
-	for (const node of nodes) {
-		if (isExternalNotificationsButton(node)) {
-			if (found) continue;
-			found = true;
-			deduplicated.push(node);
-			continue;
-		}
-		if (node.type !== 'group') {
-			deduplicated.push(node);
-			continue;
-		}
-		const children: Array<HataSideButton | HataSideWidget> = [];
-		for (const child of node.children) {
-			if (isExternalNotificationsButton(child)) {
-				if (found) continue;
-				found = true;
-			}
-			children.push(child);
-		}
-		deduplicated.push(children.length === node.children.length ? node : { ...node, children });
-	}
-	if (found) return deduplicated;
-
-	const button = createButton({
-		id: 'externalNotifications',
-		icon: 'ti ti-bell',
-		label: HATA_SIDE_STUDIO_MENU_STORAGE_LABELS.externalNotifications,
-		group: 'basic',
-	});
-	for (let index = 0; index < deduplicated.length; index++) {
-		const node = deduplicated[index];
-		if (node.type === 'button' && node.menuId === 'notifications') {
-			deduplicated.splice(index + 1, 0, button);
-			return deduplicated;
-		}
-		if (node.type !== 'group') continue;
-		const notificationsIndex = node.children.findIndex(child => child.type === 'button' && child.menuId === 'notifications');
-		if (notificationsIndex < 0) continue;
-		const children = [...node.children];
-		children.splice(notificationsIndex + 1, 0, button);
-		deduplicated[index] = { ...node, children };
-		return deduplicated;
-	}
-	deduplicated.unshift(button);
-	return deduplicated;
-}
-
-function ensureExternalNotificationsCollapsed(buttons: HataSideButton[]): HataSideButton[] {
-	let found = false;
-	const deduplicated = buttons.filter(button => {
-		if (!isExternalNotificationsButton(button)) return true;
-		if (found) return false;
-		found = true;
-		return true;
-	});
-	if (found) return deduplicated;
-
-	const button = createButton({
-		id: 'externalNotifications',
-		icon: 'ti ti-bell',
-		label: HATA_SIDE_STUDIO_MENU_STORAGE_LABELS.externalNotifications,
-		group: 'basic',
-	}, {
-		shape: 'circle',
-		showLabel: false,
-		size: 'small',
-		border: 'var(--MI_THEME-divider)',
-		borderVisible: false,
-	});
-	const notificationsIndex = deduplicated.findIndex(item => item.menuId === 'notifications');
-	deduplicated.splice(notificationsIndex >= 0 ? notificationsIndex + 1 : 0, 0, button);
-	return deduplicated;
-}
-
-/** 拡大メニューはルートとグループの子を表示順に1つの並びとして統合する。 */
-function normalizeHatagoesButtons<T extends HataSideButton | HataSideWidget>(items: T[], keep: HataSideButton | undefined): T[] {
-	return items.flatMap(item => {
-		if (item.type !== 'button' || (item.menuId !== 'hatagoes' && !RETIRED_HATA_SIDEBAR_IDS.has(item.menuId))) return [item];
-		if (item !== keep) return [];
-		if (item.menuId === 'hatagoes') return [item];
-		const { targetId: _targetId, ...button } = item;
-		return [{ ...button, menuId: 'hatagoes', icon: 'ti ti-sparkles', label: HATA_SIDE_STUDIO_MENU_STORAGE_LABELS.hatagoes } as T];
-	});
-}
-
-function preferredHatagoesButton(buttons: HataSideButton[]): HataSideButton | undefined {
-	return buttons.find(button => button.menuId === 'hatagoes')
-		?? buttons.find(button => RETIRED_HATA_SIDEBAR_IDS.has(button.menuId));
-}
-
-function normalizeHatagoesExpanded(nodes: HataSideNode[]): HataSideNode[] {
-	const buttons = nodes.flatMap(node => node.type === 'button' ? [node] : node.type === 'group' ? node.children.filter((child): child is HataSideButton => child.type === 'button') : []);
-	const keep = preferredHatagoesButton(buttons);
-	return nodes.flatMap<HataSideNode>(node => {
-		if (node.type !== 'group') return normalizeHatagoesButtons([node], keep);
-		const children = normalizeHatagoesButtons(node.children, keep);
-		return [children.length === node.children.length && children.every((child, index) => child === node.children[index]) ? node : { ...node, children }];
-	});
-}
-
-function normalizeHatagoesCollapsed(buttons: HataSideButton[]): HataSideButton[] {
-	return normalizeHatagoesButtons(buttons, preferredHatagoesButton(buttons));
-}
-
 export function sanitizeHataSideStudioStore(value: unknown, source: readonly SidebarSourceItem[] = fallbackSidebar): HataSideStudioStore {
 	if (!isRecord(value) || !Array.isArray(value.profiles)) return createDefaultStore(source);
 	const storedVersion = Number(value.version);
@@ -775,11 +627,11 @@ export function sanitizeHataSideStudioStore(value: unknown, source: readonly Sid
 		const expandedRaw = isRecord(raw.expanded) ? raw.expanded : {};
 		const collapsedRaw = isRecord(raw.collapsed) ? raw.collapsed : {};
 		const columns = expandedRaw.columns === 2 || expandedRaw.columns === 3 ? expandedRaw.columns : 1;
-		const nodes = normalizeHatagoesExpanded(ensureExternalNotificationsExpanded((Array.isArray(expandedRaw.nodes) ? expandedRaw.nodes.map(node => isRecord(node) && node.type === 'group' ? sanitizeGroup(node, refreshLayoutDefaults) : isRecord(node) && node.type === 'widget' ? sanitizeWidget(node, refreshLayoutDefaults) : sanitizeButton(node)).filter((node): node is HataSideNode => node != null) : [])
-			.map(node => columns > 1 && node.type !== 'group' && node.size === 'large' ? { ...node, size: 'normal' as const } : node)));
-		const buttons = normalizeHatagoesCollapsed(ensureExternalNotificationsCollapsed(Array.isArray(collapsedRaw.buttons) ? collapsedRaw.buttons
+		const nodes = (Array.isArray(expandedRaw.nodes) ? expandedRaw.nodes.map(node => isRecord(node) && node.type === 'group' ? sanitizeGroup(node, refreshLayoutDefaults) : isRecord(node) && node.type === 'widget' ? sanitizeWidget(node, refreshLayoutDefaults) : sanitizeButton(node)).filter((node): node is HataSideNode => node != null) : [])
+			.map(node => columns > 1 && node.type !== 'group' && node.size === 'large' ? { ...node, size: 'normal' as const } : node);
+		const buttons = Array.isArray(collapsedRaw.buttons) ? collapsedRaw.buttons
 			.map(button => sanitizeButton(button, true))
-			.filter((button): button is HataSideButton => button != null) : []));
+			.filter((button): button is HataSideButton => button != null) : [];
 		profiles.push({
 			id: typeof raw.id === 'string' ? raw.id : uid('profile'), name: typeof raw.name === 'string' ? raw.name.slice(0, 80) : HATA_SIDE_STUDIO_DEFAULT_STORAGE_NAMES.profileFallback,
 			postButton: sanitizePostButtonAppearance(raw.postButton),
@@ -797,8 +649,8 @@ export function sanitizeHataSideStudioStore(value: unknown, source: readonly Sid
 	return { version: HATA_SIDE_STUDIO_FORMAT_VERSION, activeProfileId: profiles.some(profile => profile.id === requestedActive) ? requestedActive : profiles[0].id, profiles };
 }
 
-function readStore(key: typeof HATA_SIDE_STUDIO_STORAGE_KEY | typeof HATA_SIDE_STUDIO_UI_S_STORAGE_KEY): HataSideStudioStore {
-	const raw = miLocalStorage.getItem(key);
+function readStore(): HataSideStudioStore {
+	const raw = miLocalStorage.getItem(HATA_SIDE_STUDIO_STORAGE_KEY);
 	if (raw == null) return createDefaultStore();
 	try {
 		return sanitizeHataSideStudioStore(JSON.parse(raw));
@@ -807,47 +659,11 @@ function readStore(key: typeof HATA_SIDE_STUDIO_STORAGE_KEY | typeof HATA_SIDE_S
 	}
 }
 
-// 実行中のUIは別タブのUI切替に影響されないよう、モジュールの初期化時に固定する。
-const initialStorageKey = miLocalStorage.getItem('ui') === 'hataskey3'
-	? HATA_SIDE_STUDIO_UI_S_STORAGE_KEY : HATA_SIDE_STUDIO_STORAGE_KEY;
-// 旧データがある場合は初回アクセス時にUI Sの初期値を固定する。旧データがない
-// 場合は sidebar source を受け取る ensure まで待つ。
-const initialLegacyRaw = miLocalStorage.getItem(HATA_SIDE_STUDIO_STORAGE_KEY);
-const legacyInitialStore = readStore(HATA_SIDE_STUDIO_STORAGE_KEY);
-if (initialLegacyRaw != null && miLocalStorage.getItem(HATA_SIDE_STUDIO_UI_S_STORAGE_KEY) == null) {
-	miLocalStorage.setItem(HATA_SIDE_STUDIO_UI_S_STORAGE_KEY, JSON.stringify(legacyInitialStore));
-}
-const legacyStore = ref<HataSideStudioStore>(legacyInitialStore);
-const uiSStore = ref<HataSideStudioStore>(readStore(HATA_SIDE_STUDIO_UI_S_STORAGE_KEY));
-
-export function getHataSideStudioStorageKey(): typeof HATA_SIDE_STUDIO_STORAGE_KEY | typeof HATA_SIDE_STUDIO_UI_S_STORAGE_KEY {
-	return initialStorageKey;
-}
-
-function storeForKey(key: ReturnType<typeof getHataSideStudioStorageKey>) {
-	return key === HATA_SIDE_STUDIO_UI_S_STORAGE_KEY ? uiSStore : legacyStore;
-}
-
-export const hataSideStudioStore = storeForKey(initialStorageKey);
-
-function ensureUiSSeed(source?: readonly SidebarSourceItem[]): void {
-	if (miLocalStorage.getItem(HATA_SIDE_STUDIO_UI_S_STORAGE_KEY) != null) return;
-	let initial: HataSideStudioStore;
-	if (initialStorageKey === HATA_SIDE_STUDIO_UI_S_STORAGE_KEY && initialLegacyRaw == null) {
-		initial = source != null ? createDefaultStore(source) : legacyInitialStore;
-	} else if (miLocalStorage.getItem(HATA_SIDE_STUDIO_STORAGE_KEY) != null) {
-		initial = readStore(HATA_SIDE_STUDIO_STORAGE_KEY);
-	} else {
-		initial = source != null ? createDefaultStore(source) : legacyInitialStore;
-	}
-	uiSStore.value = initial;
-	miLocalStorage.setItem(HATA_SIDE_STUDIO_UI_S_STORAGE_KEY, JSON.stringify(initial));
-}
+export const hataSideStudioStore = ref<HataSideStudioStore>(readStore());
 
 type HataSideStudioSyncDetail = {
 	sourceId: string;
 	serialized: string;
-	storageKey?: ReturnType<typeof getHataSideStudioStorageKey>;
 };
 
 const syncSourceId = uid('sync');
@@ -858,12 +674,11 @@ function isSyncDetail(value: unknown): value is HataSideStudioSyncDetail {
 	return isRecord(value) && typeof value.sourceId === 'string' && typeof value.serialized === 'string';
 }
 
-function applySerializedHataSideStudioStore(serialized: string, sourceId = '', key: ReturnType<typeof getHataSideStudioStorageKey> = HATA_SIDE_STUDIO_STORAGE_KEY): void {
+function applySerializedHataSideStudioStore(serialized: string, sourceId = ''): void {
 	if (sourceId === syncSourceId || !isHataSideStudioStorageString(serialized)) return;
 	try {
 		const next = sanitizeHataSideStudioStore(JSON.parse(serialized));
-		const target = storeForKey(key);
-		if (JSON.stringify(target.value) !== JSON.stringify(next)) target.value = next;
+		if (JSON.stringify(hataSideStudioStore.value) !== JSON.stringify(next)) hataSideStudioStore.value = next;
 	} catch {
 		// 他ウィンドウから壊れた値が来ても、現在表示中の正常な設定は維持する。
 	}
@@ -871,15 +686,15 @@ function applySerializedHataSideStudioStore(serialized: string, sourceId = '', k
 
 function onHataSideStudioCustomEvent(event: Event): void {
 	const detail = (event as CustomEvent<unknown>).detail;
-	if (isSyncDetail(detail)) applySerializedHataSideStudioStore(detail.serialized, detail.sourceId, detail.storageKey);
+	if (isSyncDetail(detail)) applySerializedHataSideStudioStore(detail.serialized, detail.sourceId);
 }
 
 function onHataSideStudioStorage(event: StorageEvent): void {
-	if ((event.key === HATA_SIDE_STUDIO_STORAGE_KEY || event.key === HATA_SIDE_STUDIO_UI_S_STORAGE_KEY) && event.newValue != null) applySerializedHataSideStudioStore(event.newValue, '', event.key);
+	if (event.key === HATA_SIDE_STUDIO_STORAGE_KEY && event.newValue != null) applySerializedHataSideStudioStore(event.newValue);
 }
 
 function onHataSideStudioBroadcast(event: MessageEvent<unknown>): void {
-	if (isSyncDetail(event.data)) applySerializedHataSideStudioStore(event.data.serialized, event.data.sourceId, event.data.storageKey);
+	if (isSyncDetail(event.data)) applySerializedHataSideStudioStore(event.data.serialized, event.data.sourceId);
 }
 
 export function startHataSideStudioSync(): void {
@@ -910,9 +725,9 @@ export function stopHataSideStudioSync(): void {
 	}
 }
 
-function notifyHataSideStudioChange(serialized: string, storageKey: ReturnType<typeof getHataSideStudioStorageKey>): void {
+function notifyHataSideStudioChange(serialized: string): void {
 	if (typeof window === 'undefined') return;
-	const detail: HataSideStudioSyncDetail = { sourceId: syncSourceId, serialized, storageKey };
+	const detail: HataSideStudioSyncDetail = { sourceId: syncSourceId, serialized };
 	try {
 		window.dispatchEvent(new CustomEvent<HataSideStudioSyncDetail>(HATA_SIDE_STUDIO_CHANGE_EVENT, { detail }));
 		syncChannel?.postMessage(detail);
@@ -922,9 +737,7 @@ function notifyHataSideStudioChange(serialized: string, storageKey: ReturnType<t
 }
 
 export function ensureHataSideStudioInitialized(source: readonly SidebarSourceItem[]): void {
-	ensureUiSSeed(source);
-	const key = getHataSideStudioStorageKey();
-	const raw = miLocalStorage.getItem(key);
+	const raw = miLocalStorage.getItem(HATA_SIDE_STUDIO_STORAGE_KEY);
 	if (raw == null) {
 		applyHataSideStudioStore(createDefaultStore(source));
 		return;
@@ -932,10 +745,10 @@ export function ensureHataSideStudioInitialized(source: readonly SidebarSourceIt
 	try {
 		const migrated = sanitizeHataSideStudioStore(JSON.parse(raw), source);
 		const serialized = JSON.stringify(migrated);
-		storeForKey(key).value = migrated;
+		hataSideStudioStore.value = migrated;
 		if (serialized !== raw) {
-			miLocalStorage.setItem(key, serialized);
-			notifyHataSideStudioChange(serialized, key);
+			miLocalStorage.setItem(HATA_SIDE_STUDIO_STORAGE_KEY, serialized);
+			notifyHataSideStudioChange(serialized);
 		}
 		return;
 	} catch {
@@ -944,13 +757,12 @@ export function ensureHataSideStudioInitialized(source: readonly SidebarSourceIt
 	applyHataSideStudioStore(createDefaultStore(source));
 }
 
-export function applyHataSideStudioStore(value: HataSideStudioStore, key = getHataSideStudioStorageKey()): void {
-	ensureUiSSeed();
+export function applyHataSideStudioStore(value: HataSideStudioStore): void {
 	const next = sanitizeHataSideStudioStore(value);
 	const serialized = JSON.stringify(next);
-	storeForKey(key).value = next;
-	miLocalStorage.setItem(key, serialized);
-	notifyHataSideStudioChange(serialized, key);
+	hataSideStudioStore.value = next;
+	miLocalStorage.setItem(HATA_SIDE_STUDIO_STORAGE_KEY, serialized);
+	notifyHataSideStudioChange(serialized);
 }
 
 startHataSideStudioSync();

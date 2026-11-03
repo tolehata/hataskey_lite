@@ -17,8 +17,6 @@ import { sectionExplanationCaption, sectionExplanationScenes } from './settings-
 import type { Component, VNode, VNodeChild } from 'vue';
 import type { SettingsBentoSectionId } from './settings-bento-catalog.js';
 import type { SettingsExplanationScene } from './settings-section-explanations.js';
-import type { HataApp } from '@/utility/hata-app-brand.js';
-import HataAppLogo from '@/components/HataAppLogo.vue';
 import { i18n } from '@/i18n.js';
 
 const props = defineProps<{ sectionId: SettingsBentoSectionId; motionEnabled: boolean }>();
@@ -29,7 +27,6 @@ const intersects = ref(true);
 const documentVisible = ref(true);
 const animationVisible = computed(() => intersects.value && documentVisible.value);
 const animationEnabled = computed(() => props.motionEnabled && animationVisible.value);
-const APPS: readonly HataApp[] = ['hatagoes', 'hatask', 'hatady', 'hatafeed'];
 let observer: IntersectionObserver | null = null;
 
 function updateDocumentVisibility(): void { documentVisible.value = window.document.visibilityState !== 'hidden'; }
@@ -153,7 +150,6 @@ class SectionScenes {
 			case 'mute': return this.muteRows(0.72);
 			case 'block': return C([h('span', { style: { position: 'relative', display: 'inline-flex' } }, dot(32), h('span', { style: { position: 'absolute', right: -8, bottom: -6, display: 'inline-flex', animation: anim('hata-section-pop', 3) } }, h('span', { style: { width: 22, height: 22, borderRadius: 999, background: 'var(--MI_THEME-accent)', display: 'grid', placeItems: 'center', boxShadow: '0 0 0 2px var(--MI_THEME-bg)' } }, h('i', { className: 'ti ti-ban', style: { fontSize: 14, color: 'var(--MI_THEME-fgOnAccent)' } }))))]);
 			case 'upload': return this.upload(28, 18);
-			case 'apps': return C(APPS.map((a, i) => A(anim('hata-section-pop', 4, i * 0.2), h(HataAppLogo, { app: a, size: 22, active: animationEnabled.value }), { key: a })), { gap: 5 });
 			case 'mascot': return C([A(anim('hata-section-scale', 3), ic('ti-mood-smile', { fontSize: 24 })), h('span', { style: { display: 'inline-block', transformOrigin: '50% 50%', animation: anim('hata-section-shake', 2.4) } }, ic('ti-wave-sine', { fontSize: 24, color: 'var(--MI_THEME-fg)' }))], { gap: 14 });
 			case 'backup': return C([A(anim('hata-section-down', 2.4), ic('ti-arrow-down', { fontSize: 16, color: 'var(--MI_THEME-fgMuted)' })), h('span', { style: { width: 36, height: 36, borderRadius: 12, background: 'var(--MI_THEME-accentedBg)', display: 'grid', placeItems: 'center' } }, ic('ti-settings', { fontSize: 20, color: 'var(--MI_THEME-accent)' })), A(anim('hata-section-up', 2.4, 1.2), ic('ti-arrow-up', { fontSize: 16 }))]);
 			case 'export': {

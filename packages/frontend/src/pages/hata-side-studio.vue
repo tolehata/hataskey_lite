@@ -3,7 +3,7 @@ SPDX-FileCopyrightText: Tolehata and hatasaba-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 <template>
-<div :class="$style.root" :data-deck-ui="isHatasabaDeckUi ? 'on' : undefined" :data-ui-s="isUiS ? 'true' : undefined" :data-goes-host="inHataGoes ? 'true' : undefined" :style="hk3ThemeContext">
+<div :class="$style.root" :data-deck-ui="isHatasabaDeckUi ? 'on' : undefined">
 	<header :class="[$style.header, tutorialStep?.target === 'save' && $style.tutorialFocus]">
 		<div :class="$style.brand">
 			<button v-if="!isHatasabaDeckUi" type="button" class="_button" :class="$style.backButton" :aria-label="copy.back" @click.stop="closeStudio"><i class="ti ti-chevron-left"></i></button>
@@ -22,7 +22,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<div :class="$style.historyActions">
 					<div :class="$style.resetWrap">
 						<button class="_button" :class="$style.historyButton" :aria-label="copy.restoreDefaults" @click="resetConfirmOpen = !resetConfirmOpen"><i class="ti ti-restore"></i></button>
-						<Transition :enterActiveClass="$style.sheetEnterActive" :enterFromClass="$style.sheetEnterFrom" :leaveActiveClass="$style.sheetLeaveActive" :leaveToClass="$style.sheetLeaveTo"><div v-if="resetConfirmOpen" :class="$style.resetConfirm"><b>{{ copy.resetProfileQuestion }}</b><span>{{ copy.notFinalUntilSaved }}</span><div><button class="_button" @click="resetConfirmOpen = false">{{ copy.cancel }}</button><button class="_buttonPrimary" @click="resetProfile">{{ copy.reset }}</button></div></div></Transition>
+						<div v-if="resetConfirmOpen" :class="$style.resetConfirm"><b>{{ copy.resetProfileQuestion }}</b><span>{{ copy.notFinalUntilSaved }}</span><div><button class="_button" @click="resetConfirmOpen = false">{{ copy.cancel }}</button><button class="_buttonPrimary" @click="resetProfile">{{ copy.reset }}</button></div></div>
 					</div>
 					<button class="_button" :class="$style.historyButton" :disabled="historyIndex <= 0" :aria-label="copy.undo" @click="undo"><i class="ti ti-arrow-back-up"></i></button>
 					<button class="_button" :class="$style.historyButton" :disabled="historyIndex >= history.length - 1" :aria-label="copy.redo" @click="redo"><i class="ti ti-arrow-forward-up"></i></button>
@@ -40,11 +40,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<div :class="$style.previewHeadActions">
 					<div :class="$style.copyWrap">
 						<button class="_button" :class="$style.copyButton" :aria-expanded="copyMenuOpen" @click="copyMenuOpen = !copyMenuOpen"><i class="ti ti-copy"></i>{{ copy.copyOrder }}<i class="ti ti-chevron-down"></i></button>
-						<Transition :enterActiveClass="$style.sheetEnterActive" :enterFromClass="$style.sheetEnterFrom" :leaveActiveClass="$style.sheetLeaveActive" :leaveToClass="$style.sheetLeaveTo"><div v-if="copyMenuOpen" :class="$style.copyMenu">
+						<div v-if="copyMenuOpen" :class="$style.copyMenu">
 							<button class="_button" @click="copyLayout('expandedToCollapsed')"><i class="ti ti-layout-sidebar-left-collapse"></i><span><b>{{ copy.expandedToCollapsed }}</b><small>{{ copy.copyButtonsIntoOneColumn }}</small></span></button>
 							<button class="_button" @click="copyLayout('collapsedToExpanded')"><i class="ti ti-layout-sidebar-left-expand"></i><span><b>{{ copy.collapsedToExpanded }}</b><small>{{ copy.copyCollapsedOrderToExpanded }}</small></span></button>
 							<button class="_button" @click="importCurrentSidebar"><i class="ti ti-list-check"></i><span><b>{{ copy.importCurrentOrder }}</b><small>{{ copy.applyExistingSidebarSettings }}</small></span></button>
-						</div></Transition>
+						</div>
 					</div>
 					<div :class="$style.modeTabs"><button class="_button" :aria-pressed="editMode === 'expanded'" @click="setEditMode('expanded')">{{ copy.expanded }}</button><button class="_button" :aria-pressed="editMode === 'collapsed'" @click="setEditMode('collapsed')">{{ copy.collapsed }}</button></div>
 				</div>
@@ -61,25 +61,18 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</div>
 
 				<Teleport to="body">
-				<div v-show="!inHataGoes || hataGoesHost?.active.value" :class="$style.teleportTheme" :data-ui-s="isUiS ? 'true' : undefined" :data-goes-host="inHataGoes ? 'true' : undefined" :style="hk3ThemeContext">
-				<Transition :enterActiveClass="$style.sheetEnterActive" :enterFromClass="$style.sheetEnterFrom" :leaveActiveClass="$style.sheetLeaveActive" :leaveToClass="$style.sheetLeaveTo">
+				<div :class="$style.teleportTheme">
 				<div v-if="buttonPickerOpen" :class="$style.creationPicker">
 					<div :class="$style.pickerHead"><strong>{{ copy.createButton }}</strong><button class="_button" @click="buttonPickerOpen = false"><i class="ti ti-x"></i></button></div>
-					<label v-if="!inHataGoes">{{ copy.feature }}<select v-model="newButtonMenuId" :class="$style.select"><option v-for="item in availableMenuItems" :key="item.id" :value="item.id">{{ getHataSideStudioMenuDisplayLabel(item.id, item.label) }}</option></select></label>
-						<template v-else><label>{{ copy.feature }}<input v-model="buttonSearch" type="search" :class="$style.input" placeholder="機能をさがす"></label><div :class="$style.featureList" role="radiogroup" :aria-label="copy.feature"><button v-for="item in filteredMenuItems" :key="item.id" type="button" class="_button" role="radio" :aria-checked="newButtonMenuId === item.id" @click="newButtonMenuId = item.id"><HataAppNavIcon v-if="hataAppForMenuIcon(item.id, item.icon)" :app="hataAppForMenuIcon(item.id, item.icon)!" :size="22" :monochrome="studioDark"/><i v-else :class="item.icon"></i><span>{{ getHataSideStudioMenuDisplayLabel(item.id, item.label) }}</span><i v-if="newButtonMenuId === item.id" class="ti ti-check"></i></button><p v-if="!filteredMenuItems.length">一致する機能はありません</p></div></template>
-					<span v-if="!isUiS">{{ copy.buttonShape }}</span><div v-if="!isUiS" :class="$style.shapePicker"><button v-for="shape in buttonShapes" :key="shape.value" class="_button" :aria-pressed="newButtonShape === shape.value" @click="newButtonShape = shape.value"><span :data-shape="shape.value"></span><small>{{ shape.label }}</small></button></div>
-					<div :class="$style.pickerActions"><button class="_button" @click="buttonPickerOpen = false">{{ copy.cancel }}</button><button class="_buttonPrimary" :disabled="!newButtonMenuId || (inHataGoes && !filteredMenuItems.some(item => item.id === newButtonMenuId))" @click="confirmAddButton">{{ copy.add }}</button></div>
+					<label>{{ copy.feature }}<select v-model="newButtonMenuId" :class="$style.select"><option v-for="item in availableMenuItems" :key="item.id" :value="item.id">{{ getHataSideStudioMenuDisplayLabel(item.id, item.label) }}</option></select></label>
+					<span>{{ copy.buttonShape }}</span><div :class="$style.shapePicker"><button v-for="shape in buttonShapes" :key="shape.value" class="_button" :aria-pressed="newButtonShape === shape.value" @click="newButtonShape = shape.value"><span :data-shape="shape.value"></span><small>{{ shape.label }}</small></button></div>
+					<div :class="$style.pickerActions"><button class="_button" @click="buttonPickerOpen = false">{{ copy.cancel }}</button><button class="_buttonPrimary" :disabled="!newButtonMenuId" @click="confirmAddButton">{{ copy.add }}</button></div>
 				</div>
-				</Transition>
-				<Transition :enterActiveClass="$style.sheetEnterActive" :enterFromClass="$style.sheetEnterFrom" :leaveActiveClass="$style.sheetLeaveActive" :leaveToClass="$style.sheetLeaveTo">
 				<div v-if="widgetPickerOpen" :class="$style.creationPicker">
 					<div :class="$style.pickerHead"><strong>{{ copy.createWidget }}</strong><button class="_button" @click="widgetPickerOpen = false"><i class="ti ti-x"></i></button></div>
-					<label v-if="!inHataGoes">{{ copy.type }}<select v-model="newWidgetKind" :class="$style.select"><option v-for="widget in availableWidgetChoices" :key="widget.kind" :value="widget.kind">{{ widget.label }}</option></select></label>
-					<template v-else><label>{{ copy.type }}<input v-model="widgetSearch" type="search" :class="$style.input" placeholder="機能をさがす"></label><div :class="$style.featureList" role="radiogroup" :aria-label="copy.type"><button v-for="widget in filteredWidgetChoices" :key="widget.kind" type="button" class="_button" role="radio" :aria-checked="newWidgetKind === widget.kind" @click="newWidgetKind = widget.kind"><i :class="widget.icon"></i><span>{{ widget.label }}</span><i v-if="newWidgetKind === widget.kind" class="ti ti-check"></i></button><p v-if="!filteredWidgetChoices.length">一致する機能はありません</p></div></template>
-					<div :class="$style.pickerActions"><button class="_button" @click="widgetPickerOpen = false">{{ copy.cancel }}</button><button class="_buttonPrimary" :disabled="inHataGoes && !filteredWidgetChoices.some(item => item.kind === newWidgetKind)" @click="confirmAddWidget">{{ copy.add }}</button></div>
+					<label>{{ copy.type }}<select v-model="newWidgetKind" :class="$style.select"><option v-for="widget in availableWidgetChoices" :key="widget.kind" :value="widget.kind">{{ widget.label }}</option></select></label>
+					<div :class="$style.pickerActions"><button class="_button" @click="widgetPickerOpen = false">{{ copy.cancel }}</button><button class="_buttonPrimary" @click="confirmAddWidget">{{ copy.add }}</button></div>
 				</div>
-				</Transition>
-				<Transition :enterActiveClass="$style.sheetEnterActive" :enterFromClass="$style.sheetEnterFrom" :leaveActiveClass="$style.sheetLeaveActive" :leaveToClass="$style.sheetLeaveTo">
 				<div v-if="reorderOpen" :class="$style.reorderWindow">
 					<div :class="$style.pickerHead"><div><strong>{{ copy.advancedReorder }}</strong><small>{{ copy.moveOneStepWithArrows }}</small></div><button class="_button" :aria-label="copy.close" @click="reorderOpen = false"><i class="ti ti-x"></i></button></div>
 					<section v-for="section in reorderSections" :key="section.id" :class="$style.reorderSection" :data-container="section.id">
@@ -91,31 +84,27 @@ SPDX-License-Identifier: AGPL-3.0-only
 						</div>
 					</section>
 				</div>
-				</Transition>
-				<Transition :enterActiveClass="$style.sheetEnterActive" :enterFromClass="$style.sheetEnterFrom" :leaveActiveClass="$style.sheetLeaveActive" :leaveToClass="$style.sheetLeaveTo">
 				<div v-if="quickEditorOpen && selected != null" :class="$style.quickEditor">
-					<p v-if="isUiS" :class="$style.uiSAppearanceNote">{{ uiSAppearanceNote }}</p>
 					<div :class="$style.pickerHead"><div><strong>{{ selected.type === 'group' ? copy.adjustGroupHere : copy.adjustHere }}</strong><small>{{ selectedDisplayName }}</small></div><button class="_button" :aria-label="copy.close" @click="quickEditorOpen = false"><i class="ti ti-x"></i></button></div>
 					<template v-if="selected.type === 'group'">
 						<label :class="$style.quickField"><span>{{ copy.groupName }}</span><input v-model="selected.name" :class="$style.input" maxlength="80"></label>
 						<label :class="$style.check"><input v-model="selected.showName" type="checkbox">{{ copy.showGroupName }}</label>
-						<div :class="$style.quickSection"><b>{{ copy.layout }}</b><div :class="$style.layoutPicker"><button class="_button" :aria-pressed="selected.columns === 1 && (isUiS || !selected.masonry)" @click="setGroupLayout(selected, 1, false)"><i class="ti ti-layout-list"></i><span>{{ copy.oneColumn }}</span></button><button class="_button" :disabled="!canSetGroupColumns(selected, 2)" :aria-pressed="selected.columns === 2 && (isUiS || !selected.masonry)" @click="setGroupLayout(selected, 2, false)"><i class="ti ti-layout-grid"></i><span>{{ copy.grid }}</span></button><button class="_button" :disabled="!canSetGroupColumns(selected, 3)" :aria-pressed="selected.columns === 3 && (isUiS || !selected.masonry)" @click="setGroupLayout(selected, 3, false)"><i class="ti ti-layout-grid-add"></i><span>{{ copy.threeColumns }}</span></button><button v-if="!isUiS" class="_button" :disabled="!canSetGroupColumns(selected, Math.max(2, selected.columns) as 2 | 3)" :aria-pressed="selected.masonry" @click="setGroupLayout(selected, Math.max(2, selected.columns) as 2 | 3, true)"><i class="ti ti-layout-board-split"></i><span>{{ copy.masonry }}</span></button></div><small v-if="groupHasLargeItems(selected)">{{ copy.largeItemsPreventMultipleColumns }}</small></div>
-						<div v-if="!isUiS" :class="$style.quickColors"><label>{{ copy.background }}<input type="color" :value="cssColor(selected.background)" @input="selected.background = ($event.target as HTMLInputElement).value"></label><label>{{ copy.border }}<input type="color" :value="cssColor(selected.border)" @input="selected.border = ($event.target as HTMLInputElement).value"></label></div>
+						<div :class="$style.quickSection"><b>{{ copy.layout }}</b><div :class="$style.layoutPicker"><button class="_button" :aria-pressed="selected.columns === 1 && !selected.masonry" @click="setGroupLayout(selected, 1, false)"><i class="ti ti-layout-list"></i><span>{{ copy.oneColumn }}</span></button><button class="_button" :disabled="!canSetGroupColumns(selected, 2)" :aria-pressed="selected.columns === 2 && !selected.masonry" @click="setGroupLayout(selected, 2, false)"><i class="ti ti-layout-grid"></i><span>{{ copy.grid }}</span></button><button class="_button" :disabled="!canSetGroupColumns(selected, 3)" :aria-pressed="selected.columns === 3 && !selected.masonry" @click="setGroupLayout(selected, 3, false)"><i class="ti ti-layout-grid-add"></i><span>{{ copy.threeColumns }}</span></button><button class="_button" :disabled="!canSetGroupColumns(selected, Math.max(2, selected.columns) as 2 | 3)" :aria-pressed="selected.masonry" @click="setGroupLayout(selected, Math.max(2, selected.columns) as 2 | 3, true)"><i class="ti ti-layout-board-split"></i><span>{{ copy.masonry }}</span></button></div><small v-if="groupHasLargeItems(selected)">{{ copy.largeItemsPreventMultipleColumns }}</small></div>
+						<div :class="$style.quickColors"><label>{{ copy.background }}<input type="color" :value="cssColor(selected.background)" @input="selected.background = ($event.target as HTMLInputElement).value"></label><label>{{ copy.border }}<input type="color" :value="cssColor(selected.border)" @input="selected.border = ($event.target as HTMLInputElement).value"></label></div>
 					</template>
 					<template v-else>
-						<div v-if="!isUiS" :class="$style.quickSection"><b>{{ copy.shape }}</b><div :class="$style.shapePicker"><button v-for="shape in buttonShapes" :key="shape.value" class="_button" :aria-pressed="selected.shape === shape.value" @click="selected.shape = shape.value"><span :data-shape="shape.value"></span><small>{{ shape.label }}</small></button></div></div>
+						<div :class="$style.quickSection"><b>{{ copy.shape }}</b><div :class="$style.shapePicker"><button v-for="shape in buttonShapes" :key="shape.value" class="_button" :aria-pressed="selected.shape === shape.value" @click="selected.shape = shape.value"><span :data-shape="shape.value"></span><small>{{ shape.label }}</small></button></div></div>
 						<div v-if="editMode === 'expanded'" :class="$style.quickSection"><b>{{ copy.size }}</b><div :class="$style.choiceRow"><button v-for="size in sizes" :key="size.value" class="_button" :disabled="!canSetNodeSize(selected, size.value)" :data-active="selected.size === size.value" @click="setNodeSize(selected, size.value)">{{ size.label }}</button></div><small v-if="selectedParentColumns > 1">{{ copy.largeUnavailableInMultipleColumns }}</small></div>
 						<label v-if="selected.type === 'button' && editMode === 'expanded'" :class="$style.check"><input v-model="selected.showLabel" type="checkbox">{{ copy.showLabel }}</label>
-						<label v-if="!isUiS && selected.type === 'button' && editMode === 'expanded'" :class="$style.field"><span>{{ copy.rotation }}</span><input v-model.number="selected.rotation" type="range" min="-12" max="12" step="1"><output>{{ selected.rotation }}°</output></label>
-						<label v-if="!isUiS && selected.type === 'button' && editMode === 'collapsed'" :class="$style.check"><input v-model="selected.borderVisible" type="checkbox">{{ copy.showBorder }}</label>
-						<div v-if="!isUiS" :class="$style.quickColors"><label>{{ copy.background }}<input type="color" :value="cssColor(selected.background)" @input="selected.background = ($event.target as HTMLInputElement).value"></label><label>{{ copy.border }}<input type="color" :value="cssColor(selected.border)" @pointerdown="promptCollapsedBorderVisibility(selected, $event)" @keydown.enter.prevent="promptCollapsedBorderVisibility(selected, $event)" @input="selected.border = ($event.target as HTMLInputElement).value"></label><label>{{ copy.text }}<input type="color" :value="cssColor(selected.foreground)" @input="selected.foreground = ($event.target as HTMLInputElement).value"></label></div>
+						<label v-if="selected.type === 'button' && editMode === 'expanded'" :class="$style.field"><span>{{ copy.rotation }}</span><input v-model.number="selected.rotation" type="range" min="-12" max="12" step="1"><output>{{ selected.rotation }}°</output></label>
+						<label v-if="selected.type === 'button' && editMode === 'collapsed'" :class="$style.check"><input v-model="selected.borderVisible" type="checkbox">{{ copy.showBorder }}</label>
+						<div :class="$style.quickColors"><label>{{ copy.background }}<input type="color" :value="cssColor(selected.background)" @input="selected.background = ($event.target as HTMLInputElement).value"></label><label>{{ copy.border }}<input type="color" :value="cssColor(selected.border)" @pointerdown="promptCollapsedBorderVisibility(selected, $event)" @keydown.enter.prevent="promptCollapsedBorderVisibility(selected, $event)" @input="selected.border = ($event.target as HTMLInputElement).value"></label><label>{{ copy.text }}<input type="color" :value="cssColor(selected.foreground)" @input="selected.foreground = ($event.target as HTMLInputElement).value"></label></div>
 					</template>
-					<label v-if="!isUiS" :class="$style.field"><span>{{ copy.border }}</span><input v-model.number="selected.borderWidth" type="range" min="0" max="5"><output>{{ selected.borderWidth }}px</output></label>
-					<label v-if="!isUiS" :class="$style.quickField"><span>{{ copy.borderStyle }}</span><select v-model="selected.borderStyle" :class="$style.select"><option value="solid">{{ copy.solid }}</option><option value="dashed">{{ copy.dashed }}</option><option value="double">{{ copy.double }}</option></select></label>
-					<GradientEditor v-if="!isUiS" :modelValue="selected"/>
+					<label :class="$style.field"><span>{{ copy.border }}</span><input v-model.number="selected.borderWidth" type="range" min="0" max="5"><output>{{ selected.borderWidth }}px</output></label>
+					<label :class="$style.quickField"><span>{{ copy.borderStyle }}</span><select v-model="selected.borderStyle" :class="$style.select"><option value="solid">{{ copy.solid }}</option><option value="dashed">{{ copy.dashed }}</option><option value="double">{{ copy.double }}</option></select></label>
+					<GradientEditor :modelValue="selected"/>
 					<div :class="$style.pickerActions"><button class="_button" @click="quickEditorOpen = false">{{ copy.close }}</button><button class="_buttonPrimary" @click="openSelectedInspector"><i class="ti ti-adjustments-horizontal"></i>{{ copy.advancedSettings }}</button></div>
 				</div>
-				</Transition>
 				<div v-if="dragHintVisible" :class="$style.dragHint" :style="dragHintStyle"><i class="ti ti-hand-move"></i><span>{{ copy.dragTimelineHint }}</span></div>
 				<aside v-if="dragHintVisible" :class="$style.dragTimeline" :style="dragTimelineStyle" :aria-label="copy.dragTimelineAria" @pointerleave="timelineDropTarget = null">
 					<div :class="$style.dragTimelineHead"><i class="ti ti-timeline"></i><span><b>{{ copy.order }}</b><small>{{ copy.dropAtDesiredPosition }}</small></span></div>
@@ -135,15 +124,15 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<div ref="sidebarPreviewEl" :class="[$style.sidebarPreview, editMode === 'expanded' && activeProfile.expanded.width === 'wide' && $style.sidebarPreviewWide, editMode === 'collapsed' && $style.sidebarPreviewCollapsed, tutorialStep?.target === 'arrange' && $style.tutorialFocus]">
 					<div :class="$style.serverRow">
 						<button class="_button" :class="$style.serverIcon" :aria-label="copy.serverMenu"><img v-if="instance.iconUrl" :src="instance.iconUrl"><i v-else class="ti ti-server"></i></button>
-						<div v-if="!isUiS && editMode === 'expanded'" :class="$style.serverName"><small>{{ copy.thisIs }}</small><b>{{ instance.name ?? 'Hataskey' }}</b></div>
-						<button v-if="!isUiS && editMode === 'expanded'" class="_button" :class="$style.serverAction" :aria-label="copy.timelineSettings"><i class="ti ti-adjustments"></i></button>
-						<button v-if="!isUiS" class="_button" :class="$style.serverAction" :aria-label="editMode === 'expanded' ? copy.collapseMenu : copy.expandMenu" @click="togglePreviewWidth"><i :class="editMode === 'expanded' ? 'ti ti-chevron-left' : 'ti ti-chevron-right'"></i></button>
+						<div v-if="editMode === 'expanded'" :class="$style.serverName"><small>{{ copy.thisIs }}</small><b>{{ instance.name ?? 'Hataskey Lite' }}</b></div>
+						<button v-if="editMode === 'expanded'" class="_button" :class="$style.serverAction" :aria-label="copy.timelineSettings"><i class="ti ti-adjustments"></i></button>
+						<button class="_button" :class="$style.serverAction" :aria-label="editMode === 'expanded' ? copy.collapseMenu : copy.expandMenu" @click="togglePreviewWidth"><i :class="editMode === 'expanded' ? 'ti ti-chevron-left' : 'ti ti-chevron-right'"></i></button>
 					</div>
-					<div :class="$style.customArea" :data-parallax="!isUiS && activeProfile.expanded.parallax ? 'on' : 'off'">
+					<div :class="$style.customArea" :data-parallax="activeProfile.expanded.parallax ? 'on' : 'off'">
 						<draggable v-if="editMode === 'expanded'" v-model="activeProfile.expanded.nodes" itemKey="id" :group="expandedDragGroup" handle=".hssDrag" :move="allowExpandedMove" :animation="180" :fallbackOnBody="true" :forceFallback="isTouch" :delay="isTouch ? 140 : 0" :delayOnTouchOnly="true" :class="$style.expandedNodes" :style="{ '--hss-normal-columns': String(activeProfile.expanded.columns) }" @start="onDragStart" @end="onDragEnd">
 							<template #item="{ element: node }">
-								<div :class="[$style.previewNode, node.type === 'group' && $style.previewGroup, node.type === 'widget' && $style.previewWidget]" :style="nodeStyle(node)" :data-node-id="node.id" :data-group-id="node.type === 'group' ? node.id : undefined" :data-shape="!isUiS && node.type !== 'group' ? node.shape : undefined" :data-size="node.type !== 'group' ? node.size : undefined" :data-selected="selectedId === node.id" :data-masonry="!isUiS && node.type === 'group' && node.masonry ? 'on' : undefined" @click.stop="selectNode(node.id)">
-									<div v-if="node.type === 'group'" :class="$style.groupHead" :data-show-name="node.showName ? 'true' : undefined">
+								<div :class="[$style.previewNode, node.type === 'group' && $style.previewGroup, node.type === 'widget' && $style.previewWidget]" :style="nodeStyle(node)" :data-node-id="node.id" :data-group-id="node.type === 'group' ? node.id : undefined" :data-shape="node.type !== 'group' ? node.shape : undefined" :data-size="node.type !== 'group' ? node.size : undefined" :data-selected="selectedId === node.id" :data-masonry="node.type === 'group' && node.masonry ? 'on' : undefined" @click.stop="selectNode(node.id)">
+									<div v-if="node.type === 'group'" :class="$style.groupHead">
 						<span v-if="node.showName">{{ getHataSideStudioGroupDisplayName(node.name) }}</span>
 										<div>
 											<button v-if="groupContrastWarnings.get(node.id)?.low" class="_button" :class="$style.contrastWarning" :aria-expanded="contrastPopoverGroupId === node.id" :aria-label="copy.adjustTextReadability" @click.stop="toggleContrastPopover(node.id)"><i class="ti ti-contrast"></i></button>
@@ -158,7 +147,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 									</div>
 									<draggable v-if="node.type === 'group'" v-model="node.children" itemKey="id" :group="groupChildDragGroup" handle=".hssDrag" :move="allowGroupChildMove" :animation="180" :fallbackOnBody="true" :forceFallback="isTouch" :delay="isTouch ? 180 : 0" :delayOnTouchOnly="true" :class="$style.groupGrid" :data-empty="node.children.length === 0 ? 'true' : undefined" :style="{ '--hss-columns': String(node.columns) }" @start="onDragStart" @end="onDragEnd">
 										<template #item="{ element: child }">
-											<div :class="child.type === 'button' ? $style.previewButton : $style.previewWidget" :data-node-id="child.id" :data-menu-id="child.type === 'button' ? child.menuId : undefined" :data-shape="isUiS ? undefined : child.shape" :data-size="child.size" :data-brand="child.type === 'button' && isBrandMenu(child.menuId) ? 'true' : undefined" :data-selected="selectedId === child.id" :style="nodeStyle(child)" @click.stop="selectNode(child.id)">
+											<div :class="child.type === 'button' ? $style.previewButton : $style.previewWidget" :data-node-id="child.id" :data-shape="child.shape" :data-size="child.size" :data-selected="selectedId === child.id" :style="nodeStyle(child)" @click.stop="selectNode(child.id)">
 												<ButtonPreview v-if="child.type === 'button'" :button="child" @search="runPreviewSearch"/>
 												<WidgetPreview v-else :widget="child"/>
 												<button class="_button hssDrag" :class="$style.dragHandle" :aria-label="copy.moveItem"><i class="ti ti-grip-vertical"></i></button>
@@ -167,7 +156,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 											</div>
 										</template>
 									</draggable>
-									<div v-else-if="node.type === 'button'" :class="$style.previewButton" :data-menu-id="node.menuId" :data-shape="isUiS ? undefined : node.shape" :data-size="node.size" :data-brand="isBrandMenu(node.menuId) ? 'true' : undefined"><ButtonPreview :button="node" @search="runPreviewSearch"/></div>
+									<div v-else-if="node.type === 'button'" :class="$style.previewButton" :data-shape="node.shape" :data-size="node.size"><ButtonPreview :button="node" @search="runPreviewSearch"/></div>
 									<div v-else><WidgetPreview :widget="node"/></div>
 									<button v-if="node.type !== 'group'" class="_button hssDrag" :class="$style.dragHandle" :aria-label="node.type === 'button' ? copy.moveItem : copy.moveWidget"><i class="ti ti-grip-vertical"></i></button>
 									<button v-if="node.type !== 'group' && !deleteMode" class="_button" :class="$style.quickTrigger" :aria-label="copy.editHere" @click.stop="openQuickEditor(node.id)"><i class="ti ti-pencil"></i></button>
@@ -176,27 +165,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 							</template>
 						</draggable>
 						<draggable v-else v-model="activeProfile.collapsed.buttons" itemKey="id" handle=".hssDrag" :animation="180" :fallbackOnBody="true" :forceFallback="isTouch" :delay="isTouch ? 180 : 0" :delayOnTouchOnly="true" :class="$style.collapsedButtons" @start="onDragStart" @end="onDragEnd">
-						<template #item="{ element: button }"><div class="_button hssDrag" :class="$style.collapsedButton" :data-node-id="button.id" :data-shape="isUiS ? undefined : button.shape" :data-selected="selectedId === button.id" :style="nodeStyle(button)" role="button" tabindex="0" :aria-label="getHataSideStudioMenuDisplayLabel(button.menuId, button.label)" @click.stop="selectNode(button.id)" @keydown.enter.stop="selectNode(button.id)"><HataAppNavIcon v-if="hataAppForMenuIcon(button.menuId, button.icon)" :app="hataAppForMenuIcon(button.menuId, button.icon)!" :size="20" :monochrome="studioDark"/><i v-else :class="button.icon"></i><button v-if="!deleteMode" class="_button" :class="$style.quickTrigger" :aria-label="copy.editHere" @click.stop="openQuickEditor(button.id)"><i class="ti ti-pencil"></i></button><button v-if="deleteMode" class="_button" :class="$style.deleteItem" :aria-label="copy.delete" @click.stop="requestRemoveNode(button.id)"><i class="ti ti-x"></i></button></div></template>
+						<template #item="{ element: button }"><div class="_button hssDrag" :class="$style.collapsedButton" :data-node-id="button.id" :data-shape="button.shape" :data-selected="selectedId === button.id" :style="nodeStyle(button)" role="button" tabindex="0" :aria-label="getHataSideStudioMenuDisplayLabel(button.menuId, button.label)" @click.stop="selectNode(button.id)" @keydown.enter.stop="selectNode(button.id)"><i :class="button.icon"></i><button v-if="!deleteMode" class="_button" :class="$style.quickTrigger" :aria-label="copy.editHere" @click.stop="openQuickEditor(button.id)"><i class="ti ti-pencil"></i></button><button v-if="deleteMode" class="_button" :class="$style.deleteItem" :aria-label="copy.delete" @click.stop="requestRemoveNode(button.id)"><i class="ti ti-x"></i></button></div></template>
 						</draggable>
 					</div>
-					<div v-if="!isUiS" :class="$style.fixedArea"><button class="_button"><i class="ti ti-dots"></i><span v-if="editMode === 'expanded'">{{ copy.more }}</span></button><button class="_button"><i class="ti ti-settings"></i><span v-if="editMode === 'expanded'">{{ copy.settings }}</span></button><button class="_button"><i class="ti ti-bolt"></i><span v-if="editMode === 'expanded'">{{ copy.realtime }}</span></button><button v-if="$i?.isAdmin || $i?.isModerator" class="_button"><i class="ti ti-dashboard"></i><span v-if="editMode === 'expanded'">{{ copy.controlPanel }}</span></button></div>
-					<div v-if="!isUiS" :class="$style.bottomArea">
+					<div :class="$style.fixedArea"><button class="_button"><i class="ti ti-dots"></i><span v-if="editMode === 'expanded'">{{ copy.more }}</span></button><button class="_button"><i class="ti ti-settings"></i><span v-if="editMode === 'expanded'">{{ copy.settings }}</span></button><button class="_button"><i class="ti ti-bolt"></i><span v-if="editMode === 'expanded'">{{ copy.realtime }}</span></button><button v-if="$i?.isAdmin || $i?.isModerator" class="_button"><i class="ti ti-dashboard"></i><span v-if="editMode === 'expanded'">{{ copy.controlPanel }}</span></button></div>
+					<div :class="$style.bottomArea">
 						<button class="_button" :class="$style.postButton" :style="postButtonStyle(activeProfile.postButton)"><i :class="postButtonIconClass(activeProfile.postButton.icon)"></i><span v-if="editMode === 'expanded'">{{ copy.note }}</span></button>
 						<div :class="$style.modeToggle" :aria-label="copy.displayMode"><button class="_button" :aria-pressed="editMode === 'expanded'" :aria-label="copy.normalView" @click="setEditMode('expanded')"><i class="ti ti-device-mobile"></i></button><button class="_button" :aria-pressed="editMode === 'collapsed'" :aria-label="copy.deckView" @click="setEditMode('collapsed')"><i class="ti ti-layout-columns"></i></button></div>
 						<button class="_button" :class="$style.accountButton"><img v-if="$i?.avatarUrl" :src="$i.avatarUrl"><i v-else class="ti ti-user-circle"></i><span v-if="editMode === 'expanded'"><b>{{ $i?.name || $i?.username || copy.account }}</b><small>@{{ $i?.username }}</small></span></button>
-					</div>
-					<div v-else :class="$style.uiSFooter" :data-collapsed="editMode === 'collapsed' ? 'true' : undefined">
-						<button v-if="uiSPreviewDeck" type="button" class="_button" :class="$style.uiSPost" :aria-label="copy.note"><component :is="activeProfile.postButton.icon === 'paw' ? PawPrint : Pencil" :size="20"/></button>
-						<div :class="$style.uiSFooterTrio">
-							<button type="button" class="_button" :aria-label="$i?.isAdmin ? copy.controlPanel : uiSCopy.editSideMenu"><component :is="$i?.isAdmin ? Gauge : PanelsTopLeft" :size="18"/></button>
-							<button type="button" class="_button" :aria-label="hk3ThemeContext?.['color-scheme'] === 'dark' ? uiSCopy.lightMode : uiSCopy.darkMode"><component :is="hk3ThemeContext?.['color-scheme'] === 'dark' ? Sun : Moon" :size="18"/></button>
-							<button type="button" class="_button" :aria-label="copy.settings"><Settings :size="18"/></button>
-						</div>
-						<div :class="$style.uiSFooterPair" :aria-label="copy.displayMode">
-							<button type="button" class="_button" :aria-label="copy.normalView" :aria-pressed="!uiSPreviewDeck" @click="uiSPreviewDeck = false"><RectangleVertical :size="18"/></button>
-							<button type="button" class="_button" :aria-label="copy.deckView" :aria-pressed="uiSPreviewDeck" @click="uiSPreviewDeck = true"><Columns3 :size="18"/></button>
-						</div>
-						<button type="button" class="_button" :class="$style.uiSAccount" :aria-label="copy.account"><img v-if="$i?.avatarUrl" :src="$i.avatarUrl" alt=""><i v-else class="ti ti-user-circle"></i><span v-if="editMode === 'expanded'">@{{ $i?.username }}</span></button>
 					</div>
 				</div>
 				<p v-if="editMode === 'collapsed'" :class="$style.collapsedNotice"><i class="ti ti-info-circle"></i>{{ copy.collapsedMenuNotice }}</p>
@@ -206,8 +182,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<section ref="inspectorPaneEl" :class="[$style.pane, inspectorAttention && $style.inspectorAttention, tutorialStep?.target === 'customize' && $style.tutorialFocus]" :aria-label="copy.studioSettingsAria" tabindex="-1">
 			<div :class="$style.paneHead"><div><h2>{{ copy.studioSettings }}</h2><span>{{ selected?.type === 'button' ? copy.button : selected?.type === 'widget' ? copy.widget : selected?.type === 'group' ? copy.group : copy.overall }}</span></div></div>
 			<div :class="$style.inspector">
-				<div :class="$style.selectedSummary"><HataAppNavIcon v-if="selected?.type === 'button' && hataAppForMenuIcon(selected.menuId, selected.icon)" :app="hataAppForMenuIcon(selected.menuId, selected.icon)!" :size="24" :monochrome="studioDark"/><i v-else :class="selected?.type === 'button' ? selected.icon : selected?.type === 'group' ? 'ti ti-category' : selected?.type === 'widget' ? 'ti ti-app-window' : 'ti ti-layout-sidebar-left'"></i><div><b><HataAppWordmark v-if="selected?.type === 'button' && hataAppForMenuLabel(selected.menuId, selectedDisplayName, selected.icon)" :app="hataAppForMenuLabel(selected.menuId, selectedDisplayName, selected.icon)!" :onDark="studioDark"/><template v-else>{{ selectedDisplayName }}</template></b><small>{{ copy.selectPreviewItemHint }}</small></div></div>
-				<p v-if="isUiS" :class="$style.uiSAppearanceNote">{{ uiSAppearanceNote }}</p>
+				<div :class="$style.selectedSummary"><i :class="selected?.type === 'button' ? selected.icon : selected?.type === 'group' ? 'ti ti-category' : selected?.type === 'widget' ? 'ti ti-app-window' : 'ti ti-layout-sidebar-left'"></i><div><b>{{ selectedDisplayName }}</b><small>{{ copy.selectPreviewItemHint }}</small></div></div>
 				<nav :class="$style.inspectorTabs"><button class="_button" :aria-pressed="inspectorTab === 'layout'" @click="inspectorTab = 'layout'">{{ copy.placement }}</button><button class="_button" :disabled="selected?.type !== 'button'" :aria-pressed="inspectorTab === 'button'" @click="inspectorTab = 'button'">{{ copy.button }}</button><button class="_button" :disabled="selected?.type !== 'widget'" :aria-pressed="inspectorTab === 'widget'" @click="inspectorTab = 'widget'">{{ copy.widget }}</button><button class="_button" :disabled="selected?.type !== 'group'" :aria-pressed="inspectorTab === 'group'" @click="inspectorTab = 'group'">{{ copy.group }}</button><button class="_button" :aria-pressed="inspectorTab === 'role'" @click="inspectorTab = 'role'">{{ copy.limits }}</button></nav>
 
 				<div v-if="inspectorTab === 'layout'" :class="$style.bento">
@@ -215,12 +190,12 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<InspectorCard :title="copy.normalMenuColumns"><div :class="$style.choiceRow"><button v-for="columns in [1, 2, 3]" :key="columns" class="_button" :disabled="!canSetRootColumns(columns as 1 | 2 | 3)" :data-active="activeProfile.expanded.columns === columns" @click="setRootColumns(columns as 1 | 2 | 3)">{{ copyx.columnCount({ count: columns.toString() }) }}</button></div><small v-if="rootHasLargeItems">{{ copy.largeItemsPreventMultipleColumns }}</small></InspectorCard>
 					<InspectorCard :title="copy.sidebarWidth"><div :class="$style.choiceRow"><button class="_button" :data-active="activeProfile.expanded.width === 'normal'" @click="activeProfile.expanded.width = 'normal'">{{ copy.currentSize }}</button><button class="_button" :data-active="activeProfile.expanded.width === 'wide'" @click="activeProfile.expanded.width = 'wide'">{{ copy.wide }}</button></div><small>{{ copy.appliesToPreviewAndPcSidebar }}</small></InspectorCard>
 					<InspectorCard :title="copy.existingSettings"><button class="_button" :class="$style.currentSettingsButton" @click="importCurrentSidebar"><i class="ti ti-list-check"></i>{{ copy.importCurrentOrder }}</button><small>{{ copy.applyConfiguredVisibilityOrder }}</small></InspectorCard>
-					<InspectorCard v-if="!isUiS" :title="copy.motion"><label :class="$style.check"><input v-model="activeProfile.expanded.parallax" type="checkbox">{{ copy.parallaxBeta }}</label><small>{{ copy.disabledWithReducedMotion }}</small></InspectorCard>
+					<InspectorCard :title="copy.motion"><label :class="$style.check"><input v-model="activeProfile.expanded.parallax" type="checkbox">{{ copy.parallaxBeta }}</label><small>{{ copy.disabledWithReducedMotion }}</small></InspectorCard>
 					<InspectorCard :title="copy.noteButtonCustomization">
 						<small>{{ copy.noteButtonCustomizationDescription }}</small>
 						<label :class="$style.field"><span>{{ copy.noteButtonIcon }}</span><span :class="$style.choiceRow"><button class="_button" :data-active="activeProfile.postButton.icon === 'pencil'" @click="activeProfile.postButton.icon = 'pencil'"><i class="ti ti-pencil"></i>{{ copy.pencilIcon }}</button><button class="_button" :data-active="activeProfile.postButton.icon === 'paw'" @click="activeProfile.postButton.icon = 'paw'"><i class="ti ti-paw"></i>{{ copy.pawIcon }}</button></span></label>
-						<div v-if="!isUiS" :class="$style.colorGrid"><label :class="$style.colorField"><span>{{ copy.background }}</span><input type="color" :value="cssColor(activeProfile.postButton.background)" @input="activeProfile.postButton.background = ($event.target as HTMLInputElement).value"></label><label :class="$style.colorField"><span>{{ copy.text }}</span><input type="color" :value="cssColor(activeProfile.postButton.foreground)" @input="activeProfile.postButton.foreground = ($event.target as HTMLInputElement).value"></label></div>
-						<GradientEditor v-if="!isUiS" :modelValue="activeProfile.postButton"/>
+						<div :class="$style.colorGrid"><label :class="$style.colorField"><span>{{ copy.background }}</span><input type="color" :value="cssColor(activeProfile.postButton.background)" @input="activeProfile.postButton.background = ($event.target as HTMLInputElement).value"></label><label :class="$style.colorField"><span>{{ copy.text }}</span><input type="color" :value="cssColor(activeProfile.postButton.foreground)" @input="activeProfile.postButton.foreground = ($event.target as HTMLInputElement).value"></label></div>
+						<GradientEditor :modelValue="activeProfile.postButton"/>
 					</InspectorCard>
 					<InspectorCard :title="copy.collapsedMenuRules"><p>{{ copy.collapsedMenuRulesDescription }}</p></InspectorCard>
 				</div>
@@ -228,10 +203,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<InspectorTitle icon="ti ti-square-rounded" :title="getHataSideStudioMenuDisplayLabel(selected.menuId, selected.label)" :subtitle="copy.button"/>
 					<div :class="$style.bento">
 						<InspectorCard v-if="editMode === 'expanded'" :title="copy.location"><select :value="selectedParentGroupId" :class="$style.select" @change="moveSelectedTo(($event.target as HTMLSelectElement).value)"><option value="">{{ copy.normalMenu }}</option><option v-for="group in availableGroups" :key="group.id" :value="group.id">{{ getHataSideStudioGroupDisplayName(group.name) }}</option></select></InspectorCard>
-						<InspectorCard v-if="!isUiS" :title="copy.shape"><div :class="$style.choiceRow"><button v-for="shape in buttonShapes" :key="shape.value" class="_button" :data-active="selected.shape === shape.value" @click="selected.shape = shape.value"><span :class="$style.shapeSample" :data-shape="shape.value"></span><small>{{ shape.label }}</small></button></div></InspectorCard>
+						<InspectorCard :title="copy.shape"><div :class="$style.choiceRow"><button v-for="shape in buttonShapes" :key="shape.value" class="_button" :data-active="selected.shape === shape.value" @click="selected.shape = shape.value"><span :class="$style.shapeSample" :data-shape="shape.value"></span><small>{{ shape.label }}</small></button></div></InspectorCard>
 						<InspectorCard :title="copy.size"><div :class="$style.choiceRow"><button v-for="size in sizes" :key="size.value" class="_button" :disabled="!canSetNodeSize(selected, size.value)" :data-active="selected.size === size.value" @click="setNodeSize(selected, size.value)">{{ size.label }}</button></div><small v-if="selectedParentColumns > 1">{{ copy.largeUnavailableInMultipleColumns }}</small></InspectorCard>
-						<InspectorCard v-if="editMode === 'expanded'" :title="copy.display"><label :class="$style.check"><input v-model="selected.showLabel" type="checkbox">{{ copy.showTextUnderIcon }}</label><label v-if="!isUiS" :class="$style.field">{{ copy.rotation }} <input v-model.number="selected.rotation" type="range" min="-12" max="12" step="1"><output>{{ selected.rotation }}°</output></label></InspectorCard>
-						<AppearanceEditor v-if="!isUiS" v-model="selected" :collapsedButton="editMode === 'collapsed'"/>
+						<InspectorCard v-if="editMode === 'expanded'" :title="copy.display"><label :class="$style.check"><input v-model="selected.showLabel" type="checkbox">{{ copy.showTextUnderIcon }}</label><label :class="$style.field">{{ copy.rotation }} <input v-model.number="selected.rotation" type="range" min="-12" max="12" step="1"><output>{{ selected.rotation }}°</output></label></InspectorCard>
+						<AppearanceEditor v-model="selected" :collapsedButton="editMode === 'collapsed'"/>
 						<InspectorCard v-if="selected.menuId === 'lists' || selected.menuId === 'antennas'" :title="copy.directOpenItem"><button class="_buttonPrimary" @click="chooseDirectTarget(selected)"><i class="ti ti-list-search"></i>{{ selected.targetId ? copy.chooseAgain : copy.choose }}</button><small>{{ selected.targetId ? copy.opensSpecifiedItem : copy.opensLastItemWhenUnspecified }}</small></InspectorCard>
 					</div>
 				</template>
@@ -258,12 +233,12 @@ SPDX-License-Identifier: AGPL-3.0-only
 							</template>
 							<small v-if="widgetSizeSettingEntries(selected, size.value).length === 0">{{ copy.onlyMinimumHeightAdjustable }}</small>
 						</InspectorCard>
-						<AppearanceEditor v-if="!isUiS" v-model="selected"/>
+						<AppearanceEditor v-model="selected"/>
 					</div>
 				</template>
 				<template v-else-if="inspectorTab === 'group' && selected?.type === 'group'">
 					<InspectorTitle icon="ti ti-category" :title="getHataSideStudioGroupDisplayName(selected.name)" :subtitle="copy.group"/>
-					<div :class="$style.bento"><InspectorCard :title="copy.name"><input v-model="selected.name" :class="$style.input" maxlength="80"><label :class="$style.check"><input v-model="selected.showName" type="checkbox">{{ copy.showGroupNameTopLeft }}</label></InspectorCard><InspectorCard :title="copy.layout"><div :class="$style.layoutPicker"><button class="_button" :aria-pressed="selected.columns === 1 && (isUiS || !selected.masonry)" @click="setGroupLayout(selected, 1, false)"><i class="ti ti-layout-list"></i><span>{{ copy.oneColumn }}</span></button><button class="_button" :disabled="!canSetGroupColumns(selected, 2)" :aria-pressed="selected.columns === 2 && (isUiS || !selected.masonry)" @click="setGroupLayout(selected, 2, false)"><i class="ti ti-layout-grid"></i><span>{{ copy.grid }}</span></button><button class="_button" :disabled="!canSetGroupColumns(selected, 3)" :aria-pressed="selected.columns === 3 && (isUiS || !selected.masonry)" @click="setGroupLayout(selected, 3, false)"><i class="ti ti-layout-grid-add"></i><span>{{ copy.threeColumns }}</span></button><button v-if="!isUiS" class="_button" :disabled="!canSetGroupColumns(selected, Math.max(2, selected.columns) as 2 | 3)" :aria-pressed="selected.masonry" @click="setGroupLayout(selected, Math.max(2, selected.columns) as 2 | 3, true)"><i class="ti ti-layout-board-split"></i><span>{{ copy.masonry }}</span></button></div><small v-if="groupHasLargeItems(selected)">{{ copy.largeItemsPreventMultipleColumns }}</small></InspectorCard><GroupAppearanceEditor v-if="!isUiS" v-model="selected"/><InspectorCard :title="copy.itemsInGroup"><button v-for="child in selected.children" :key="child.id" class="_button" :class="$style.memberButton" @click="selectNode(child.id)"><i :class="child.type === 'button' ? child.icon : 'ti ti-app-window'"></i><span>{{ child.type === 'widget' ? widgetDisplayLabel(child.kind, child.label) : getHataSideStudioMenuDisplayLabel(child.menuId, child.label) }}</span><i class="ti ti-chevron-right"></i></button><small v-if="selected.children.length === 0">{{ copy.emptyGroupHint }}</small></InspectorCard><InspectorCard v-if="mergeTargets.length > 0" :title="copy.mergeIntoAnotherGroup"><select v-model="mergeTargetId" :class="$style.select"><option value="">{{ copy.selectMergeTarget }}</option><option v-for="group in mergeTargets" :key="group.id" :value="group.id">{{ getHataSideStudioGroupDisplayName(group.name) }}</option></select><button class="_button" :disabled="!mergeTargetId" @click="mergeSelectedGroup"><i class="ti ti-arrows-join"></i>{{ copy.merge }}</button></InspectorCard></div>
+					<div :class="$style.bento"><InspectorCard :title="copy.name"><input v-model="selected.name" :class="$style.input" maxlength="80"><label :class="$style.check"><input v-model="selected.showName" type="checkbox">{{ copy.showGroupNameTopLeft }}</label></InspectorCard><InspectorCard :title="copy.layout"><div :class="$style.layoutPicker"><button class="_button" :aria-pressed="selected.columns === 1 && !selected.masonry" @click="setGroupLayout(selected, 1, false)"><i class="ti ti-layout-list"></i><span>{{ copy.oneColumn }}</span></button><button class="_button" :disabled="!canSetGroupColumns(selected, 2)" :aria-pressed="selected.columns === 2 && !selected.masonry" @click="setGroupLayout(selected, 2, false)"><i class="ti ti-layout-grid"></i><span>{{ copy.grid }}</span></button><button class="_button" :disabled="!canSetGroupColumns(selected, 3)" :aria-pressed="selected.columns === 3 && !selected.masonry" @click="setGroupLayout(selected, 3, false)"><i class="ti ti-layout-grid-add"></i><span>{{ copy.threeColumns }}</span></button><button class="_button" :disabled="!canSetGroupColumns(selected, Math.max(2, selected.columns) as 2 | 3)" :aria-pressed="selected.masonry" @click="setGroupLayout(selected, Math.max(2, selected.columns) as 2 | 3, true)"><i class="ti ti-layout-board-split"></i><span>{{ copy.masonry }}</span></button></div><small v-if="groupHasLargeItems(selected)">{{ copy.largeItemsPreventMultipleColumns }}</small></InspectorCard><GroupAppearanceEditor v-model="selected"/><InspectorCard :title="copy.itemsInGroup"><button v-for="child in selected.children" :key="child.id" class="_button" :class="$style.memberButton" @click="selectNode(child.id)"><i :class="child.type === 'button' ? child.icon : 'ti ti-app-window'"></i><span>{{ child.type === 'widget' ? widgetDisplayLabel(child.kind, child.label) : getHataSideStudioMenuDisplayLabel(child.menuId, child.label) }}</span><i class="ti ti-chevron-right"></i></button><small v-if="selected.children.length === 0">{{ copy.emptyGroupHint }}</small></InspectorCard><InspectorCard v-if="mergeTargets.length > 0" :title="copy.mergeIntoAnotherGroup"><select v-model="mergeTargetId" :class="$style.select"><option value="">{{ copy.selectMergeTarget }}</option><option v-for="group in mergeTargets" :key="group.id" :value="group.id">{{ getHataSideStudioGroupDisplayName(group.name) }}</option></select><button class="_button" :disabled="!mergeTargetId" @click="mergeSelectedGroup"><i class="ti ti-arrows-join"></i>{{ copy.merge }}</button></InspectorCard></div>
 				</template>
 				<div v-else-if="inspectorTab === 'role'" :class="$style.bento">
 					<InspectorCard :title="copy.accountSaveLimit"><strong :class="$style.limitValue">{{ copyx.itemCount({ count: profileLimit.toString() }) }}</strong><small>{{ copy.profileLimitPerDevice }}</small></InspectorCard>
@@ -276,7 +251,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	</main>
 
 	<Teleport to="body">
-	<div v-show="!inHataGoes || hataGoesHost?.active.value" :class="$style.teleportTheme" :data-ui-s="isUiS ? 'true' : undefined" :style="hk3ThemeContext">
+	<div :class="$style.teleportTheme">
 	<div v-if="studioDialog" :class="$style.studioDialogWindow" role="dialog" aria-modal="false" :aria-label="studioDialog.title">
 		<header><span><i :class="studioDialog.icon"></i><b>{{ studioDialog.title }}</b></span><button class="_button" :aria-label="copy.close" @click="resolveStudioDialog(false)"><i class="ti ti-x"></i></button></header>
 		<p>{{ studioDialog.text }}</p>
@@ -297,14 +272,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { computed, defineAsyncComponent, defineComponent, h, inject, nextTick, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref, resolveDynamicComponent, useCssModule, watch } from 'vue';
+import { computed, defineAsyncComponent, defineComponent, h, nextTick, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref, resolveDynamicComponent, useCssModule, watch } from 'vue';
 import draggable from 'vuedraggable';
-import { Columns3, Gauge, Moon, PanelsTopLeft, PawPrint, Pencil, RectangleVertical, Settings, Sun } from '@lucide/vue';
 import type { HataSideButton, HataSideButtonShape, HataSideButtonSize, HataSideGroup, HataSideNode, HataSidePostButtonAppearance, HataSidePostButtonIcon, HataSideStudioStore, HataSideWidget, HataSideWidgetKind } from '@/utility/hata-side-studio.js';
 import { $i } from '@/i.js';
 import { i18n } from '@/i18n.js';
 import { instance } from '@/instance.js';
-import { mainRouter, useRouter } from '@/router.js';
+import { mainRouter } from '@/router.js';
 import { definePage } from '@/page.js';
 import { navbarItemDef } from '@/navbar.js';
 import { prefer } from '@/preferences.js';
@@ -317,35 +291,15 @@ import * as os from '@/os.js';
 import {
 	HATA_SIDE_STUDIO_DEFAULT_PROFILE_LIMIT, applyHataSideStudioStore, cloneHataSideStudioStore,
 	copyCollapsedToExpanded, copyExpandedToCollapsed, createButton, createDefaultProfile, createGroup, createHataSideStudioSourceCatalog, createWidget,
-	ensureHataSideStudioInitialized, findHataSideNodeParentGroup, getActiveHataSideProfile, getHataSideNodeContainerColumns, getHataSideStudioCacheLabelSize, getHataSideStudioGroupDisplayName, getHataSideStudioMenuDisplayLabel, getHataSideStudioProfileDisplayName,
-	getHataSideWidgetDisplayLabel, gradientCss, hataSideStudioNodeContainsRequiredMenu, hataSideStudioStore, mergeHataSideGroups,
+	ensureHataSideStudioInitialized, findHataSideNodeParentGroup, getActiveHataSideProfile, getHataSideNodeContainerColumns, getHataSideStudioGroupDisplayName, getHataSideStudioMenuDisplayLabel, getHataSideStudioProfileDisplayName,
+	getHataSideWidgetDisplayLabel, gradientCss, hataSideStudioStore, mergeHataSideGroups,
 } from '@/utility/hata-side-studio.js';
 import { SIDEBAR_ICON_OVERRIDES } from '@/utility/sidebar-icon-overrides.js';
-import HataSideStudioEarthquake from '@/components/HataSideStudioEarthquake.vue';
-import HataSideStudioFlowers from '@/components/HataSideStudioFlowers.vue';
-import { HK3_THEME_CONTEXT } from '@/components/hataskey3/hk3-theme.js';
-import { HATA_GOES_HOST } from '@/utility/hatagoes-context.js';
-import { useHataGoesPopup } from '@/utility/hatagoes-popup.js';
-import HataAppNavIcon from '@/components/HataAppNavIcon.vue';
-import HataAppWordmark from '@/components/HataAppWordmark.vue';
-import { hataAppForMenuIcon, hataAppForMenuLabel } from '@/utility/hata-app-brand.js';
-import { store } from '@/store.js';
 
 const copy = i18n.ts._hata._hataSideStudio._main;
 const copyx = i18n.tsx._hata._hataSideStudio._main;
 const $style = useCssModule();
 const emptyGroupDropText = JSON.stringify(copy.dropButtonOrWidgetHere);
-const hk3ThemeContext = inject(HK3_THEME_CONTEXT, null);
-const studioDark = computed(() => hk3ThemeContext != null ? hk3ThemeContext['color-scheme'] === 'dark' : store.r.darkMode.value);
-const hataGoesHost = inject(HATA_GOES_HOST, null);
-const inHataGoes = hataGoesHost != null;
-const popup = useHataGoesPopup();
-const studioRouter = inHataGoes ? useRouter() : mainRouter;
-const isUiS = hk3ThemeContext != null;
-const uiSCopy = i18n.ts._hata._hataskeyUi3;
-const uiSPreviewDeck = ref(false);
-const uiSAppearanceNote = 'UI Sでは配色と形をテーマに統一します';
-const isBrandMenu = (id: string): boolean => ['hatask', 'hatady', 'hatafeed'].includes(id);
 const isHatasabaDeckUi = computed(() => miLocalStorage.getItem('ui') === 'simple' && prefer.r['simpleUi.deckMode'].value === true);
 const studioDialogControl = ref<HTMLInputElement | HTMLSelectElement | null>(null);
 
@@ -394,19 +348,18 @@ const ButtonPreview = defineComponent({
 		const query = ref('');
 		return () => {
 			const button = props.button as HataSideButton;
-			if (!isUiS && button.menuId === 'search' && button.size === 'large' && button.shape !== 'circle') {
+			if (button.menuId === 'search' && button.size === 'large' && button.shape !== 'circle') {
 				return h('form', { class: $style.searchButtonPreview, onSubmit: (event: Event) => { event.preventDefault(); emit('search', query.value); } }, [
 					h('i', { class: button.icon }),
 					h('input', { value: query.value, type: 'search', placeholder: copy.searchNotesOrUsers, 'aria-label': copy.searchQuery, onInput: (event: Event) => { query.value = (event.target as HTMLInputElement).value; }, onClick: (event: Event) => event.stopPropagation() }),
 					h('button', { class: '_button', type: 'submit', 'aria-label': copy.search, onClick: (event: Event) => event.stopPropagation() }, [h('i', { class: 'ti ti-arrow-right' })]),
 				]);
 			}
-			const large = button.size === 'large' && (isUiS || button.shape !== 'circle');
+			const large = button.size === 'large' && button.shape !== 'circle';
 			const unreadCount = button.menuId === 'notifications' ? Number($i?.unreadNotificationsCount ?? 0) : 0;
 			return h('div', { class: large ? $style.largeButtonPreview : $style.buttonPreviewBody }, [
-				hataAppForMenuIcon(button.menuId, button.icon) ? h(HataAppNavIcon, { app: hataAppForMenuIcon(button.menuId, button.icon)!, size: 22, monochrome: studioDark.value }) : h('i', { class: button.icon }),
-				button.showLabel || (!isUiS && large) ? h('span', [h('b', hataAppForMenuLabel(button.menuId, getHataSideStudioMenuDisplayLabel(button.menuId, button.label), button.icon) ? [h(HataAppWordmark, { app: hataAppForMenuLabel(button.menuId, getHataSideStudioMenuDisplayLabel(button.menuId, button.label), button.icon)!, onDark: studioDark.value })] : getHataSideStudioMenuDisplayLabel(button.menuId, button.label)), large ? h('small', buttonDetail(button.menuId)) : null]) : null,
-				large && ['hatask', 'hatady', 'hatafeed'].includes(button.menuId) ? h('em', button.menuId === 'hatask' ? copy.scheduleAndTodo : button.menuId === 'hatady' ? copy.todayStudy : copy.applicationStatus) : null,
+				h('i', { class: button.icon }),
+				button.showLabel || large ? h('span', [h('b', getHataSideStudioMenuDisplayLabel(button.menuId, button.label)), large ? h('small', buttonDetail(button.menuId)) : null]) : null,
 				unreadCount > 0 ? h('span', { class: $style.previewBadge, 'aria-label': copyx.unreadCount({ count: unreadCount.toString() }) }, unreadCount > 99 ? '99+' : String(unreadCount)) : null,
 			]);
 		};
@@ -417,7 +370,7 @@ const WidgetPreview = defineComponent({
 	setup: props => () => {
 		const widget = props.widget as HataSideWidget;
 		const definition = HATA_SIDE_WIDGET_REGISTRY[widget.kind];
-		const nativeKind = widget.kind === 'flowers' ? 'hataskFlowers' : widget.kind === 'announcements' ? null : widget.kind;
+		const nativeKind = widget.kind === 'announcements' ? null : widget.kind;
 		const sizeSetting = widget.sizeSettings[widget.size];
 		const registryMinHeight = definition.sizes[widget.size].minHeight;
 		const effectiveMinHeight = widget.kind === 'aichan' ? Math.max(sizeSetting.minHeight, registryMinHeight) : sizeSetting.minHeight;
@@ -427,12 +380,6 @@ const WidgetPreview = defineComponent({
 			'--hss-widget-height': `${effectiveMinHeight}px`,
 			...(widget.kind === 'aichan' ? { '--hss-aichan-scale': String(Math.min(1, effectiveMinHeight / 350)) } : {}),
 		};
-		if (widget.kind === 'hataskFlowers' || widget.kind === 'flowers') {
-			return h('div', { class: $style.nativeWidgetPreview, 'data-hss-kind': 'hataskFlowers', 'data-hss-size': widget.size, style: widgetStyle }, [h(HataSideStudioFlowers, { size: widget.size })]);
-		}
-		if (widget.kind === 'earthquake') {
-			return h('div', { class: $style.nativeWidgetPreview, 'data-hss-kind': 'earthquake', 'data-hss-size': widget.size, style: widgetStyle }, [h(HataSideStudioEarthquake, { size: widget.size })]);
-		}
 		if (nativeKind != null) {
 			return h('div', {
 				class: $style.nativeWidgetPreview,
@@ -484,8 +431,6 @@ let dragConstraintNoticeShown = false;
 const deleteDropArmed = ref(false);
 const timelineDropTarget = ref<{ containerId: string; index: number } | null>(null);
 const newButtonMenuId = ref('');
-const buttonSearch = ref('');
-const widgetSearch = ref('');
 const newButtonShape = ref<HataSideButtonShape>('rounded');
 const newWidgetKind = ref<HataSideWidgetKind>('clock');
 const selectedId = ref<string | null>(null);
@@ -531,9 +476,8 @@ const selectedDisplayName = computed(() => selected.value == null ? copy.overall
 const mergeTargets = computed(() => activeProfile.value.expanded.nodes.filter((node): node is HataSideGroup => node.type === 'group' && node.id !== selectedId.value));
 const availableGroups = computed(() => activeProfile.value.expanded.nodes.filter((node): node is HataSideGroup => node.type === 'group'));
 const availableWidgetChoices = computed(() => Object.entries(HATA_SIDE_WIDGET_REGISTRY)
-	.filter(([kind, definition]) => kind !== 'flowers' && (!definition.availability.requiresFederation || instance.federation !== 'none') && (!definition.availability.adminOnly || $i?.isAdmin || $i?.isModerator))
+	.filter(([, definition]) => (!definition.availability.requiresFederation || instance.federation !== 'none') && (!definition.availability.adminOnly || $i?.isAdmin || $i?.isModerator))
 	.map(([kind, definition]) => ({ kind: kind as HataSideWidgetKind, label: widgetDisplayLabel(kind as HataSideWidgetKind, definition.label), icon: definition.icon })));
-const filteredWidgetChoices = computed(() => availableWidgetChoices.value.filter(item => item.label.toLocaleLowerCase().includes(widgetSearch.value.trim().toLocaleLowerCase())));
 const buttonShapes: { value: HataSideButtonShape; label: string }[] = [{ value: 'rounded', label: copy.rounded }, { value: 'circle', label: copy.circle }, { value: 'pill', label: copy.capsule }];
 const sizes: { value: HataSideButtonSize; label: string }[] = [{ value: 'small', label: copy.small }, { value: 'normal', label: copy.normal }, { value: 'large', label: copy.large }];
 const expandedDragGroup = { name: 'hata-side-items', pull: true, put: true };
@@ -550,7 +494,6 @@ const usedMenuIds = computed(() => new Set(editMode.value === 'collapsed'
 	? activeProfile.value.collapsed.buttons.map(button => button.menuId)
 	: activeProfile.value.expanded.nodes.flatMap(node => node.type === 'button' ? [node.menuId] : node.type === 'group' ? node.children.filter((child): child is HataSideButton => child.type === 'button').map(child => child.menuId) : [])));
 const availableMenuItems = computed(() => menuCatalog.value.filter(item => !usedMenuIds.value.has(item.id)));
-const filteredMenuItems = computed(() => availableMenuItems.value.filter(item => `${getHataSideStudioMenuDisplayLabel(item.id, item.label)} ${item.id}`.toLocaleLowerCase().includes(buttonSearch.value.trim().toLocaleLowerCase())));
 const previewCount = computed(() => {
 	const nodes = activeProfile.value.expanded.nodes;
 	const buttons = nodes.reduce((count, node) => count + (node.type === 'button' ? 1 : node.type === 'group' ? node.children.filter(child => child.type === 'button').length : 0), 0);
@@ -600,9 +543,7 @@ const dragTimelineSections = computed(() => {
 		...availableGroups.value.filter(() => dragging?.type !== 'group').map(group => ({ id: group.id, label: getHataSideStudioGroupDisplayName(group.name), items: summarize(group.children) })),
 	];
 });
-const groupContrastWarnings = computed(() => isUiS
-	? new Map<string, ReturnType<typeof inspectGroupContrast>>()
-	: new Map(availableGroups.value.map(group => [group.id, inspectGroupContrast(group)])));
+const groupContrastWarnings = computed(() => new Map(availableGroups.value.map(group => [group.id, inspectGroupContrast(group)])));
 
 watch(draft, () => {
 	if (historyLocked) return;
@@ -892,16 +833,6 @@ function allowExpandedMove(evt: any) { return allowNodeMove(evt, 'root'); }
 function allowGroupChildMove(evt: any) { return allowNodeMove(evt, 'root') && evt?.draggedContext?.element?.type !== 'group'; }
 
 function nodeStyle(node: HataSideNode) {
-	if (isUiS) return {
-		...(node.type === 'button' && node.menuId === 'cacheClear' ? { '--hk3-cache-label-size': getHataSideStudioCacheLabelSize(getHataSideStudioMenuDisplayLabel(node.menuId, node.label)) } : {}),
-		'--hss-bg': 'transparent',
-		'--hss-border': 'var(--hk3-divider)',
-		'--hss-border-width': '1px',
-		'--hss-border-style': 'solid',
-		'--hss-fg': 'var(--hk3-text)',
-		'--hss-rotation': '0deg',
-		'--hss-rotation-space': '0px',
-	};
 	const rotation = node.type === 'button' ? Number(node.rotation ?? 0) : 0;
 	const borderVisible = node.type !== 'button' || node.borderVisible !== false;
 	const radians = Math.abs(rotation) * Math.PI / 180;
@@ -925,7 +856,6 @@ function postButtonIconClass(icon: HataSidePostButtonIcon): string {
 }
 
 function postButtonStyle(postButton: HataSidePostButtonAppearance) {
-	if (isUiS) return { background: 'var(--hk3-accent)', color: 'var(--hk3-bg)' };
 	return {
 		background: gradientCss(postButton),
 		color: postButton.foreground,
@@ -941,10 +871,6 @@ function removeNode(id: string) { if (editMode.value === 'collapsed') activeProf
 async function requestRemoveNode(id: string) {
 	const node = findNode(id);
 	if (!node) return;
-	if (hataSideStudioNodeContainsRequiredMenu(node)) {
-		os.toast(i18n.ts._hata._sidebarEditor.alwaysVisible, 'ti ti-lock');
-		return;
-	}
 	const label = node.type === 'group' ? copyx.groupQuoted({ name: getHataSideStudioGroupDisplayName(node.name) }) : copyx.itemQuoted({ name: node.type === 'widget' ? widgetDisplayLabel(node.kind, node.label) : getHataSideStudioMenuDisplayLabel(node.menuId, node.label) });
 	const detail = node.type === 'group' && node.children.length > 0 ? copyx.deleteChildrenTogether({ count: node.children.length.toString() }) : copy.notFinalUntilSaved;
 	if (await askStudioConfirm(copyx.deleteNamed({ name: label }), detail, copy.deleteAction, 'ti ti-trash')) removeNode(id);
@@ -1002,7 +928,7 @@ function setNodeSize(node: HataSideButton | HataSideWidget, size: HataSideButton
 function setGroupLayout(group: HataSideGroup, columns: 1 | 2 | 3, masonry: boolean) {
 	if (!canSetGroupColumns(group, columns)) return;
 	group.columns = columns;
-	if (!isUiS) group.masonry = masonry;
+	group.masonry = masonry;
 }
 
 function toggleReorder() {
@@ -1031,13 +957,11 @@ function moveReorderItem(sectionId: string, index: number, direction: -1 | 1) {
 function openButtonPicker() {
 	widgetPickerOpen.value = false;
 	buttonPickerOpen.value = true;
-	buttonSearch.value = '';
 	newButtonMenuId.value = availableMenuItems.value[0]?.id ?? '';
 	newButtonShape.value = editMode.value === 'collapsed' ? 'circle' : 'rounded';
 }
 
 function confirmAddButton() {
-	if (!availableMenuItems.value.some(item => item.id === newButtonMenuId.value)) return;
 	const source = menuCatalog.value.find(item => item.id === newButtonMenuId.value);
 	if (!source) return;
 	const button = createButton(source, editMode.value === 'collapsed' ? { shape: newButtonShape.value, size: 'small', showLabel: false, borderVisible: false } : { shape: newButtonShape.value });
@@ -1051,11 +975,9 @@ function openWidgetPicker() {
 	if (editMode.value === 'collapsed') return;
 	buttonPickerOpen.value = false;
 	widgetPickerOpen.value = true;
-	widgetSearch.value = '';
 }
 
 function confirmAddWidget() {
-	if (!availableWidgetChoices.value.some(item => item.kind === newWidgetKind.value)) return;
 	const widget = createWidget(newWidgetKind.value);
 	activeProfile.value.expanded.nodes.push(widget);
 	widgetPickerOpen.value = false;
@@ -1131,7 +1053,7 @@ async function importCurrentSidebar() {
 }
 
 function openSettingsTransfer() {
-	const { dispose } = popup(defineAsyncComponent(() => import('@/components/MkHataSettingsTransfer.vue')), {}, { closed: () => dispose() });
+	const { dispose } = os.popup(defineAsyncComponent(() => import('@/components/MkHataSettingsTransfer.vue')), {}, { closed: () => dispose() });
 }
 
 function moveSelectedTo(groupId: string) {
@@ -1192,9 +1114,6 @@ function save() {
 }
 
 function buttonDetail(menuId: string): string {
-	if (menuId === 'hatafeed') return ($i?.isAdmin || $i?.isModerator) ? copy.hatafeedAdminDetail : copy.hatafeedUserDetail;
-	if (menuId === 'hatask') return copy.hataskDetail;
-	if (menuId === 'hatady') return copy.hatadyDetail;
 	if (menuId === 'notifications') return Number($i?.unreadNotificationsCount ?? 0) > 0 ? copyx.recentNotificationsUnread({ count: String($i?.unreadNotificationsCount) }) : copy.noNewNotifications;
 	if (menuId === 'announcements') return copy.announcementsDetail;
 	if (menuId === 'search') return copy.searchBox;
@@ -1205,7 +1124,7 @@ function buttonDetail(menuId: string): string {
 
 function runPreviewSearch(query: string) {
 	const normalized = query.trim();
-	studioRouter.pushByPath(normalized ? `/search?q=${encodeURIComponent(normalized)}` : '/search');
+	mainRouter.pushByPath(normalized ? `/search?q=${encodeURIComponent(normalized)}` : '/search');
 }
 
 function startTutorial() {
@@ -1232,11 +1151,11 @@ function finishTutorial(skipped: boolean) {
 const leaveConfirmOpen = ref(false);
 const pendingPath = ref<string | null>(null);
 const pendingNavigationMode = ref<'push' | 'replace'>('push');
-const previousNavHook = studioRouter.navHook;
+const previousNavHook = mainRouter.navHook;
 let bypassNavigation = false;
 let studioPageActive = true;
-const studioNavHook: NonNullable<typeof studioRouter.navHook> = (fullPath, flag) => {
-	if (studioPageActive && !bypassNavigation && hasChanges.value && (!inHataGoes || hataGoesHost?.active.value)) {
+const studioNavHook: NonNullable<typeof mainRouter.navHook> = (fullPath, flag) => {
+	if (studioPageActive && !bypassNavigation && hasChanges.value) {
 		pendingPath.value = fullPath;
 		pendingNavigationMode.value = 'push';
 		leaveConfirmOpen.value = true;
@@ -1244,7 +1163,7 @@ const studioNavHook: NonNullable<typeof studioRouter.navHook> = (fullPath, flag)
 	}
 	return previousNavHook?.(fullPath, flag) ?? false;
 };
-studioRouter.navHook = studioNavHook;
+mainRouter.navHook = studioNavHook;
 
 function onBeforeUnload(event: BeforeUnloadEvent) { if (!studioPageActive || !hasChanges.value) return; event.preventDefault(); event.returnValue = ''; }
 
@@ -1256,9 +1175,9 @@ onMounted(() => {
 // pass through while another page is visible, then protect edits on re-entry.
 onActivated(() => { studioPageActive = true; });
 onDeactivated(() => { studioPageActive = false; cancelLeave(); });
-onBeforeUnmount(() => { studioPageActive = false; if (historyTimer) window.clearTimeout(historyTimer); if (studioRouter.navHook === studioNavHook) studioRouter.navHook = previousNavHook; window.removeEventListener('beforeunload', onBeforeUnload); window.removeEventListener('pointermove', updateDragPointer); window.document.removeEventListener('dragover', updateDragPointer); window.removeEventListener('touchmove', updateDragPointer); window.removeEventListener('resize', updateDragTimelinePosition); });
+onBeforeUnmount(() => { studioPageActive = false; if (historyTimer) window.clearTimeout(historyTimer); if (mainRouter.navHook === studioNavHook) mainRouter.navHook = previousNavHook; window.removeEventListener('beforeunload', onBeforeUnload); window.removeEventListener('pointermove', updateDragPointer); window.document.removeEventListener('dragover', updateDragPointer); window.removeEventListener('touchmove', updateDragPointer); window.removeEventListener('resize', updateDragTimelinePosition); });
 
-function navigatePending() { const path = pendingPath.value ?? '/settings/hata-custom'; const mode = pendingNavigationMode.value; pendingPath.value = null; pendingNavigationMode.value = 'push'; leaveConfirmOpen.value = false; bypassNavigation = true; try { if (mode === 'replace' && path === '/settings/hata-custom') studioRouter.replace('/settings/hata-custom'); else studioRouter.pushByPath(path); } finally { bypassNavigation = false; } }
+function navigatePending() { const path = pendingPath.value ?? '/settings/hata-custom'; const mode = pendingNavigationMode.value; pendingPath.value = null; pendingNavigationMode.value = 'push'; leaveConfirmOpen.value = false; bypassNavigation = true; try { if (mode === 'replace' && path === '/settings/hata-custom') mainRouter.replace('/settings/hata-custom'); else mainRouter.pushByPath(path); } finally { bypassNavigation = false; } }
 
 function confirmLeave(saveFirst: boolean) { if (saveFirst && !save()) return; navigatePending(); }
 
@@ -1266,9 +1185,9 @@ function saveAndLeave() { confirmLeave(true); }
 
 function cancelLeave() { pendingPath.value = null; pendingNavigationMode.value = 'push'; leaveConfirmOpen.value = false; }
 
-function closeStudio() { if (hasChanges.value) { pendingPath.value = '/settings/hata-custom'; pendingNavigationMode.value = 'replace'; leaveConfirmOpen.value = true; } else studioRouter.replace('/settings/hata-custom'); }
+function closeStudio() { if (hasChanges.value) { pendingPath.value = '/settings/hata-custom'; pendingNavigationMode.value = 'replace'; leaveConfirmOpen.value = true; } else mainRouter.replace('/settings/hata-custom'); }
 
-function openRoleSettings() { studioRouter.push('/admin/roles'); }
+function openRoleSettings() { mainRouter.push('/admin/roles'); }
 
 definePage(() => ({
 	title: 'HataSideStudio',
@@ -1277,19 +1196,6 @@ definePage(() => ({
 </script>
 
 <style lang="scss" module>
-@use '../components/hataskey3/side-nav-item' as sideNavItem;
-.root[data-goes-host="true"] .sheetEnterActive,.root[data-goes-host="true"] .sheetLeaveActive,.teleportTheme[data-goes-host="true"] .sheetEnterActive,.teleportTheme[data-goes-host="true"] .sheetLeaveActive { transition:opacity .16s ease,transform .16s ease !important; }
-.root[data-goes-host="true"] .sheetEnterFrom,.root[data-goes-host="true"] .sheetLeaveTo,.teleportTheme[data-goes-host="true"] .sheetEnterFrom,.teleportTheme[data-goes-host="true"] .sheetLeaveTo { opacity:0; }
-.featureList { display:grid;gap:4px;max-height:250px;overflow:auto;padding:4px;border:1px solid var(--studioLine);border-radius:11px;background:var(--studioSurface); }
-.featureList button { display:grid;grid-template-columns:24px minmax(0,1fr) 18px;align-items:center;gap:8px;min-height:42px;padding:8px;text-align:left;border-radius:8px; }
-.featureList button[aria-checked="true"] { color:var(--studioAccentFg);background:var(--studioAccent); }
-.featureList button span { overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-.featureList p { margin:8px;color:var(--studioMuted);font-size:.8rem; }
-.root[data-goes-host="true"] .copyMenu,.root[data-goes-host="true"] .resetConfirm { position:fixed;z-index:3500010;top:auto;right:0;bottom:0;left:0;width:auto;max-height:75dvh;overflow:auto;padding:20px;border-radius:20px 20px 0 0;box-shadow:0 -14px 42px #0004; }
-.teleportTheme[data-goes-host="true"] .creationPicker,.teleportTheme[data-goes-host="true"] .quickEditor,.teleportTheme[data-goes-host="true"] .reorderWindow { top:auto;bottom:0;left:50%;width:min(100%,560px);max-height:78dvh;border-radius:20px 20px 0 0;transform:translateX(-50%);box-shadow:0 -14px 42px #0004; }
-.root[data-goes-host="true"] .sheetEnterFrom,.root[data-goes-host="true"] .sheetLeaveTo,.teleportTheme[data-goes-host="true"] .sheetEnterFrom,.teleportTheme[data-goes-host="true"] .sheetLeaveTo { transform:translateY(6px); }
-.teleportTheme[data-goes-host="true"] .sheetEnterFrom,.teleportTheme[data-goes-host="true"] .sheetLeaveTo { transform:translate(-50%,6px); }
-
 @font-face {
 	font-family:'Righteous';
 	font-style:normal;
@@ -1511,9 +1417,6 @@ definePage(() => ({
 .previewButton[data-size="small"] { min-height:34px;padding:6px;font-size:.8em; }
 .previewButton[data-size="large"] { grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr);grid-auto-rows:auto;min-height:86px;align-items:start;padding:10px 11px; }
 .previewButton[data-shape="circle"][data-size="large"] { display:flex;grid-column:auto;grid-template-columns:none;grid-template-rows:none;min-height:54px;padding:7px; }
-.previewButton[data-menu-id="earthquake"] { container-type:inline-size; }
-.previewButton[data-menu-id="earthquake"] .buttonPreviewBody b,
-.previewButton[data-menu-id="earthquake"] .largeButtonPreview b { font-size:clamp(9px,11cqi,11px);letter-spacing:-.04em;white-space:normal;overflow-wrap:anywhere;text-overflow:clip;overflow:visible; }
 .previewWidget { position:relative;grid-column:1/-1;width:100%;min-width:0;box-sizing:border-box;padding:9px 10px;color:var(--hss-fg);border:var(--hss-border-width,1px) var(--hss-border-style,solid) var(--hss-border);border-radius:13px;background:var(--hss-bg);overflow:visible; }
 .previewWidget[data-shape="circle"] { width:58px;min-width:58px;height:58px;min-height:58px;margin-inline:auto;border-radius:50%; }
 .previewWidget[data-shape="circle"] .widgetBody > div { display:none; }
@@ -1592,9 +1495,7 @@ definePage(() => ({
 .nativeWidgetPreview[data-hss-kind="aichan"] .nativeWidgetFrame { position:relative;height:var(--hss-widget-height,168px);min-height:var(--hss-widget-height,168px);overflow:hidden; }
 .nativeWidgetPreview[data-hss-kind="aichan"] .nativeWidgetFrame > * { position:relative;height:var(--hss-widget-height,168px)!important;overflow:hidden!important; }
 .nativeWidgetPreview[data-hss-kind="aichan"] .nativeWidgetFrame iframe { position:absolute;top:0;left:50%;width:300px!important;height:350px!important;max-width:none!important;transform:translateX(-50%) scale(var(--hss-aichan-scale,1));transform-origin:top center; }
-.nativeWidgetPreview[data-hss-kind="mascot"][data-hss-size="small"] .nativeWidgetFrame > *,
 .nativeWidgetPreview[data-hss-kind="dice"][data-hss-size="small"] .nativeWidgetFrame > * { width:125%!important;transform:scale(.8);transform-origin:top left; }
-.nativeWidgetPreview[data-hss-kind="mascot"][data-hss-size="normal"] .nativeWidgetFrame > *,
 .nativeWidgetPreview[data-hss-kind="dice"][data-hss-size="normal"] .nativeWidgetFrame > * { width:111.12%!important;transform:scale(.9);transform-origin:top left; }
 .dragHandle { position:absolute;z-index:10;top:-9px;left:-9px!important;display:grid!important;place-items:center;width:26px!important;height:26px!important;min-height:26px!important;padding:0!important;border:1px solid var(--studioLine);border-radius:50%!important;color:var(--studioMuted);background:var(--studioRaised);box-shadow:0 2px 7px #0003;cursor:grab;touch-action:none;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .12s ease,transform .12s ease,visibility .12s;transform:scale(.88); }
 .dragHandle:active { cursor:grabbing; }
@@ -1677,119 +1578,6 @@ definePage(() => ({
 .tutorialActions { display:flex;justify-content:flex-end;gap:7px;flex-wrap:wrap;margin-top:4px; }.tutorialActions button { display:flex;align-items:center;gap:5px;min-height:36px;padding:7px 11px;border:1px solid var(--studioLine);border-radius:10px; }.tutorialActions ._buttonPrimary { border-color:var(--studioAccent); }
 .tutorialFocus { z-index:8;outline:3px solid color-mix(in srgb,var(--studioAccent) 82%,#fff);outline-offset:3px;box-shadow:0 0 0 7px color-mix(in srgb,var(--studioAccent) 18%,transparent); }
 .header.tutorialFocus,.sidebarPreview.tutorialFocus { position:relative; }
-/* UI S uses the live hk3 palette and the same straight-edged navigation rhythm. */
-.root[data-ui-s="true"],.teleportTheme[data-ui-s="true"] {
-	--studioBg:var(--hk3-bg);
-	--studioSurface:var(--hk3-bg);
-	--studioRaised:var(--hk3-surface);
-	--studioMuted:var(--hk3-neutral-700);
-	--studioLine:var(--hk3-divider);
-	--studioAccent:var(--hk3-accent);
-	--studioAccentFg:var(--hk3-bg);
-	--studioAccentSoft:var(--hk3-accent-100);
-	color:var(--hk3-text);
-	font-family:'LINE Seed JP',var(--MI-font,sans-serif);
-}
-.root[data-ui-s="true"] .header,
-.root[data-ui-s="true"] .pane,
-.root[data-ui-s="true"] .stage { background:var(--hk3-bg); }
-.root[data-ui-s="true"] .header { border-bottom:2px solid var(--hk3-divider); }
-.root[data-ui-s="true"] .stage { border:1px solid var(--hk3-divider);border-radius:0;min-height:760px; }
-.root[data-ui-s="true"] .pane { padding:14px; }
-.root[data-ui-s="true"] .logo { font-family:'Righteous',system-ui,sans-serif;font-weight:400; }
-.root[data-ui-s="true"] .sidebarPreview { width:200px;max-width:100%;height:740px;padding:0;border:0;border-right:2px solid var(--hk3-divider);outline:1px solid var(--hk3-divider);border-radius:0;background:var(--hk3-bg);color:var(--hk3-text);box-shadow:none; }
-.root[data-ui-s="true"] .sidebarPreviewWide { width:232px; }
-.root[data-ui-s="true"] .sidebarPreviewCollapsed { width:64px; }
-.root[data-ui-s="true"] .serverRow { display:flex;justify-content:center;align-items:center;flex:0 0 58px;margin:0;border-bottom:2px solid var(--hk3-divider); }
-.root[data-ui-s="true"] .serverIcon { width:32px;height:32px;border-radius:0;color:var(--hk3-bg);background:var(--hk3-accent); }
-.root[data-ui-s="true"] .customArea { padding:0;scrollbar-width:none; }
-.root[data-ui-s="true"] .expandedNodes { gap:0;padding:0; }
-.root[data-ui-s="true"] .previewNode { min-height:0; }
-.root[data-ui-s="true"] .previewWidget { grid-column:auto; }
-.root[data-ui-s="true"] .previewNode[data-size="large"],.root[data-ui-s="true"] .previewWidget[data-size="large"] { grid-column:1/-1; }
-.root[data-ui-s="true"] .previewWidget { border:0;border-right:1px solid var(--hk3-divider);border-bottom:1px solid var(--hk3-divider);border-radius:0;background:transparent;color:var(--hk3-text);box-shadow:none;transform:none; }
-.root[data-ui-s="true"] .previewNode[data-size]:not(.previewWidget) { display:flex;align-items:stretch;height:72px;min-height:72px; }
-.root[data-ui-s="true"] .previewNode[data-size="small"]:not(.previewWidget) { height:52px;min-height:52px; }
-.root[data-ui-s="true"] .previewNode[data-size="large"]:not(.previewWidget) { height:84px;min-height:84px; }
-.root[data-ui-s="true"] .previewButton { @include sideNavItem.frame; margin:0;transform:none;box-shadow:none;overflow:visible; }
-.root[data-ui-s="true"] .previewNode[data-size] > .previewButton { flex:1; }
-.root[data-ui-s="true"] .buttonPreviewBody,
-.root[data-ui-s="true"] .largeButtonPreview { display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;width:100%;min-width:0; }
-.root[data-ui-s="true"] .buttonPreviewBody > i,.root[data-ui-s="true"] .largeButtonPreview > i { @include sideNavItem.icon; }
-.root[data-ui-s="true"] .buttonPreviewBody > span,.root[data-ui-s="true"] .largeButtonPreview > span { width:100%; }
-.root[data-ui-s="true"] .buttonPreviewBody b,.root[data-ui-s="true"] .largeButtonPreview b { @include sideNavItem.label;overflow:visible; }
-.root[data-ui-s="true"] .previewButton[data-menu-id="cacheClear"] .buttonPreviewBody b,
-.root[data-ui-s="true"] .previewButton[data-menu-id="cacheClear"] .largeButtonPreview b { @include sideNavItem.cache-clear-label; }
-.root[data-ui-s="true"] .previewButton[data-menu-id="earthquake"] .buttonPreviewBody b,
-.root[data-ui-s="true"] .previewButton[data-menu-id="earthquake"] .largeButtonPreview b { @include sideNavItem.earthquake-label; }
-.root[data-ui-s="true"] .previewButton[data-shape="circle"] .buttonPreviewBody > span,
-.root[data-ui-s="true"] .previewButton[data-shape="circle"] .largeButtonPreview > span { display:grid; }
-.root[data-ui-s="true"] .previewNode[data-size="small"] .buttonPreviewBody > span,
-.root[data-ui-s="true"] .previewButton[data-size="small"] .buttonPreviewBody > span,
-.root[data-ui-s="true"] .largeButtonPreview small,
-.root[data-ui-s="true"] .largeButtonPreview em { display:none; }
-.root[data-ui-s="true"] [data-brand="true"] .buttonPreviewBody b,
-.root[data-ui-s="true"] [data-brand="true"] .largeButtonPreview b { font-family:'Righteous',system-ui,sans-serif;font-weight:400;letter-spacing:.02em; }
-.root[data-ui-s="true"] .previewGroup { padding:0;border:0;border-bottom:2px solid var(--hk3-divider);border-radius:0;background:transparent;color:var(--hk3-text); }
-.root[data-ui-s="true"] .groupHead { position:relative;height:0;min-height:0;margin:0;padding:0;color:var(--hk3-neutral-700);font-size:11px;font-weight:800;letter-spacing:.08em;justify-content:center; }
-.root[data-ui-s="true"] .groupHead[data-show-name] { @include sideNavItem.heading; height:auto;box-sizing:border-box; }
-.root[data-ui-s="true"] .groupHead > div { position:absolute;z-index:11;top:0;right:2px; }
-.root[data-ui-s="true"] .groupGrid { gap:0;padding:0;border-radius:0; }
-.root[data-ui-s="true"] .groupGrid .previewButton { border-right:1px solid var(--hk3-divider);border-bottom:1px solid var(--hk3-divider); }
-.root[data-ui-s="true"] .previewWidget { padding:0; }
-.root[data-ui-s="true"] .collapsedButtons { gap:0;padding:0; }
-.root[data-ui-s="true"] .collapsedButton,
-.root[data-ui-s="true"] .collapsedButton[data-shape="circle"],
-.root[data-ui-s="true"] .collapsedButton[data-shape="pill"] { align-self:stretch;flex:0 0 56px!important;width:100%!important;min-width:0!important;max-width:none!important;height:56px;min-height:56px;border:0;border-bottom:1px solid var(--hk3-divider);border-radius:0;background:transparent;color:var(--hk3-text); }
-.root[data-ui-s="true"] .selectedSummary,
-.root[data-ui-s="true"] .inspectorTabs,
-.root[data-ui-s="true"] .inspectorCard,
-.root[data-ui-s="true"] .copyButton,
-.root[data-ui-s="true"] .modeTabs,
-.root[data-ui-s="true"] .actionButton,
-.root[data-ui-s="true"] .addAction,
-.root[data-ui-s="true"] .bulkAction,
-.root[data-ui-s="true"] .reorderAction,
-.root[data-ui-s="true"] .profileTab,
-.root[data-ui-s="true"] .historyActions,
-.root[data-ui-s="true"] .choiceRow button,
-.root[data-ui-s="true"] .layoutPicker button,
-.root[data-ui-s="true"] .select,
-.root[data-ui-s="true"] .input,
-.root[data-ui-s="true"] .textarea,
-.teleportTheme[data-ui-s="true"] .creationPicker,
-.teleportTheme[data-ui-s="true"] .quickEditor,
-.teleportTheme[data-ui-s="true"] .reorderWindow,
-.teleportTheme[data-ui-s="true"] .studioDialogWindow,
-.teleportTheme[data-ui-s="true"] .tutorialWindow { border-radius:4px;box-shadow:none; }
-.teleportTheme[data-ui-s="true"] .uiSAppearanceNote,
-.root[data-ui-s="true"] .uiSAppearanceNote { margin:0;padding:8px 10px;border-left:2px solid var(--hk3-accent);background:var(--hk3-accent-100);color:var(--hk3-text);font-size:.76rem; }
-
-.uiSFooter { flex:none;border-top:2px solid var(--hk3-divider); }
-.uiSFooterTrio { display:grid;grid-template-columns:repeat(3,minmax(0,1fr)); }
-.uiSFooterPair { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:1px solid var(--hk3-divider); }
-.uiSFooterTrio button,.uiSFooterPair button { display:grid;place-items:center;min-width:0;min-height:42px;border:0;border-right:1px solid var(--hk3-divider);border-radius:0;color:var(--hk3-text);background:transparent; }
-.uiSFooterTrio button:last-child,.uiSFooterPair button:last-child { border-right:0; }
-.uiSFooterPair button[aria-pressed="true"] { color:var(--hk3-bg);background:var(--hk3-text); }
-.uiSFooter[data-collapsed] .uiSFooterTrio,.uiSFooter[data-collapsed] .uiSFooterPair { grid-template-columns:minmax(0,1fr); }
-.uiSFooter[data-collapsed] .uiSFooterTrio button,.uiSFooter[data-collapsed] .uiSFooterPair button { border-right:0;border-bottom:1px solid var(--hk3-divider); }
-.uiSPost { display:grid;place-items:center;width:100%;min-height:46px;border-radius:0;color:var(--hk3-bg);background:var(--hk3-accent); }
-.uiSAccount { display:flex;align-items:center;gap:8px;min-height:52px;width:100%;padding:8px 12px;border-top:1px solid var(--hk3-divider);color:var(--hk3-text); }
-.uiSAccount img,.uiSAccount > i { width:30px;height:30px;flex:none;border-radius:50%;object-fit:cover; }
-.uiSAccount span { min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:12px; }
-.uiSFooter[data-collapsed] .uiSAccount { justify-content:center; }
-.root[data-ui-s="true"] .backButton,.root[data-ui-s="true"] .profileRename,.root[data-ui-s="true"] .profileAdd,.root[data-ui-s="true"] .profileBar,.root[data-ui-s="true"] .historyButton,.root[data-ui-s="true"] .inspectorTabs button,.root[data-ui-s="true"] .copyMenu,.root[data-ui-s="true"] .resetConfirm,.root[data-ui-s="true"] .selectedSummary > i,.root[data-ui-s="true"] .groupHead button,
-.teleportTheme[data-ui-s="true"] .select,.teleportTheme[data-ui-s="true"] .input,.teleportTheme[data-ui-s="true"] .textarea,.teleportTheme[data-ui-s="true"] .layoutPicker button,.teleportTheme[data-ui-s="true"] .choiceRow button,.teleportTheme[data-ui-s="true"] .pickerActions button,.teleportTheme[data-ui-s="true"] .pickerHead button,.teleportTheme[data-ui-s="true"] .leaveDialog { border-radius:4px;box-shadow:none; }
-@container (min-width:961px) {
-	.root[data-ui-s="true"] .main { grid-template-columns:minmax(0,1fr) minmax(390px,1fr); }
-}
-@container (max-width:960px) {
-	.root[data-ui-s="true"] .main { grid-template-columns:1fr; }
-	.root[data-ui-s="true"] .stage { min-height:700px;padding:16px 72px 16px 88px; }
-}
-@container (max-width:720px) {
-	.root[data-ui-s="true"] .stage { min-height:680px;padding:154px 8px 16px; }
-}
 @container (max-width:1120px) {
 	.header { grid-template-columns:minmax(0,1fr) auto; }
 	.profileBar { grid-column:1/-1;grid-row:2;justify-content:flex-start; }

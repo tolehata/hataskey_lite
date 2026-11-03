@@ -112,8 +112,6 @@ export const meta = {
 					chatRoomInvitationReceived: { optional: true, ...notificationRecieveConfig },
 					achievementEarned: { optional: true, ...notificationRecieveConfig },
 					app: { optional: true, ...notificationRecieveConfig },
-					hataFeed: { optional: true, ...notificationRecieveConfig },
-					hatady: { optional: true, ...notificationRecieveConfig },
 					test: { optional: true, ...notificationRecieveConfig },
 				},
 			},

@@ -51,15 +51,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		super(meta, paramDef, async (ps, user, token, flashToken) => {
 			const isSecure = token == null && flashToken == null;
 
-			// 旗鯖fork: 既にDBへ確定済みの宴成功・阻止回数も含め、
-			// 公式クライアントから自分の情報を取得した時点で未解除実績を補完する。
-			// read:account だけの外部アプリから永続更新や通知を起こさせない。
-			if (isSecure) {
-				await this.achievementService.reconcileUtageAchievements(user.id).catch(err => {
-					console.error('[utage] login achievement reconciliation failed:', err);
-				});
-			}
-
 			const now = new Date();
 			const today = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
 

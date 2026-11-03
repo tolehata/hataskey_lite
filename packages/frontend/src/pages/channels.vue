@@ -101,7 +101,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<MkRadios v-model="adminFilter" @update:modelValue="reloadAdminAll()">
 					<option value="all">{{ copy.filterAll }}</option>
 					<option value="public">{{ copy.filterPublic }}</option>
-					<option value="private">{{ copy.filterPrivate }}</option>
 					<option value="archived">{{ copy.filterArchived }}</option>
 				</MkRadios>
 			</div>
@@ -133,7 +132,7 @@ import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 
 const router = useRouter();
-const copy = i18n.ts._hata._privateChannels;
+const copy = i18n.ts._hata._channels;
 
 const props = defineProps<{
 	query: string;
@@ -209,7 +208,7 @@ const ownedPaginator = markRaw(new Paginator('channels/owned', {
 }));
 
 // 旗鯖fork: 管理者専用「すべて」タブ。フィルタ変更時は paginator を作り直して再取得する。
-const adminFilter = ref<'all' | 'public' | 'private' | 'archived'>('all');
+const adminFilter = ref<'all' | 'public' | 'archived'>('all');
 const adminAllKey = ref(0);
 function buildAdminAllPaginator() {
 	// 旗鯖fork: admin/channels/list は新規エンドポイントで cherrypick-js SDK 型が未生成のため as any。
@@ -252,30 +251,7 @@ function create() {
 	router.push('/channels/new');
 }
 
-// 旗鯖fork: あいことば(キーフレーズ)だけでプライベートチャンネルに参加する
-async function joinByPassword() {
-	const { canceled, result: password } = await os.inputText({
-		title: copy.joinWithPassphrase,
-		text: copy.passphrasePrompt,
-		placeholder: copy.passphraseExample,
-		default: '',
-	});
-	if (canceled || password == null || password === '') return;
-
-	try {
-		const ch = await misskeyApi('channels/join', { password });
-		os.success();
-		router.push('/channels/:channelId', { params: { channelId: ch.id } });
-	} catch (err) {
-		os.alert({ type: 'error', text: copy.noMatchingChannel });
-	}
-}
-
 const headerActions = computed(() => [{
-	icon: 'ti ti-door-enter',
-	text: copy.joinWithPassphrase,
-	handler: joinByPassword,
-}, {
 	icon: 'ti ti-plus',
 	text: i18n.ts.create,
 	handler: create,

@@ -7,7 +7,6 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { RegistryApiService } from '@/core/RegistryApiService.js';
 import { ApiError } from '../../../error.js';
-import { assertHataskNativeRegistryAccess } from './_hatask-planner-access.js';
 
 export const meta = {
 	requireCredential: true,
@@ -52,8 +51,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 	constructor(
 		private registryApiService: RegistryApiService,
 	) {
-		super(meta, paramDef, async (ps, me, accessToken, flashToken) => {
-			assertHataskNativeRegistryAccess(ps.scope, flashToken);
+		super(meta, paramDef, async (ps, me, accessToken) => {
 			const item = await this.registryApiService.getItem(me.id, accessToken != null ? accessToken.id : (ps.domain ?? null), ps.scope, ps.key);
 
 			if (item == null) {

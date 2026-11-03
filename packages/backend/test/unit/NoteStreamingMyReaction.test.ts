@@ -147,6 +147,6 @@ test('viewer-specific reactions still pass through the visibility filter', async
 	await deliver(original, allowed, hidden);
 	expect(allowed.messages.map(message => message.body.renote?.myReaction)).toEqual(['👍']);
 	expect(hidden.messages).toEqual([]);
-	expect(hidden.shouldHideNote).toHaveBeenCalledWith(expect.objectContaining({ id: 'original' }), 'hidden', { channelVisibilityChecked: true });
+	expect(hidden.shouldHideNote).toHaveBeenCalledWith(expect.objectContaining({ id: 'original' }), 'hidden');
 	expect(original).toStrictEqual(before);
 });

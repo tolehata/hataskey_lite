@@ -48,22 +48,22 @@ const glass = descriptor({
 	stableId: 'settings.control.glass-opacity', route: '/settings/hata-custom', categoryId: 'hataskey-ui',
 	activation: { kind: 'hata-custom-category', category: 'glassUi' },
 });
-const font = descriptor({
-	stableId: 'settings.control.font-family', route: '/settings/hata-custom', categoryId: 'theme-font',
-	activation: { kind: 'hata-custom-category', category: 'font' },
+const visual = descriptor({
+	stableId: 'settings.control.note-spacing', route: '/settings/hata-custom', categoryId: 'display-notes',
+	activation: { kind: 'hata-custom-category', category: 'visual' },
 });
 const density = descriptor({ stableId: 'settings.control.note-density', route: '/settings/preferences', categoryId: 'display-notes' });
 const chat = descriptor({ stableId: 'settings.control.chat-enter', route: '/settings/preferences', categoryId: 'behavior' });
-const descriptors = [glass, font, density, chat];
+const descriptors = [glass, visual, density, chat];
 const byStableId = new Map(descriptors.map(item => [item.stableId, item]));
 
 describe('settings navigation catalog scope', () => {
-	test('same-route badge counts are distinct for glassUi, font, and exact preferences controls', () => {
+	test('same-route badge counts are distinct for glassUi, visual, and exact preferences controls', () => {
 		const glassTarget = { route: '/settings/hata-custom', categoryId: 'hataskey-ui', activation: { kind: 'hata-custom-category' as const, category: 'glassUi' as const } };
-		const fontTarget = { route: '/settings/hata-custom', categoryId: 'theme-font', activation: { kind: 'hata-custom-category' as const, category: 'font' as const } };
+		const visualTarget = { route: '/settings/hata-custom', categoryId: 'display-notes', activation: { kind: 'hata-custom-category' as const, category: 'visual' as const } };
 		const densityTarget = { route: '/settings/preferences', controlId: density.stableId, categoryId: 'display-notes' };
 		expect(countSettingsNavigationScopeV2(descriptors, glassTarget)).toBe(1);
-		expect(countSettingsNavigationScopeV2(descriptors, fontTarget)).toBe(1);
+		expect(countSettingsNavigationScopeV2(descriptors, visualTarget)).toBe(1);
 		expect(countSettingsNavigationScopeV2(descriptors, densityTarget)).toBe(1);
 		expect(descriptorMatchesSettingsNavigationScopeV2(chat, densityTarget)).toBe(false);
 		// Positive control: a route-only count would incorrectly include both.
@@ -75,8 +75,8 @@ describe('settings navigation catalog scope', () => {
 			descriptors, byStableId, currentRoute: '/settings/hata-custom', activeTarget: null, activeHataCustomCategory: 'glassUi', fallback: null,
 		})).toEqual([glass]);
 		expect(relatedSourcesForSettingsNavigationV2({
-			descriptors, byStableId, currentRoute: '/settings/hata-custom', activeTarget: null, activeHataCustomCategory: 'font', fallback: null,
-		})).toEqual([font]);
+			descriptors, byStableId, currentRoute: '/settings/hata-custom', activeTarget: null, activeHataCustomCategory: 'visual', fallback: null,
+		})).toEqual([visual]);
 		expect(relatedSourcesForSettingsNavigationV2({
 			descriptors, byStableId, currentRoute: '/settings/preferences', activeTarget: { route: '/settings/preferences', controlId: density.stableId }, activeHataCustomCategory: null, fallback: null,
 		})).toEqual([density]);

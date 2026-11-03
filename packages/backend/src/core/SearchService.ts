@@ -251,7 +251,6 @@ export class SearchService {
 		}
 
 		this.queryService.generateVisibilityQuery(query, me);
-		await this.queryService.generateChannelVisibilityQuery(query, me);
 		if (me == null) this.queryService.generateUgcVisibilityQueryForVisitor(query);
 		this.queryService.generateBaseNoteFilteringQuery(query, me);
 
@@ -331,9 +330,8 @@ export class SearchService {
 		this.queryService.generateBlockedHostQueryForNote(query);
 		this.queryService.generateSuspendedUserQueryForNote(query);
 		this.queryService.generateVisibilityQuery(query, me);
-		await this.queryService.generateChannelVisibilityQuery(query, me);
 
-		// Search indexes retain private-channel and removed-member hits. Fill the
+		// Search indexes can retain hits that are no longer visible. Fill the
 		// requested page from current DB-visible notes before returning its cursor.
 		const notes: MiNote[] = [];
 		const seen = new Set<string>();

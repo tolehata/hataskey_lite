@@ -10,7 +10,6 @@ import type { BadgeNames, PushNotificationDataMap } from '@/types.js';
 import { char2fileName } from '@/scripts/twemoji-base.js';
 import { cli } from '@/scripts/operations.js';
 import { getAccountFromId } from '@/scripts/get-account-from-id.js';
-import { hataFeedNotificationDisplayBody, privateChannelNotificationDisplayCopy } from '@/scripts/hata-custom-notification-copy.js';
 import { swLang } from '@/scripts/lang.js';
 import { getUserName } from '@/scripts/get-user-name.js';
 
@@ -53,19 +52,6 @@ async function composeNotification(data: PushNotificationDataMap[keyof PushNotif
 		*/
 		case 'notification':
 			switch (data.body.type) {
-				case 'hatady': {
-					const copy = i18n.ts._hata._hatady._push;
-					const subtype = data.body.subtype;
-					const body = subtype === 'follow' ? copy.follow
-						: subtype === 'comment' || subtype === 'mediaComment' || subtype === 'mediaReply' ? copy.comment
-						: subtype === 'reaction' || subtype === 'mediaReaction' ? copy.reaction : copy.update;
-					return [copy.title, {
-						body,
-						badge: iconUrl('bell'),
-						tag: `hatady:${data.body.id}`,
-						data,
-					}];
-				}
 				case 'follow': {
 					// users/showの型定義をswos.apiへ当てはめるのが困難なのでapiFetch.requestを直接使用
 					const account = await getAccountFromId(data.userId);
@@ -307,46 +293,20 @@ async function composeNotification(data: PushNotificationDataMap[keyof PushNotif
 						data,
 					}];
 
-				case 'app':
-				case 'hataFeed':
-				case 'hataskFlowerReady':
-				case 'hataskFlowerBloomed':
-				case 'hataskZukanUpdated':
-				case 'hataskFestivalBloomed':
-				case 'hataskDecorationUnlocked':
-				case 'earthquake':
-				case 'addedToPrivateChannel':
-				case 'removedFromPrivateChannel': {
+				case 'app': {
 					// 旗鯖fork: 独自通知はすべて app 通知と同じ header/body/icon/link 形状。
 					// 専用 type を追加した際にここへ結線し忘れると composeNotification が null となり、
 					// OSには「Hataskey v...」だけの空通知が出るため、同じ分岐でまとめて扱う。
 					const rawBody = data.body.body?.trim() ?? '';
 					const rawHeader = data.body.header?.trim() ?? '';
-					let body = rawBody;
-					let header = rawHeader;
-					if (data.body.type === 'hataskFlowerReady' || data.body.type === 'hataskFlowerBloomed' || data.body.type === 'hataskZukanUpdated' || data.body.type === 'hataskFestivalBloomed') {
-						header = i18n.ts._notification._types[data.body.type];
-						body = {
-							hataskFlowerReady: i18n.ts._hata._customNotifications.flowerReady,
-							hataskFlowerBloomed: i18n.ts._hata._customNotifications.flowerBloomed,
-							hataskZukanUpdated: i18n.ts._hata._customNotifications.zukanUpdated,
-							hataskFestivalBloomed: i18n.ts._hata._customNotifications.festivalBloomed,
-						}[data.body.type];
-					} else if (data.body.type === 'hataFeed') {
-						body = hataFeedNotificationDisplayBody(rawBody, i18n);
-					} else if (data.body.type === 'addedToPrivateChannel' || data.body.type === 'removedFromPrivateChannel') {
-						({ body, header } = privateChannelNotificationDisplayCopy(data.body.type, rawHeader, rawBody, i18n));
-					}
+					const body = rawBody;
+					const header = rawHeader;
 					const newNotice = i18n.ts._hata._customNotifications.newNotice;
 					const title = header || body || newNotice;
-					// 旗鯖fork: HataFeed は同じ案件の OS 通知を1つにまとめる。
-					// link が無い通知も HataFeed 全体でまとめ、他の独自通知には影響させない。
-					const tag = data.body.type === 'hataFeed' ? `hatafeed:${data.body.link ?? 'general'}` : undefined;
 					return [title, {
 						body: header ? body : '',
 						icon: data.body.icon ?? undefined,
 						badge: iconUrl('bell'),
-						...(tag ? { tag, renotify: true } : {}),
 						data,
 					}];
 				}
@@ -390,24 +350,6 @@ async function composeNotification(data: PushNotificationDataMap[keyof PushNotif
 					renotify: true,
 				}];
 			}
-		case 'hatadyNotification': {
-			const copy = i18n.ts._hata._hatady._push;
-			const body = data.body.notificationType === 'follow'
-				? copy.follow
-				: data.body.notificationType === 'comment' || data.body.notificationType === 'mediaComment' || data.body.notificationType === 'mediaReply'
-					? copy.comment
-					: data.body.notificationType === 'reaction' || data.body.notificationType === 'mediaReaction'
-						? (data.body.reaction ? i18n.tsx._hata._hatady._push.reactionWithEmoji({ reaction: data.body.reaction }) : copy.reaction)
-						: data.body.notificationType === 'milestone'
-							? i18n.tsx._hata._hatady._push.milestone({ count: String(data.body.value ?? 0) })
-							: copy.update;
-			return [copy.title, {
-				body,
-				badge: iconUrl('bell'),
-				tag: `hatady:${data.body.id}`,
-				data,
-			}];
-		}
 		default:
 			return null;
 	}
@@ -420,7 +362,7 @@ export async function createEmptyNotification(): Promise<void> {
 		await globalThis.registration.showNotification(
 			(new URL(origin)).host,
 			{
-				body: `Hataskey v${_VERSION_}`,
+				body: `Hataskey Lite v${_VERSION_}`,
 				silent: true,
 				badge: iconUrl('null'),
 				tag: 'read_notification',

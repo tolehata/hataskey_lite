@@ -58,7 +58,6 @@ import MkPullToRefresh from '@/components/MkPullToRefresh.vue';
 import MkButton from '@/components/MkButton.vue';
 import MkPaginationControl from '@/components/MkPaginationControl.vue';
 import { Paginator } from '@/utility/paginator.js';
-import { moderationLogLabel } from '@/utility/record-moderation-labels.js';
 
 const props = defineProps<{
 	applicationId?: string;
@@ -70,7 +69,7 @@ const {
 } = useMkSelect({
 	items: [
 		{ label: i18n.ts.all, value: null },
-		...Misskey.moderationLogTypes.map(t => ({ label: moderationLogLabel(t), value: t })),
+		...Misskey.moderationLogTypes.map(t => ({ label: i18n.ts._moderationLogTypes[t] ?? t, value: t })),
 	],
 	initialValue: null,
 });

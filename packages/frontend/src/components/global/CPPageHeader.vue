@@ -26,11 +26,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<div v-if="pageMetadata.avatar" :class="$style.titleAvatarContainer" @click="top">
 				<MkAvatar :class="$style.titleAvatar" :user="pageMetadata.avatar" indicator/>
 			</div>
-			<HataAppLogo v-else-if="pageMetadata.hataApp" :app="pageMetadata.hataApp" :size="20" :monochrome="store.r.darkMode.value" :class="$style.titleBrandLogo" @click="top"/><i v-else-if="pageMetadata.icon" :class="[$style.titleIcon, pageMetadata.icon]" @click="top"></i>
+			<i v-else-if="pageMetadata.icon" :class="[$style.titleIcon, pageMetadata.icon]" @click="top"></i>
 
 			<div :class="$style.title">
 				<MkUserName v-if="pageMetadata.userName" :user="pageMetadata.userName" :nowrap="true" @click="top"/>
-				<div v-else-if="pageMetadata.title" @click="top"><HataAppWordmark v-if="isExactHataAppTitle(pageMetadata)" :app="pageMetadata.hataApp!" inheritColor/><template v-else>{{ pageMetadata.title }}</template></div>
+				<div v-else-if="pageMetadata.title" @click="top">{{ pageMetadata.title }}</div>
 				<div v-if="!narrow && pageMetadata.subtitle" :class="$style.subtitle" @click="top">
 					{{ pageMetadata.subtitle }}
 				</div>
@@ -103,9 +103,6 @@ import { prefer } from '@/preferences.js';
 import { scrollToVisibility } from '@/utility/scroll-to-visibility.js';
 import MkFollowButton from '@/components/MkFollowButton.vue';
 import { haptic } from '@/utility/haptic.js';
-import { isExactHataAppTitle } from '@/page.js';
-import HataAppLogo from '@/components/HataAppLogo.vue';
-import HataAppWordmark from '@/components/HataAppWordmark.vue';
 import { store } from '@/store.js';
 
 const { showEl } = scrollToVisibility();
@@ -436,7 +433,6 @@ onUnmounted(() => {
 	text-align: center;
 }
 
-.titleBrandLogo { margin-right: 8px; }
 
 .title {
 	min-width: 0;

@@ -40,10 +40,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<template #label>{{ copy.showTrendingTab }}</template>
 				<template #caption>{{ copy.showTrendingTabCaption }}</template>
 			</MkSwitch>
-			<MkSwitch v-model="editedShowHatadyTab">
-				<template #label>{{ copy.showHatadyTab }}</template>
-				<template #caption>{{ copy.showHatadyTabCaption }}</template>
-			</MkSwitch>
 			<MkSwitch v-model="editedTopNavMode">
 				<template #label>{{ copy.showMenuAtTop }}</template>
 				<template #caption>{{ copy.showMenuAtTopCaption }}<b>{{ copy.deckOnlyNote }}</b></template>
@@ -244,7 +240,6 @@ const snapshot = {
 	disableBubbleInHatasabaDeck: prefer.r['simpleUi.disableBubbleInHatasabaDeck'].value,
 	// 旗鯖fork: 基本セクション(旧 Hataskey UI 設定から移設)。
 	showTrendingTab: prefer.r['simpleUi.showTrendingTab'].value,
-	showHatadyTab: prefer.r['simpleUi.showHatadyTab'].value,
 	topNavMode: prefer.r['simpleUi.topNavMode'].value,
 	deckIgnoreWidth: deckIgnoreWidth.value,
 	tabSwipeEnabled: tabSwipeEnabled.value,
@@ -258,7 +253,6 @@ const editedProfileNoBannerBg = ref(snapshot.profileNoBannerBg);
 const editedOpacity = ref<number>(snapshot.opacity);
 const editedDisableBubbleInHatasabaDeck = ref(snapshot.disableBubbleInHatasabaDeck);
 const editedShowTrendingTab = ref(snapshot.showTrendingTab);
-const editedShowHatadyTab = ref(snapshot.showHatadyTab);
 const editedTopNavMode = ref(snapshot.topNavMode);
 const editedDeckIgnoreWidth = ref(snapshot.deckIgnoreWidth);
 const editedTabSwipeEnabled = ref(snapshot.tabSwipeEnabled);
@@ -271,7 +265,6 @@ const hasChanges = computed(() =>
 	|| editedOpacity.value !== snapshot.opacity
 	|| editedDisableBubbleInHatasabaDeck.value !== snapshot.disableBubbleInHatasabaDeck
 	|| editedShowTrendingTab.value !== snapshot.showTrendingTab
-	|| editedShowHatadyTab.value !== snapshot.showHatadyTab
 	|| editedTopNavMode.value !== snapshot.topNavMode
 	|| editedDeckIgnoreWidth.value !== snapshot.deckIgnoreWidth
 	|| editedTabSwipeEnabled.value !== snapshot.tabSwipeEnabled
@@ -324,7 +317,6 @@ async function resetToDefault() {
 	editedOpacity.value = (PREF_DEF['simpleUi.glassUiCardOpacity'].default as number);
 	editedDisableBubbleInHatasabaDeck.value = (PREF_DEF['simpleUi.disableBubbleInHatasabaDeck'].default as boolean);
 	editedShowTrendingTab.value = (PREF_DEF['simpleUi.showTrendingTab'].default as boolean);
-	editedShowHatadyTab.value = (PREF_DEF['simpleUi.showHatadyTab'].default as boolean);
 	editedTopNavMode.value = (PREF_DEF['simpleUi.topNavMode'].default as boolean);
 	editedDeckIgnoreWidth.value = false;
 	editedTabSwipeEnabled.value = true;
@@ -399,8 +391,6 @@ const navLabelById: Record<string, string> = {
 	search: copy.navSearch,
 	home: copy.navHome,
 	notifications: copy.navNotifications,
-	hatagoes: 'HataGoes',
-	hatafeed: copy.navHataFeed,
 	widgets: copy.navWidgets,
 };
 
@@ -436,7 +426,6 @@ function save() {
 		}
 		if (editedDisableBubbleInHatasabaDeck.value !== snapshot.disableBubbleInHatasabaDeck) prefer.commit('simpleUi.disableBubbleInHatasabaDeck', editedDisableBubbleInHatasabaDeck.value);
 		if (editedShowTrendingTab.value !== snapshot.showTrendingTab) prefer.commit('simpleUi.showTrendingTab', editedShowTrendingTab.value);
-		if (editedShowHatadyTab.value !== snapshot.showHatadyTab) prefer.commit('simpleUi.showHatadyTab', editedShowHatadyTab.value);
 		if (editedTopNavMode.value !== snapshot.topNavMode) prefer.commit('simpleUi.topNavMode', editedTopNavMode.value);
 		if (editedDeckIgnoreWidth.value !== snapshot.deckIgnoreWidth) setDeckIgnoreWidth(editedDeckIgnoreWidth.value);
 		if (editedTabSwipeEnabled.value !== snapshot.tabSwipeEnabled) setTabSwipeEnabled(editedTabSwipeEnabled.value);

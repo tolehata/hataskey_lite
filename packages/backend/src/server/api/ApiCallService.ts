@@ -19,7 +19,6 @@ import { writeMultipartFileToTemp } from '@/misc/write-multipart-file-to-temp.js
 import { bindThis } from '@/decorators.js';
 import { RoleService } from '@/core/RoleService.js';
 import { TelemetryService } from '@/core/telemetry/TelemetryService.js';
-import { isLtlEmojiVoteApiPath } from '@/core/ltl-emoji-vote.js';
 import type { Config } from '@/config.js';
 import type { FlashToken } from '@/misc/flash-token.js';
 import { ApiError } from './error.js';
@@ -125,17 +124,14 @@ export class ApiCallService implements OnApplicationShutdown {
 			throw err;
 		} else {
 			const errId = randomUUID();
-			const ephemeral = isLtlEmojiVoteApiPath(ep.name);
 			const registration = registrationApplicationApiPaths.has(ep.name);
-			const privateOperation = ephemeral || registration;
-			const diagnostic = registration ? new Error('Registration application operation failed')
-				: ephemeral ? new Error('Ephemeral emoji vote operation failed') : err;
+			const privateOperation = registration;
+			const diagnostic = registration ? new Error('Registration application operation failed') : err;
 			if (privateOperation) {
-				// SQL引数・申請情報・投票理由をログ、telemetry、API応答へ持ち込まない。
+				// SQL引数・申請情報をログ、telemetry、API応答へ持ち込まない。
 				diagnostic.name = ['Error', 'TypeError', 'RangeError', 'ReferenceError', 'SyntaxError', 'QueryFailedError'].includes(err.name) ? err.name : 'Error';
 				// DB例外のstackにも申請データが混ざり得るため、申請では元のstackも渡さない。
-				diagnostic.stack = registration ? `${diagnostic.name}: ${diagnostic.message}`
-					: `${diagnostic.name}: ${diagnostic.message}\n${err.stack?.split('\n').filter(line => /^\s+at /.test(line)).join('\n') ?? ''}`;
+				diagnostic.stack = `${diagnostic.name}: ${diagnostic.message}`;
 			}
 			this.logger.write({
 				level: 'error',

@@ -4,7 +4,7 @@ import type { SettingsBentoCategoryId, SettingsBentoSectionId } from './settings
 import { i18n } from '@/i18n.js';
 
 export const settingsExplanationSceneIds = [
-	'access', 'actions', 'apps', 'autodel', 'backup', 'bell',
+	'access', 'actions', 'autodel', 'backup', 'bell',
 	'block', 'border', 'card', 'clean', 'compose', 'deck',
 	'dm', 'effects', 'emoji', 'export', 'extend', 'feed',
 	'fold', 'font', 'glass', 'globe', 'history', 'layout',
@@ -64,8 +64,6 @@ export const sectionExplanationScenes = {
 	'drive.section1': 'upload',
 	'drive.section2': 'media',
 	'drive.section3': 'video',
-	'apps.section0': 'apps',
-	'apps.section1': 'mascot',
 	'data.section0': 'backup',
 	'data.section1': 'backup',
 	'data.section2': 'export',

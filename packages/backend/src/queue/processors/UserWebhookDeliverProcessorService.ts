@@ -36,10 +36,6 @@ export class UserWebhookDeliverProcessorService {
 
 	@bindThis
 	public async process(job: Bull.Job<UserWebhookDeliverJobData>): Promise<string> {
-		// Recheck current channel membership/privacy after any queue delay or retry.
-		if ('note' in job.data.content && !await this.noteEntityService.isChannelVisibleForMe(job.data.content.note, job.data.userId)) {
-			return 'Skipped: note is no longer visible';
-		}
 		const webhook = await this.webhooksRepository.findOneBy({ id: job.data.webhookId, userId: job.data.userId });
 		const configuration = job.data.testConfiguration ?? { url: job.data.to, secret: job.data.secret };
 		if (webhook == null || webhook.url !== configuration.url || webhook.secret !== configuration.secret

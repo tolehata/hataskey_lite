@@ -155,12 +155,7 @@ const menuDef = computed<SuperMenuDef[]>(() => [{
 		text: i18n.ts.avatarDecorations,
 		to: '/admin/avatar-decorations',
 		active: currentPage.value?.route.name === 'avatarDecorations',
-	}, ...(iAmAdmin ? [{
-		icon: 'ti ti-flower',
-		text: 'Hatask管理',
-		to: '/admin/hatask',
-		active: currentPage.value?.route.name === 'hatask',
-	}] : []), {
+	}, {
 		icon: 'ti ti-world',
 		text: i18n.ts.federation,
 		to: '/admin/federation',
@@ -273,17 +268,7 @@ const menuDef = computed<SuperMenuDef[]>(() => [{
 		to: '/admin/registration-applications',
 		active: currentPage.value?.route.name === 'registration-applications',
 		indicated: !instance.registrationClosed && instance.disableRegistration === true && thereIsPendingRegistration.value,
-	}, {
-		icon: 'ti ti-shield-check',
-		text: i18n.ts._hata._adminCommon.consentManagement,
-		to: '/admin/consent-manager',
-		active: currentPage.value?.route.name === 'consent-manager',
-	}, ...(iAmAdmin ? [{
-		icon: 'ti ti-heart-handshake',
-		text: '支援管理',
-		to: '/admin/support',
-		active: currentPage.value?.route.name === 'support',
-	}] : [])],
+	}],
 }]);
 
 onMounted(() => {

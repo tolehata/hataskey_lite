@@ -60,7 +60,7 @@ export const packedMetaLiteSchema = {
 		repositoryUrl: {
 			type: 'string',
 			optional: false, nullable: true,
-			default: 'https://github.com/tolehata/hataskey',
+			default: 'https://github.com/tolehata/hataskey_lite',
 		},
 		feedbackUrl: {
 			type: 'string',
