@@ -2407,17 +2407,6 @@ onUnmounted(() => {
     text-align:center;
     box-sizing:border-box;
 }
-/* 旗鯖fork: 外部通知の未読青ドット (サイドメニュー用) */
-.sbExtDot {
-    position:absolute;
-    top:50%;
-    right:14px;
-    transform:translateY(-50%);
-    width:8px;
-    height:8px;
-    border-radius:50%;
-    background:#4a9eff;
-}
 .sbDot {
     position:absolute;
     top:50%;
@@ -3562,17 +3551,6 @@ onUnmounted(() => {
     pointer-events:auto; transition:background .3s,box-shadow .3s;
 }
 
-/* 旗鯖fork: 外部通知ボタンの未読青ドット (モバイルナビ用) */
-.extDot {
-    position:absolute;
-    top:6px;
-    right:6px;
-    width:8px;
-    height:8px;
-    border-radius:50%;
-    background:#4a9eff;
-    border:1.5px solid var(--MI_THEME-panel);
-}
 .bottomBarDark .navPill {
     background:color-mix(in srgb,var(--MI_THEME-panel) 92%,transparent); backdrop-filter:blur(24px) saturate(1.4); -webkit-backdrop-filter:blur(24px) saturate(1.4);
     box-shadow:0 5px 26px rgba(0,0,0,.24),0 0 0 1px color-mix(in srgb,var(--MI_THEME-fg) 13%,transparent) inset;

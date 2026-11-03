@@ -13,7 +13,6 @@ import { lookup } from '@/utility/lookup.js';
 import * as os from '@/os.js';
 import { i18n } from '@/i18n.js';
 import { unisonReload } from '@/utility/unison-reload.js';
-import { prefer } from '@/preferences.js';
 
 export const navbarItemDef = reactive({
 	notifications: {
@@ -31,18 +30,6 @@ export const navbarItemDef = reactive({
 			}
 		}),
 		to: '/my/notifications',
-	},
-	// 旗鯖fork: 外部通知。外部アカウント連携時のみ表示 (通知の直後に配置)。
-	externalNotifications: {
-		title: i18n.ts._hata._common.externalNotifications,
-		icon: 'ti ti-bell',
-		show: computed(() => {
-			const token = prefer.r['external.token']?.value;
-			const host = prefer.r['external.host']?.value;
-			const disabled = prefer.r['external.disableNotificationToast']?.value === true;
-			return $i != null && token != null && host != null && host !== '' && !disabled;
-		}),
-		to: '/my/external-notifications',
 	},
 	drive: {
 		title: i18n.ts.drive,

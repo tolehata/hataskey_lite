@@ -10,15 +10,25 @@ import { describe, expect, test } from 'vitest';
 const source = (path: string) => readFileSync(resolve(process.cwd(), path), 'utf8');
 
 describe('Hataskey UI sidebar persisted items', () => {
-	test('新規設定では外部通知を通知の直後かつメッセージの前に置く', () => {
+	test('新規設定に撤去した外部通知を置かず、通知の直後にメッセージを置く', () => {
 		const def = source('src/preferences/def.ts');
-		const notificationsIndex = def.indexOf("{ id: 'notifications'");
-		const externalNotificationsIndex = def.indexOf("{ id: 'externalNotifications'");
+		const notificationsIndex = def.indexOf("{ id: 'notifications', icon: 'ti ti-bell', label: '通知', group: 'basic' }");
 		const chatIndex = def.indexOf("{ id: 'chat'");
 		expect(notificationsIndex).toBeGreaterThan(-1);
-		expect(externalNotificationsIndex).toBeGreaterThan(notificationsIndex);
-		expect(chatIndex).toBeGreaterThan(externalNotificationsIndex);
-		expect(def.slice(externalNotificationsIndex, externalNotificationsIndex + 140)).toContain("group: 'basic'");
+		expect(chatIndex).toBeGreaterThan(notificationsIndex);
+		expect(def.slice(notificationsIndex, chatIndex)).not.toContain('externalNotifications');
+		expect(def).not.toContain("{ id: 'externalNotifications'");
+	});
+
+	test('撤去した外部通知をナビの項目と編集画面から外す', () => {
+		const navbar = source('src/navbar.ts');
+		const navbarUi = source('src/ui/_common_/navbar.vue');
+		const editor = source('src/components/MkSidebarEditDialog.vue');
+		expect(navbar).not.toContain('externalNotifications');
+		expect(navbarUi).not.toContain("menu.includes('externalNotifications')");
+		expect(navbarUi).toContain('item in navbarItemDef');
+		expect(editor).toContain('const REMOVED_SIDEBAR_IDS = HATA_SIDE_STUDIO_DEAD_IDS;');
+		expect(source('src/utility/hata-side-studio.ts')).toMatch(/HATA_SIDE_STUDIO_DEAD_IDS = new Set\([^\n]*'externalNotifications'/);
 	});
 
 	test('新規設定ではリロードの直後に表示可能な通常項目として置く', () => {

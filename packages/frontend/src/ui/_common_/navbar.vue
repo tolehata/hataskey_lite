@@ -145,20 +145,9 @@ const otherMenuItemIndicated = computed(() => {
 });
 const controlPanelIndicated = ref(false);
 
-// 旗鯖fork: 外部アカウント連携時に、menu に externalNotifications が無ければ
-// 通知の直後に動的注入する (既存ユーザーの保存済み menu 設定を壊さず反映)。
 const displayMenu = computed(() => {
 	const menu = [...prefer.r.menu.value];
-	const token = prefer.r['external.token']?.value;
-	const host = prefer.r['external.host']?.value;
-	const linked = token != null && host != null && host !== '';
-	if (linked && !menu.includes('externalNotifications')) {
-		const notifIdx = menu.indexOf('notifications');
-		if (notifIdx >= 0) menu.splice(notifIdx + 1, 0, 'externalNotifications');
-		else menu.unshift('externalNotifications');
-	}
-	// 連携OFF時に menu に含まれていても navbarItemDef.show=false で非表示になるのでフィルタ不要
-	// 旗鯖fork: 削除済み項目(例: hataWhatsNew)が既存ユーザーの保存済み menu に残っていても、
+	// 旗鯖fork: 削除済み項目(例: hataWhatsNew・externalNotifications)が既存ユーザーの保存済み menu に残っていても、
 	// navbarItemDef に定義の無いIDは描画されないため、ここで除去してゴミを抱えないようにする。
 	// セパレータ('-')は navbarItemDef に無いが残す必要があるため除外条件から外す。
 	return menu.filter(item => item === '-' || item in navbarItemDef);

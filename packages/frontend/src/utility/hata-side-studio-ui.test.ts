@@ -44,9 +44,9 @@ describe('HataSideStudio UI integration', () => {
 		expect(studio).toContain('copy.collapsedBorderHiddenDescription');
 	});
 
-	test('Hataskey UIの通知・外部通知・お知らせバッジをメニューボタンの縦中央へ揃える', () => {
+	test('Hataskey UIの通知・お知らせバッジをメニューボタンの縦中央へ揃える', () => {
 		const simple = read('ui/simple.vue');
-		for (const selector of ['.sbBadge', '.sbExtDot', '.sbDot', '.sbNotifDot']) {
+		for (const selector of ['.sbBadge', '.sbDot', '.sbNotifDot']) {
 			const block = simple.slice(simple.indexOf(`${selector} {`), simple.indexOf('}', simple.indexOf(`${selector} {`)));
 			expect(block).toContain('top:50%');
 			expect(block).toContain('transform:translateY(-50%)');

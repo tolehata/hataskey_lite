@@ -77,6 +77,7 @@ import MkWindow from '@/components/MkWindow.vue';
 import MkButton from '@/components/MkButton.vue';
 import MkSwitch from '@/components/MkSwitch.vue';
 import { prefer } from '@/preferences.js';
+import { HATA_SIDE_STUDIO_DEAD_IDS } from '@/utility/hata-side-studio.js';
 import { PREF_DEF } from '@/preferences/def.js';
 import { applySidebarIconOverride as applyIconOverride } from '@/utility/sidebar-icon-overrides.js';
 import * as os from '@/os.js';
@@ -113,7 +114,8 @@ const ITEM_LABELS: Record<string, string> = {
 	cacheClear: copy.itemClearCache,
 };
 
-const REMOVED_SIDEBAR_IDS = new Set(['portal']);
+// 旗鯖fork: 撤去した機能の項目は、保存値に残っていても編集画面に出さない (保存時に消える)。
+const REMOVED_SIDEBAR_IDS = HATA_SIDE_STUDIO_DEAD_IDS;
 
 const emit = defineEmits<{
 	(ev: 'closed'): void;

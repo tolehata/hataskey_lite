@@ -99,9 +99,7 @@ const showNavbarSubButtons = prefer.model('showNavbarSubButtons');
 const bannerDisplay = prefer.model('bannerDisplay');
 
 async function addItem(ev: MouseEvent) {
-	// 旗鯖fork: externalNotifications は連携ON時に通知の直後へ自動表示される必須項目のため、
-	// 並び替え/追加の対象から除外する (menu に保存させない)。
-	const menu = Object.keys(navbarItemDef).filter(k => !itemTypeValues.value.includes(k) && k !== 'externalNotifications');
+	const menu = Object.keys(navbarItemDef).filter(k => !itemTypeValues.value.includes(k));
 	os.popupMenu([
 		...menu.map(k => ({
 			type: 'button' as const,

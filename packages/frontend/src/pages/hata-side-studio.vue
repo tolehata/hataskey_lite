@@ -1446,10 +1446,8 @@ definePage(() => ({
 .nativeWidgetPreview[data-hss-kind="digitalClock"] :global([data-testid="mkw-digitalClock"]) { padding-block:0!important; }
 .nativeWidgetPreview[data-hss-kind="rssTicker"] :global(.mkw-rss-ticker) { width:100%!important;min-height:0!important; }
 .nativeWidgetPreview[data-hss-kind="notifications"] :global(.mkw-notifications),
-.nativeWidgetPreview[data-hss-kind="externalNotifications"] :global(.mkw-externalNotifications),
 .nativeWidgetPreview[data-hss-kind="timeline"] :global(.mkw-timeline) { width:100%!important;height:auto!important;min-height:var(--hss-widget-height,112px)!important;box-sizing:border-box;overflow:clip!important; }
 .nativeWidgetPreview[data-hss-kind="notifications"] :global(.mkw-notifications > div:last-child),
-.nativeWidgetPreview[data-hss-kind="externalNotifications"] :global(.mkw-externalNotifications > div:last-child),
 .nativeWidgetPreview[data-hss-kind="timeline"] :global(.mkw-timeline > div:last-child) { overflow:visible!important; }
 .nativeWidgetPreview[data-hss-kind="notifications"] :global(.mkw-notifications > div:last-child > div > div > div > button),
 .nativeWidgetPreview[data-hss-kind="timeline"] :global(.mkw-timeline > div:last-child > div > div > div > button) { display:none!important; }
@@ -1459,10 +1457,6 @@ definePage(() => ({
 .nativeWidgetPreview[data-hss-kind="timeline"][data-hss-size="normal"] :global([data-scroll-anchor]:nth-child(n+3)),
 .nativeWidgetPreview[data-hss-kind="notifications"][data-hss-size="large"] :global([data-scroll-anchor]:nth-child(n+4)),
 .nativeWidgetPreview[data-hss-kind="timeline"][data-hss-size="large"] :global([data-scroll-anchor]:nth-child(n+4)) { display:none!important; }
-.nativeWidgetPreview[data-hss-kind="externalNotifications"][data-hss-size="small"] :global(.mkw-externalNotifications > div:last-child > div > div > div:nth-child(n+2)),
-.nativeWidgetPreview[data-hss-kind="externalNotifications"][data-hss-size="normal"] :global(.mkw-externalNotifications > div:last-child > div > div > div:nth-child(n+3)),
-.nativeWidgetPreview[data-hss-kind="externalNotifications"][data-hss-size="large"] :global(.mkw-externalNotifications > div:last-child > div > div > div:nth-child(n+4)) { display:none!important; }
-.nativeWidgetPreview[data-hss-kind="externalNotifications"] :global(.mkw-externalNotifications) div:has(> .ti-plug-connected-x) { display:flex!important;flex-direction:column;align-items:center;justify-content:center;min-height:var(--hss-widget-height,88px)!important;padding:4px 8px!important;box-sizing:border-box;overflow:clip!important;text-align:center; }
 .nativeWidgetPreview[data-hss-kind="trends"] :global(.wbrkwala),
 .nativeWidgetPreview[data-hss-kind="federation"] :global(.wbrkwalb) { height:auto!important;max-height:none!important;overflow:visible!important; }
 .nativeWidgetPreview[data-hss-kind="rss"] :global(.mkw-rss a) { padding:5px 9px!important;font-size:.8rem; }
